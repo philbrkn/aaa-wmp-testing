@@ -1,6 +1,6 @@
 from math import sqrt
-import Path
-
+from pathlib import Path
+ 
 import os
 import pickle
 import matplotlib.pyplot as plt
@@ -361,12 +361,11 @@ def vectfit_nuclide(
 
     # ======================================================================
     # PREPARE POINT-WISE XS
-
     # make 0K ACE data using njoy
-    if log:
-        print(f"Running NJOY to get 0K point-wise data (error={njoy_error})...")
-
     if njoy_input is None:
+        if log:
+            print(f"Running NJOY to get 0K point-wise data (error={njoy_error})...")
+
         nuc_ce = IncidentNeutron.from_njoy(
             endf_file,
             temperatures=[0.0],
@@ -376,11 +375,11 @@ def vectfit_nuclide(
             purr=False,
         )
         # dump the NJOY input for later use
-        # path_out / U238_NJOY.pickle
-        njoy_path_out = Path(__file__).parent / "NJOY_pickles"
-        if njoy_path_out:
-            with open(njoy_path_out / "U238_NJOY.pickle", "wb") as f:
-                pickle.dump(nuc_ce, f)
+        base_dir = Path(path_out).parent  #TODO: this assumes path_out is a subdirectory
+        njoy_path_out = base_dir / "NJOY_pickles"
+        njoy_path_out.mkdir(parents=True, exist_ok=True)
+        with open(njoy_path_out / "U238_NJOY.pickle", "wb") as f:
+            pickle.dump(nuc_ce, f)
     else:
         # pickle in
         nuc_ce = pickle.load(open(njoy_input, "rb"))

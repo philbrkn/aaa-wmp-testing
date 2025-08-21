@@ -1,17 +1,17 @@
 # AAA - wmp environment
 
 OpenMC is included with addition: openmc/openmc/data/aaa.py.
-This replaces vectfit. I pickled njoy at 5e-4 since its expensive to run NJOY each time for u238. so we just import the pickle.
+This replaces vectfit. I pickled njoy at 5e-4 since its expensive to run NJOY each time for u238. so we just import the pickle. 
+
+the pickle is 128 mb, so it cant be added to github. you will have to run njoy the first time.
 
 
 ### install python environment with: 
 ```bash
-conda create -n aaa-wmp-env -c conda-forge openmc scipy h5py numpy matplotlib
+conda create -n aaa-wmp-env -c conda-forge openmc scipy h5py numpy matplotlib njoy2016
 conda activate aaa-wmp-env
-cd openmc
+SETUPTOOLS_SCM_PRETEND_VERSION_FOR_OPENMC=0.0+local python -m pip install -e ./openmc
 # no need to make c++
-python -m pip install . 
-cd ..
 ```
 
 ### run with file:
