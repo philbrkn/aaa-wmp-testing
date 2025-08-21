@@ -1,0 +1,7642 @@
+Running NJOY to get 0K point-wise data (error=0.0005)...
+Parsing cross sections within resolved resonance range...
+  MTs: [2, 27, 18]
+  Energy range: 1.000e-05 to 2.000e+04 eV (614658 points)
+Vector fitting piece 1/307...
+  energy: 1.000e-05 to 3.688e-01 eV (466 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 0 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Found ideal results. Stop!
+Found 2 real poles and 1 conjugate complex pairs.
+Final number of poles: 3
+Vector fitting piece 2/307...
+  energy: 1.000e-02 to 1.156e+00 eV (195 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 0 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Found ideal results. Stop!
+Found 2 real poles and 1 conjugate complex pairs.
+Final number of poles: 3
+Vector fitting piece 3/307...
+  energy: 3.125e-01 to 2.449e+00 eV (66 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 0 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Found ideal results. Stop!
+Found 2 real poles and 1 conjugate complex pairs.
+Final number of poles: 3
+Vector fitting piece 4/307...
+  energy: 1.031e+00 to 4.022e+00 eV (47 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 0 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Order=6(2/100)
+Found ideal results. Stop!
+Found 4 real poles and 1 conjugate complex pairs.
+Final number of poles: 5
+Vector fitting piece 5/307...
+  energy: 2.150e+00 to 5.973e+00 eV (235 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 1 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Order=6(2/100)
+Found ideal results. Stop!
+Found 2 real poles and 2 conjugate complex pairs.
+Final number of poles: 4
+Vector fitting piece 6/307...
+  energy: 3.722e+00 to 8.446e+00 eV (905 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Found ideal results. Stop!
+Found 0 real poles and 5 conjugate complex pairs.
+Final number of poles: 5
+Vector fitting piece 7/307...
+  energy: 5.779e+00 to 1.129e+01 eV (1089 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Found ideal results. Stop!
+Found 0 real poles and 6 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 8/307...
+  energy: 8.193e+00 to 1.478e+01 eV (564 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Found ideal results. Stop!
+Found 2 real poles and 4 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 9/307...
+  energy: 1.104e+01 to 1.842e+01 eV (280 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 1 peaks
+Fitting orders from 2 to 200
+Order=2(0/100)
+Order=4(1/100)
+Order=6(2/100)
+Order=8(3/100)
+Found ideal results. Stop!
+Found 4 real poles and 2 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 10/307...
+  energy: 1.427e+01 to 2.251e+01 eV (846 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 2 real poles and 3 conjugate complex pairs.
+Final number of poles: 5
+Vector fitting piece 11/307...
+  energy: 1.798e+01 to 2.707e+01 eV (1026 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 5 conjugate complex pairs.
+Final number of poles: 7
+Vector fitting piece 12/307...
+  energy: 2.215e+01 to 3.215e+01 eV (297 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 2 real poles and 4 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 13/307...
+  energy: 2.668e+01 to 3.752e+01 eV (758 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 0 real poles and 4 conjugate complex pairs.
+Final number of poles: 4
+Vector fitting piece 14/307...
+  energy: 3.163e+01 to 4.336e+01 eV (856 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 4 real poles and 2 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 15/307...
+  energy: 3.708e+01 to 4.964e+01 eV (640 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Order=14(4/98)
+Order=16(5/98)
+Order=18(6/98)
+Order=20(7/98)
+Order=22(8/98)
+Order=24(9/98)
+Order=26(10/98)
+Order=28(11/98)
+Order=30(12/98)
+Order=32(13/98)
+Order=34(14/98)
+Order=36(15/98)
+Order=38(16/98)
+Order=40(17/98)
+Order=42(18/98)
+Order=44(19/98)
+Order=46(20/98)
+Order=48(21/98)
+Order=50(22/98)
+Order=52(23/98)
+Order=54(24/98)
+Order=56(25/98)
+Order=58(26/98)
+Order=60(27/98)
+Found 2 real poles and 6 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 16/307...
+  energy: 4.289e+01 to 5.660e+01 eV (570 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 6 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 17/307...
+  energy: 4.912e+01 to 6.347e+01 eV (363 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 4 real poles and 4 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 18/307...
+  energy: 5.559e+01 to 7.111e+01 eV (1077 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 5 conjugate complex pairs.
+Final number of poles: 7
+Vector fitting piece 19/307...
+  energy: 6.288e+01 to 7.905e+01 eV (1118 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 0 real poles and 6 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 20/307...
+  energy: 7.042e+01 to 8.760e+01 eV (1160 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 21/307...
+  energy: 7.834e+01 to 9.650e+01 eV (1551 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 4 real poles and 6 conjugate complex pairs.
+Final number of poles: 10
+Vector fitting piece 22/307...
+  energy: 8.665e+01 to 1.056e+02 eV (1380 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 4 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 23/307...
+  energy: 9.543e+01 to 1.152e+02 eV (1059 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Order=14(4/98)
+Order=16(5/98)
+Order=18(6/98)
+Order=20(7/98)
+Order=22(8/98)
+Order=24(9/98)
+Order=26(10/98)
+Order=28(11/98)
+Order=30(12/98)
+Order=32(13/98)
+Order=34(14/98)
+Order=36(15/98)
+Order=38(16/98)
+Order=40(17/98)
+Order=42(18/98)
+Order=44(19/98)
+Order=46(20/98)
+Order=48(21/98)
+Order=50(22/98)
+Order=52(23/98)
+Order=54(24/98)
+Order=56(25/98)
+Order=58(26/98)
+Order=60(27/98)
+Found 4 real poles and 3 conjugate complex pairs.
+Final number of poles: 7
+Vector fitting piece 24/307...
+  energy: 1.048e+02 to 1.253e+02 eV (1250 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 0 real poles and 6 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 25/307...
+  energy: 1.144e+02 to 1.358e+02 eV (1200 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 6 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 26/307...
+  energy: 1.244e+02 to 1.468e+02 eV (1036 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 4 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 27/307...
+  energy: 1.348e+02 to 1.582e+02 eV (994 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Order=14(4/98)
+Order=16(5/98)
+Order=18(6/98)
+Order=20(7/98)
+Order=22(8/98)
+Order=24(9/98)
+Order=26(10/98)
+Order=28(11/98)
+Order=30(12/98)
+Order=32(13/98)
+Order=34(14/98)
+Order=36(15/98)
+Order=38(16/98)
+Order=40(17/98)
+Order=42(18/98)
+Order=44(19/98)
+Order=46(20/98)
+Order=48(21/98)
+Order=50(22/98)
+Order=52(23/98)
+Order=54(24/98)
+Order=56(25/98)
+Order=58(26/98)
+Order=60(27/98)
+Found 6 real poles and 3 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 28/307...
+  energy: 1.459e+02 to 1.700e+02 eV (1289 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 29/307...
+  energy: 1.571e+02 to 1.823e+02 eV (1183 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 4 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 30/307...
+  energy: 1.689e+02 to 1.947e+02 eV (918 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 2 peaks
+Fitting orders from 4 to 200
+Order=4(0/99)
+Order=6(1/99)
+Order=8(2/99)
+Order=10(3/99)
+Order=12(4/99)
+Order=14(5/99)
+Order=16(6/99)
+Order=18(7/99)
+Order=20(8/99)
+Order=22(9/99)
+Order=24(10/99)
+Order=26(11/99)
+Order=28(12/99)
+Order=30(13/99)
+Order=32(14/99)
+Order=34(15/99)
+Order=36(16/99)
+Order=38(17/99)
+Order=40(18/99)
+Order=42(19/99)
+Order=44(20/99)
+Order=46(21/99)
+Order=48(22/99)
+Order=50(23/99)
+Order=52(24/99)
+Order=54(25/99)
+Order=56(26/99)
+Order=58(27/99)
+Order=60(28/99)
+Found 2 real poles and 4 conjugate complex pairs.
+Final number of poles: 6
+Vector fitting piece 31/307...
+  energy: 1.812e+02 to 2.078e+02 eV (1339 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 5 conjugate complex pairs.
+Final number of poles: 7
+Vector fitting piece 32/307...
+  energy: 1.937e+02 to 2.219e+02 eV (1685 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Found 2 real poles and 8 conjugate complex pairs.
+Final number of poles: 10
+Vector fitting piece 33/307...
+  energy: 2.068e+02 to 2.353e+02 eV (1209 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 2 real poles and 6 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 34/307...
+  energy: 2.203e+02 to 2.501e+02 eV (1135 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Order=14(4/98)
+Order=16(5/98)
+Order=18(6/98)
+Order=20(7/98)
+Order=22(8/98)
+Order=24(9/98)
+Order=26(10/98)
+Order=28(11/98)
+Order=30(12/98)
+Order=32(13/98)
+Order=34(14/98)
+Order=36(15/98)
+Order=38(16/98)
+Order=40(17/98)
+Order=42(18/98)
+Order=44(19/98)
+Order=46(20/98)
+Order=48(21/98)
+Order=50(22/98)
+Order=52(23/98)
+Order=54(24/98)
+Order=56(25/98)
+Order=58(26/98)
+Order=60(27/98)
+Found 4 real poles and 3 conjugate complex pairs.
+Final number of poles: 7
+Vector fitting piece 35/307...
+  energy: 2.341e+02 to 2.643e+02 eV (1649 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 2 real poles and 6 conjugate complex pairs.
+Final number of poles: 8
+Vector fitting piece 36/307...
+  energy: 2.483e+02 to 2.797e+02 eV (1720 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Found 4 real poles and 6 conjugate complex pairs.
+Final number of poles: 10
+Vector fitting piece 37/307...
+  energy: 2.632e+02 to 2.952e+02 eV (2397 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 38/307...
+  energy: 2.784e+02 to 3.112e+02 eV (1399 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 6 real poles and 6 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 39/307...
+  energy: 2.939e+02 to 3.280e+02 eV (927 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 40/307...
+  energy: 3.099e+02 to 3.447e+02 eV (1052 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 6 real poles and 4 conjugate complex pairs.
+Final number of poles: 10
+Vector fitting piece 41/307...
+  energy: 3.262e+02 to 3.622e+02 eV (1423 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 42/307...
+  energy: 3.432e+02 to 3.797e+02 eV (1804 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 43/307...
+  energy: 3.603e+02 to 3.977e+02 eV (1552 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 44/307...
+  energy: 3.782e+02 to 4.163e+02 eV (1813 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 45/307...
+  energy: 3.963e+02 to 4.354e+02 eV (2083 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 46/307...
+  energy: 4.148e+02 to 4.548e+02 eV (1595 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 47/307...
+  energy: 4.339e+02 to 4.749e+02 eV (2119 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Found 4 real poles and 9 conjugate complex pairs.
+Final number of poles: 13
+Vector fitting piece 48/307...
+  energy: 4.533e+02 to 4.958e+02 eV (2109 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 49/307...
+  energy: 4.730e+02 to 5.157e+02 eV (1322 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 4 peaks
+Fitting orders from 8 to 200
+Order=8(0/97)
+Order=10(1/97)
+Order=12(2/97)
+Order=14(3/97)
+Order=16(4/97)
+Order=18(5/97)
+Order=20(6/97)
+Order=22(7/97)
+Order=24(8/97)
+Order=26(9/97)
+Order=28(10/97)
+Order=30(11/97)
+Order=32(12/97)
+Order=34(13/97)
+Order=36(14/97)
+Order=38(15/97)
+Order=40(16/97)
+Order=42(17/97)
+Order=44(18/97)
+Order=46(19/97)
+Order=48(20/97)
+Order=50(21/97)
+Order=52(22/97)
+Order=54(23/97)
+Order=56(24/97)
+Order=58(25/97)
+Order=60(26/97)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 50/307...
+  energy: 4.933e+02 to 5.368e+02 eV (1762 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 5 peaks
+Fitting orders from 10 to 200
+Order=10(0/96)
+Order=12(1/96)
+Order=14(2/96)
+Order=16(3/96)
+Order=18(4/96)
+Order=20(5/96)
+Order=22(6/96)
+Order=24(7/96)
+Order=26(8/96)
+Order=28(9/96)
+Order=30(10/96)
+Order=32(11/96)
+Order=34(12/96)
+Order=36(13/96)
+Order=38(14/96)
+Order=40(15/96)
+Order=42(16/96)
+Order=44(17/96)
+Order=46(18/96)
+Order=48(19/96)
+Order=50(20/96)
+Order=52(21/96)
+Order=54(22/96)
+Order=56(23/96)
+Order=58(24/96)
+Order=60(25/96)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 51/307...
+  energy: 5.140e+02 to 5.586e+02 eV (2360 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 52/307...
+  energy: 5.352e+02 to 5.803e+02 eV (1677 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Found 2 real poles and 7 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 53/307...
+  energy: 5.567e+02 to 6.028e+02 eV (1531 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 3 peaks
+Fitting orders from 6 to 200
+Order=6(0/98)
+Order=8(1/98)
+Order=10(2/98)
+Order=12(3/98)
+Order=14(4/98)
+Order=16(5/98)
+Order=18(6/98)
+Order=20(7/98)
+Order=22(8/98)
+Order=24(9/98)
+Order=26(10/98)
+Order=28(11/98)
+Order=30(12/98)
+Order=32(13/98)
+Order=34(14/98)
+Order=36(15/98)
+Order=38(16/98)
+Order=40(17/98)
+Order=42(18/98)
+Order=44(19/98)
+Order=46(20/98)
+Order=48(21/98)
+Order=50(22/98)
+Order=52(23/98)
+Order=54(24/98)
+Order=56(25/98)
+Order=58(26/98)
+Order=60(27/98)
+Found 4 real poles and 5 conjugate complex pairs.
+Final number of poles: 9
+Vector fitting piece 54/307...
+  energy: 5.786e+02 to 6.257e+02 eV (2692 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 55/307...
+  energy: 6.009e+02 to 6.491e+02 eV (2292 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 9 peaks
+Fitting orders from 18 to 200
+Order=18(0/92)
+Order=20(1/92)
+Order=22(2/92)
+Order=24(3/92)
+Order=26(4/92)
+Order=28(5/92)
+Order=30(6/92)
+Order=32(7/92)
+Order=34(8/92)
+Order=36(9/92)
+Order=38(10/92)
+Order=40(11/92)
+Order=42(12/92)
+Order=44(13/92)
+Order=46(14/92)
+Order=48(15/92)
+Order=50(16/92)
+Order=52(17/92)
+Order=54(18/92)
+Order=56(19/92)
+Order=58(20/92)
+Order=60(21/92)
+Found 4 real poles and 10 conjugate complex pairs.
+Final number of poles: 14
+Vector fitting piece 56/307...
+  energy: 6.238e+02 to 6.726e+02 eV (2133 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Found 6 real poles and 8 conjugate complex pairs.
+Final number of poles: 14
+Vector fitting piece 57/307...
+  energy: 6.470e+02 to 6.967e+02 eV (2104 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 6 real poles and 8 conjugate complex pairs.
+Final number of poles: 14
+Vector fitting piece 58/307...
+  energy: 6.706e+02 to 7.211e+02 eV (2563 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Found 4 real poles and 11 conjugate complex pairs.
+Final number of poles: 15
+Vector fitting piece 59/307...
+  energy: 6.947e+02 to 7.465e+02 eV (2689 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Order=62(21/91)
+Order=64(22/91)
+Order=66(23/91)
+Order=68(24/91)
+Order=70(25/91)
+Found 2 real poles and 12 conjugate complex pairs.
+Final number of poles: 14
+Vector fitting piece 60/307...
+  energy: 7.192e+02 to 7.715e+02 eV (2211 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 8 peaks
+Fitting orders from 16 to 200
+Order=16(0/93)
+Order=18(1/93)
+Order=20(2/93)
+Order=22(3/93)
+Order=24(4/93)
+Order=26(5/93)
+Order=28(6/93)
+Order=30(7/93)
+Order=32(8/93)
+Order=34(9/93)
+Order=36(10/93)
+Order=38(11/93)
+Order=40(12/93)
+Order=42(13/93)
+Order=44(14/93)
+Order=46(15/93)
+Order=48(16/93)
+Order=50(17/93)
+Order=52(18/93)
+Order=54(19/93)
+Order=56(20/93)
+Order=58(21/93)
+Order=60(22/93)
+Order=62(23/93)
+Order=64(24/93)
+Order=66(25/93)
+Order=68(26/93)
+Order=70(27/93)
+Found 4 real poles and 9 conjugate complex pairs.
+Final number of poles: 13
+Vector fitting piece 61/307...
+  energy: 7.441e+02 to 7.973e+02 eV (2358 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Order=62(21/91)
+Order=64(22/91)
+Order=66(23/91)
+Order=68(24/91)
+Order=70(25/91)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 62/307...
+  energy: 7.695e+02 to 8.234e+02 eV (2573 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Order=62(20/90)
+Order=64(21/90)
+Order=66(22/90)
+Order=68(23/90)
+Order=70(24/90)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 63/307...
+  energy: 7.953e+02 to 8.501e+02 eV (1806 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 6 real poles and 8 conjugate complex pairs.
+Final number of poles: 14
+Vector fitting piece 64/307...
+  energy: 8.215e+02 to 8.778e+02 eV (2649 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 9 peaks
+Fitting orders from 18 to 200
+Order=18(0/92)
+Order=20(1/92)
+Order=22(2/92)
+Order=24(3/92)
+Order=26(4/92)
+Order=28(5/92)
+Order=30(6/92)
+Order=32(7/92)
+Order=34(8/92)
+Order=36(9/92)
+Order=38(10/92)
+Order=40(11/92)
+Order=42(12/92)
+Order=44(13/92)
+Order=46(14/92)
+Order=48(15/92)
+Order=50(16/92)
+Order=52(17/92)
+Order=54(18/92)
+Order=56(19/92)
+Order=58(20/92)
+Order=60(21/92)
+Found 2 real poles and 9 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 65/307...
+  energy: 8.480e+02 to 9.047e+02 eV (2140 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 66/307...
+  energy: 8.751e+02 to 9.326e+02 eV (2003 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 67/307...
+  energy: 9.026e+02 to 9.610e+02 eV (3131 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Found 4 real poles and 11 conjugate complex pairs.
+Final number of poles: 15
+Vector fitting piece 68/307...
+  energy: 9.304e+02 to 9.897e+02 eV (2489 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 69/307...
+  energy: 9.588e+02 to 1.019e+03 eV (2287 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 70/307...
+  energy: 9.875e+02 to 1.049e+03 eV (2559 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 71/307...
+  energy: 1.016e+03 to 1.079e+03 eV (2611 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Found 6 real poles and 10 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 72/307...
+  energy: 1.046e+03 to 1.109e+03 eV (3166 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 73/307...
+  energy: 1.076e+03 to 1.140e+03 eV (3145 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 4 real poles and 15 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 74/307...
+  energy: 1.107e+03 to 1.171e+03 eV (3284 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 15 peaks
+Fitting orders from 30 to 200
+Order=30(0/86)
+Order=32(1/86)
+Order=34(2/86)
+Order=36(3/86)
+Order=38(4/86)
+Order=40(5/86)
+Order=42(6/86)
+Order=44(7/86)
+Order=46(8/86)
+Order=48(9/86)
+Order=50(10/86)
+Order=52(11/86)
+Order=54(12/86)
+Order=56(13/86)
+Order=58(14/86)
+Order=60(15/86)
+Found 4 real poles and 17 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 75/307...
+  energy: 1.138e+03 to 1.203e+03 eV (3599 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 14 peaks
+Fitting orders from 28 to 200
+Order=28(0/87)
+Order=30(1/87)
+Order=32(2/87)
+Order=34(3/87)
+Order=36(4/87)
+Order=38(5/87)
+Order=40(6/87)
+Order=42(7/87)
+Order=44(8/87)
+Order=46(9/87)
+Order=48(10/87)
+Order=50(11/87)
+Order=52(12/87)
+Order=54(13/87)
+Order=56(14/87)
+Order=58(15/87)
+Order=60(16/87)
+Found 4 real poles and 14 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 76/307...
+  energy: 1.169e+03 to 1.235e+03 eV (3042 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 77/307...
+  energy: 1.201e+03 to 1.268e+03 eV (2839 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 78/307...
+  energy: 1.233e+03 to 1.301e+03 eV (3425 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 15 peaks
+Fitting orders from 30 to 200
+Order=30(0/86)
+Order=32(1/86)
+Order=34(2/86)
+Order=36(3/86)
+Order=38(4/86)
+Order=40(5/86)
+Order=42(6/86)
+Order=44(7/86)
+Order=46(8/86)
+Order=48(9/86)
+Order=50(10/86)
+Order=52(11/86)
+Order=54(12/86)
+Order=56(13/86)
+Order=58(14/86)
+Order=60(15/86)
+Order=62(16/86)
+Order=64(17/86)
+Order=66(18/86)
+Order=68(19/86)
+Order=70(20/86)
+Found 6 real poles and 15 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 79/307...
+  energy: 1.265e+03 to 1.335e+03 eV (2967 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 80/307...
+  energy: 1.298e+03 to 1.369e+03 eV (1488 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Order=62(24/94)
+Order=64(25/94)
+Order=66(26/94)
+Order=68(27/94)
+Order=70(28/94)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 81/307...
+  energy: 1.332e+03 to 1.402e+03 eV (1428 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 6 peaks
+Fitting orders from 12 to 200
+Order=12(0/95)
+Order=14(1/95)
+Order=16(2/95)
+Order=18(3/95)
+Order=20(4/95)
+Order=22(5/95)
+Order=24(6/95)
+Order=26(7/95)
+Order=28(8/95)
+Order=30(9/95)
+Order=32(10/95)
+Order=34(11/95)
+Order=36(12/95)
+Order=38(13/95)
+Order=40(14/95)
+Order=42(15/95)
+Order=44(16/95)
+Order=46(17/95)
+Order=48(18/95)
+Order=50(19/95)
+Order=52(20/95)
+Order=54(21/95)
+Order=56(22/95)
+Order=58(23/95)
+Order=60(24/95)
+Order=62(25/95)
+Order=64(26/95)
+Order=66(27/95)
+Order=68(28/95)
+Order=70(29/95)
+Found 4 real poles and 7 conjugate complex pairs.
+Final number of poles: 11
+Vector fitting piece 82/307...
+  energy: 1.365e+03 to 1.438e+03 eV (2881 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 83/307...
+  energy: 1.400e+03 to 1.472e+03 eV (2982 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 84/307...
+  energy: 1.434e+03 to 1.508e+03 eV (2256 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Order=62(21/91)
+Order=64(22/91)
+Order=66(23/91)
+Order=68(24/91)
+Order=70(25/91)
+Found 6 real poles and 11 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 85/307...
+  energy: 1.470e+03 to 1.544e+03 eV (3043 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 15 peaks
+Fitting orders from 30 to 200
+Order=30(0/86)
+Order=32(1/86)
+Order=34(2/86)
+Order=36(3/86)
+Order=38(4/86)
+Order=40(5/86)
+Order=42(6/86)
+Order=44(7/86)
+Order=46(8/86)
+Order=48(9/86)
+Order=50(10/86)
+Order=52(11/86)
+Order=54(12/86)
+Order=56(13/86)
+Order=58(14/86)
+Order=60(15/86)
+Order=62(16/86)
+Order=64(17/86)
+Order=66(18/86)
+Order=68(19/86)
+Order=70(20/86)
+Found 4 real poles and 15 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 86/307...
+  energy: 1.505e+03 to 1.581e+03 eV (3264 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 87/307...
+  energy: 1.541e+03 to 1.617e+03 eV (2848 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 15 peaks
+Fitting orders from 30 to 200
+Order=30(0/86)
+Order=32(1/86)
+Order=34(2/86)
+Order=36(3/86)
+Order=38(4/86)
+Order=40(5/86)
+Order=42(6/86)
+Order=44(7/86)
+Order=46(8/86)
+Order=48(9/86)
+Order=50(10/86)
+Order=52(11/86)
+Order=54(12/86)
+Order=56(13/86)
+Order=58(14/86)
+Order=60(15/86)
+Order=62(16/86)
+Order=64(17/86)
+Order=66(18/86)
+Order=68(19/86)
+Order=70(20/86)
+Found 4 real poles and 16 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 88/307...
+  energy: 1.577e+03 to 1.654e+03 eV (2694 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 89/307...
+  energy: 1.614e+03 to 1.692e+03 eV (3204 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 90/307...
+  energy: 1.651e+03 to 1.731e+03 eV (3268 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 4 real poles and 14 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 91/307...
+  energy: 1.689e+03 to 1.769e+03 eV (3151 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 2 real poles and 15 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 92/307...
+  energy: 1.727e+03 to 1.808e+03 eV (2845 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 6 real poles and 14 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 93/307...
+  energy: 1.766e+03 to 1.847e+03 eV (2746 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 94/307...
+  energy: 1.805e+03 to 1.888e+03 eV (1822 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 7 peaks
+Fitting orders from 14 to 200
+Order=14(0/94)
+Order=16(1/94)
+Order=18(2/94)
+Order=20(3/94)
+Order=22(4/94)
+Order=24(5/94)
+Order=26(6/94)
+Order=28(7/94)
+Order=30(8/94)
+Order=32(9/94)
+Order=34(10/94)
+Order=36(11/94)
+Order=38(12/94)
+Order=40(13/94)
+Order=42(14/94)
+Order=44(15/94)
+Order=46(16/94)
+Order=48(17/94)
+Order=50(18/94)
+Order=52(19/94)
+Order=54(20/94)
+Order=56(21/94)
+Order=58(22/94)
+Order=60(23/94)
+Order=62(24/94)
+Order=64(25/94)
+Order=66(26/94)
+Order=68(27/94)
+Order=70(28/94)
+Found 4 real poles and 8 conjugate complex pairs.
+Final number of poles: 12
+Vector fitting piece 95/307...
+  energy: 1.844e+03 to 1.927e+03 eV (2960 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 2 real poles and 14 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 96/307...
+  energy: 1.883e+03 to 1.968e+03 eV (2799 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 2 real poles and 15 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 97/307...
+  energy: 1.924e+03 to 2.009e+03 eV (2404 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Order=62(20/90)
+Order=64(21/90)
+Order=66(22/90)
+Order=68(23/90)
+Order=70(24/90)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 98/307...
+  energy: 1.964e+03 to 2.050e+03 eV (3203 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 99/307...
+  energy: 2.006e+03 to 2.092e+03 eV (2981 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 100/307...
+  energy: 2.047e+03 to 2.135e+03 eV (2783 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 6 real poles and 12 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 101/307...
+  energy: 2.089e+03 to 2.177e+03 eV (2827 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 10 peaks
+Fitting orders from 20 to 200
+Order=20(0/91)
+Order=22(1/91)
+Order=24(2/91)
+Order=26(3/91)
+Order=28(4/91)
+Order=30(5/91)
+Order=32(6/91)
+Order=34(7/91)
+Order=36(8/91)
+Order=38(9/91)
+Order=40(10/91)
+Order=42(11/91)
+Order=44(12/91)
+Order=46(13/91)
+Order=48(14/91)
+Order=50(15/91)
+Order=52(16/91)
+Order=54(17/91)
+Order=56(18/91)
+Order=58(19/91)
+Order=60(20/91)
+Order=62(21/91)
+Order=64(22/91)
+Order=66(23/91)
+Order=68(24/91)
+Order=70(25/91)
+Found 6 real poles and 11 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 102/307...
+  energy: 2.131e+03 to 2.221e+03 eV (3248 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 103/307...
+  energy: 2.174e+03 to 2.264e+03 eV (2866 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 8 real poles and 13 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 104/307...
+  energy: 2.217e+03 to 2.309e+03 eV (3177 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 2 real poles and 15 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 105/307...
+  energy: 2.261e+03 to 2.353e+03 eV (3090 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Order=62(20/90)
+Order=64(21/90)
+Order=66(22/90)
+Order=68(23/90)
+Order=70(24/90)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 106/307...
+  energy: 2.305e+03 to 2.398e+03 eV (3148 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 4 real poles and 14 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 107/307...
+  energy: 2.349e+03 to 2.443e+03 eV (3901 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 6 real poles and 17 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 108/307...
+  energy: 2.394e+03 to 2.489e+03 eV (3492 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 16 peaks
+Fitting orders from 32 to 200
+Order=32(0/85)
+Order=34(1/85)
+Order=36(2/85)
+Order=38(3/85)
+Order=40(4/85)
+Order=42(5/85)
+Order=44(6/85)
+Order=46(7/85)
+Order=48(8/85)
+Order=50(9/85)
+Order=52(10/85)
+Order=54(11/85)
+Order=56(12/85)
+Order=58(13/85)
+Order=60(14/85)
+Order=62(15/85)
+Order=64(16/85)
+Order=66(17/85)
+Order=68(18/85)
+Order=70(19/85)
+Found 2 real poles and 18 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 109/307...
+  energy: 2.439e+03 to 2.535e+03 eV (3165 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 6 real poles and 14 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 110/307...
+  energy: 2.485e+03 to 2.581e+03 eV (3474 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 15 peaks
+Fitting orders from 30 to 200
+Order=30(0/86)
+Order=32(1/86)
+Order=34(2/86)
+Order=36(3/86)
+Order=38(4/86)
+Order=40(5/86)
+Order=42(6/86)
+Order=44(7/86)
+Order=46(8/86)
+Order=48(9/86)
+Order=50(10/86)
+Order=52(11/86)
+Order=54(12/86)
+Order=56(13/86)
+Order=58(14/86)
+Order=60(15/86)
+Order=62(16/86)
+Order=64(17/86)
+Order=66(18/86)
+Order=68(19/86)
+Order=70(20/86)
+Found 4 real poles and 16 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 111/307...
+  energy: 2.531e+03 to 2.629e+03 eV (3786 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 112/307...
+  energy: 2.578e+03 to 2.676e+03 eV (3820 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 4 real poles and 17 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 113/307...
+  energy: 2.625e+03 to 2.724e+03 eV (3358 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 14 peaks
+Fitting orders from 28 to 200
+Order=28(0/87)
+Order=30(1/87)
+Order=32(2/87)
+Order=34(3/87)
+Order=36(4/87)
+Order=38(5/87)
+Order=40(6/87)
+Order=42(7/87)
+Order=44(8/87)
+Order=46(9/87)
+Order=48(10/87)
+Order=50(11/87)
+Order=52(12/87)
+Order=54(13/87)
+Order=56(14/87)
+Order=58(15/87)
+Order=60(16/87)
+Order=62(17/87)
+Order=64(18/87)
+Order=66(19/87)
+Order=68(20/87)
+Order=70(21/87)
+Found 4 real poles and 15 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 114/307...
+  energy: 2.672e+03 to 2.772e+03 eV (3250 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Found 4 real poles and 12 conjugate complex pairs.
+Final number of poles: 16
+Vector fitting piece 115/307...
+  energy: 2.720e+03 to 2.821e+03 eV (3097 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 6 real poles and 13 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 116/307...
+  energy: 2.768e+03 to 2.870e+03 eV (3207 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 14 peaks
+Fitting orders from 28 to 200
+Order=28(0/87)
+Order=30(1/87)
+Order=32(2/87)
+Order=34(3/87)
+Order=36(4/87)
+Order=38(5/87)
+Order=40(6/87)
+Order=42(7/87)
+Order=44(8/87)
+Order=46(9/87)
+Order=48(10/87)
+Order=50(11/87)
+Order=52(12/87)
+Order=54(13/87)
+Order=56(14/87)
+Order=58(15/87)
+Order=60(16/87)
+Order=62(17/87)
+Order=64(18/87)
+Order=66(19/87)
+Order=68(20/87)
+Order=70(21/87)
+Found 2 real poles and 16 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 117/307...
+  energy: 2.817e+03 to 2.919e+03 eV (3385 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 16 peaks
+Fitting orders from 32 to 200
+Order=32(0/85)
+Order=34(1/85)
+Order=36(2/85)
+Order=38(3/85)
+Order=40(4/85)
+Order=42(5/85)
+Order=44(6/85)
+Order=46(7/85)
+Order=48(8/85)
+Order=50(9/85)
+Order=52(10/85)
+Order=54(11/85)
+Order=56(12/85)
+Order=58(13/85)
+Order=60(14/85)
+Order=62(15/85)
+Order=64(16/85)
+Order=66(17/85)
+Order=68(18/85)
+Order=70(19/85)
+Found 4 real poles and 17 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 118/307...
+  energy: 2.866e+03 to 2.969e+03 eV (3711 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 2 real poles and 18 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 119/307...
+  energy: 2.915e+03 to 3.020e+03 eV (2985 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 12 peaks
+Fitting orders from 24 to 200
+Order=24(0/89)
+Order=26(1/89)
+Order=28(2/89)
+Order=30(3/89)
+Order=32(4/89)
+Order=34(5/89)
+Order=36(6/89)
+Order=38(7/89)
+Order=40(8/89)
+Order=42(9/89)
+Order=44(10/89)
+Order=46(11/89)
+Order=48(12/89)
+Order=50(13/89)
+Order=52(14/89)
+Order=54(15/89)
+Order=56(16/89)
+Order=58(17/89)
+Order=60(18/89)
+Order=62(19/89)
+Order=64(20/89)
+Order=66(21/89)
+Order=68(22/89)
+Order=70(23/89)
+Found 4 real poles and 13 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 120/307...
+  energy: 2.965e+03 to 3.071e+03 eV (2864 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 11 peaks
+Fitting orders from 22 to 200
+Order=22(0/90)
+Order=24(1/90)
+Order=26(2/90)
+Order=28(3/90)
+Order=30(4/90)
+Order=32(5/90)
+Order=34(6/90)
+Order=36(7/90)
+Order=38(8/90)
+Order=40(9/90)
+Order=42(10/90)
+Order=44(11/90)
+Order=46(12/90)
+Order=48(13/90)
+Order=50(14/90)
+Order=52(15/90)
+Order=54(16/90)
+Order=56(17/90)
+Order=58(18/90)
+Order=60(19/90)
+Order=62(20/90)
+Order=64(21/90)
+Order=66(22/90)
+Order=68(23/90)
+Order=70(24/90)
+Found 6 real poles and 11 conjugate complex pairs.
+Final number of poles: 17
+Vector fitting piece 121/307...
+  energy: 3.016e+03 to 3.122e+03 eV (3525 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 16 peaks
+Fitting orders from 32 to 200
+Order=32(0/85)
+Order=34(1/85)
+Order=36(2/85)
+Order=38(3/85)
+Order=40(4/85)
+Order=42(5/85)
+Order=44(6/85)
+Order=46(7/85)
+Order=48(8/85)
+Order=50(9/85)
+Order=52(10/85)
+Order=54(11/85)
+Order=56(12/85)
+Order=58(13/85)
+Order=60(14/85)
+Order=62(15/85)
+Order=64(16/85)
+Order=66(17/85)
+Order=68(18/85)
+Order=70(19/85)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 122/307...
+  energy: 3.067e+03 to 3.174e+03 eV (3343 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 16 peaks
+Fitting orders from 32 to 200
+Order=32(0/85)
+Order=34(1/85)
+Order=36(2/85)
+Order=38(3/85)
+Order=40(4/85)
+Order=42(5/85)
+Order=44(6/85)
+Order=46(7/85)
+Order=48(8/85)
+Order=50(9/85)
+Order=52(10/85)
+Order=54(11/85)
+Order=56(12/85)
+Order=58(13/85)
+Order=60(14/85)
+Order=62(15/85)
+Order=64(16/85)
+Order=66(17/85)
+Order=68(18/85)
+Order=70(19/85)
+Found 6 real poles and 16 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 123/307...
+  energy: 3.118e+03 to 3.226e+03 eV (4019 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 124/307...
+  energy: 3.170e+03 to 3.278e+03 eV (4299 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 19 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 125/307...
+  energy: 3.222e+03 to 3.331e+03 eV (3637 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 6 real poles and 14 conjugate complex pairs.
+Final number of poles: 20
+Vector fitting piece 126/307...
+  energy: 3.274e+03 to 3.385e+03 eV (3841 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 4 real poles and 14 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 127/307...
+  energy: 3.327e+03 to 3.438e+03 eV (3758 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 14 peaks
+Fitting orders from 28 to 200
+Order=28(0/87)
+Order=30(1/87)
+Order=32(2/87)
+Order=34(3/87)
+Order=36(4/87)
+Order=38(5/87)
+Order=40(6/87)
+Order=42(7/87)
+Order=44(8/87)
+Order=46(9/87)
+Order=48(10/87)
+Order=50(11/87)
+Order=52(12/87)
+Order=54(13/87)
+Order=56(14/87)
+Order=58(15/87)
+Order=60(16/87)
+Order=62(17/87)
+Order=64(18/87)
+Order=66(19/87)
+Order=68(20/87)
+Order=70(21/87)
+Found 4 real poles and 15 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 128/307...
+  energy: 3.381e+03 to 3.493e+03 eV (3488 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Found 4 real poles and 14 conjugate complex pairs.
+Final number of poles: 18
+Vector fitting piece 129/307...
+  energy: 3.434e+03 to 3.547e+03 eV (3289 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 14 peaks
+Fitting orders from 28 to 200
+Order=28(0/87)
+Order=30(1/87)
+Order=32(2/87)
+Order=34(3/87)
+Order=36(4/87)
+Order=38(5/87)
+Order=40(6/87)
+Order=42(7/87)
+Order=44(8/87)
+Order=46(9/87)
+Order=48(10/87)
+Order=50(11/87)
+Order=52(12/87)
+Order=54(13/87)
+Order=56(14/87)
+Order=58(15/87)
+Order=60(16/87)
+Order=62(17/87)
+Order=64(18/87)
+Order=66(19/87)
+Order=68(20/87)
+Order=70(21/87)
+Found 4 real poles and 15 conjugate complex pairs.
+Final number of poles: 19
+Vector fitting piece 130/307...
+  energy: 3.488e+03 to 3.603e+03 eV (3619 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 17 peaks
+Fitting orders from 34 to 200
+Order=34(0/84)
+Order=36(1/84)
+Order=38(2/84)
+Order=40(3/84)
+Order=42(4/84)
+Order=44(5/84)
+Order=46(6/84)
+Order=48(7/84)
+Order=50(8/84)
+Order=52(9/84)
+Order=54(10/84)
+Order=56(11/84)
+Order=58(12/84)
+Order=60(13/84)
+Order=62(14/84)
+Order=64(15/84)
+Order=66(16/84)
+Order=68(17/84)
+Order=70(18/84)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 131/307...
+  energy: 3.543e+03 to 3.658e+03 eV (3951 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 132/307...
+  energy: 3.598e+03 to 3.714e+03 eV (2987 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 13 peaks
+Fitting orders from 26 to 200
+Order=26(0/88)
+Order=28(1/88)
+Order=30(2/88)
+Order=32(3/88)
+Order=34(4/88)
+Order=36(5/88)
+Order=38(6/88)
+Order=40(7/88)
+Order=42(8/88)
+Order=44(9/88)
+Order=46(10/88)
+Order=48(11/88)
+Order=50(12/88)
+Order=52(13/88)
+Order=54(14/88)
+Order=56(15/88)
+Order=58(16/88)
+Order=60(17/88)
+Order=62(18/88)
+Order=64(19/88)
+Order=66(20/88)
+Order=68(21/88)
+Order=70(22/88)
+Found 6 real poles and 15 conjugate complex pairs.
+Final number of poles: 21
+Vector fitting piece 133/307...
+  energy: 3.654e+03 to 3.770e+03 eV (3981 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 19 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 134/307...
+  energy: 3.710e+03 to 3.827e+03 eV (3708 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 16 peaks
+Fitting orders from 32 to 200
+Order=32(0/85)
+Order=34(1/85)
+Order=36(2/85)
+Order=38(3/85)
+Order=40(4/85)
+Order=42(5/85)
+Order=44(6/85)
+Order=46(7/85)
+Order=48(8/85)
+Order=50(9/85)
+Order=52(10/85)
+Order=54(11/85)
+Order=56(12/85)
+Order=58(13/85)
+Order=60(14/85)
+Order=62(15/85)
+Order=64(16/85)
+Order=66(17/85)
+Order=68(18/85)
+Order=70(19/85)
+Found 6 real poles and 16 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 135/307...
+  energy: 3.766e+03 to 3.885e+03 eV (3692 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 19 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 136/307...
+  energy: 3.822e+03 to 3.942e+03 eV (4398 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 20 peaks
+Fitting orders from 40 to 200
+Order=40(0/81)
+Order=42(1/81)
+Order=44(2/81)
+Order=46(3/81)
+Order=48(4/81)
+Order=50(5/81)
+Order=52(6/81)
+Order=54(7/81)
+Order=56(8/81)
+Order=58(9/81)
+Order=60(10/81)
+Order=62(11/81)
+Order=64(12/81)
+Order=66(13/81)
+Order=68(14/81)
+Order=70(15/81)
+Found 2 real poles and 21 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 137/307...
+  energy: 3.880e+03 to 4.000e+03 eV (3947 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 18 conjugate complex pairs.
+Final number of poles: 22
+Vector fitting piece 138/307...
+  energy: 3.937e+03 to 4.059e+03 eV (3890 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 20 peaks
+Fitting orders from 40 to 200
+Order=40(0/81)
+Order=42(1/81)
+Order=44(2/81)
+Order=46(3/81)
+Order=48(4/81)
+Order=50(5/81)
+Order=52(6/81)
+Order=54(7/81)
+Order=56(8/81)
+Order=58(9/81)
+Order=60(10/81)
+Order=62(11/81)
+Order=64(12/81)
+Order=66(13/81)
+Order=68(14/81)
+Order=70(15/81)
+Found 4 real poles and 20 conjugate complex pairs.
+Final number of poles: 24
+Vector fitting piece 139/307...
+  energy: 3.995e+03 to 4.118e+03 eV (3920 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 6 real poles and 22 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 140/307...
+  energy: 4.054e+03 to 4.177e+03 eV (3970 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 21 peaks
+Fitting orders from 42 to 200
+Order=42(0/80)
+Order=44(1/80)
+Order=46(2/80)
+Order=48(3/80)
+Order=50(4/80)
+Order=52(5/80)
+Order=54(6/80)
+Order=56(7/80)
+Order=58(8/80)
+Order=60(9/80)
+Order=62(10/80)
+Order=64(11/80)
+Order=66(12/80)
+Order=68(13/80)
+Order=70(14/80)
+Found 8 real poles and 21 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 141/307...
+  energy: 4.113e+03 to 4.236e+03 eV (4079 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 142/307...
+  energy: 4.172e+03 to 4.297e+03 eV (3683 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 4 real poles and 24 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 143/307...
+  energy: 4.232e+03 to 4.358e+03 eV (4397 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 144/307...
+  energy: 4.292e+03 to 4.419e+03 eV (4903 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 145/307...
+  energy: 4.352e+03 to 4.480e+03 eV (4551 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 28 peaks
+Fitting orders from 56 to 200
+Order=56(0/73)
+Order=58(1/73)
+Order=60(2/73)
+Order=62(3/73)
+Order=64(4/73)
+Order=66(5/73)
+Order=68(6/73)
+Order=70(7/73)
+Order=72(8/73)
+Order=74(9/73)
+Order=76(10/73)
+Order=78(11/73)
+Order=80(12/73)
+Found 4 real poles and 28 conjugate complex pairs.
+Final number of poles: 32
+Vector fitting piece 146/307...
+  energy: 4.413e+03 to 4.541e+03 eV (4526 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 30 peaks
+Fitting orders from 60 to 200
+Order=60(0/71)
+Order=62(1/71)
+Order=64(2/71)
+Order=66(3/71)
+Order=68(4/71)
+Order=70(5/71)
+Order=72(6/71)
+Order=74(7/71)
+Order=76(8/71)
+Order=78(9/71)
+Order=80(10/71)
+Order=82(11/71)
+Order=84(12/71)
+Order=86(13/71)
+Order=88(14/71)
+Found 4 real poles and 32 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 147/307...
+  energy: 4.475e+03 to 4.604e+03 eV (4362 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Order=78(14/76)
+Found 2 real poles and 28 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 148/307...
+  energy: 4.537e+03 to 4.666e+03 eV (4771 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Found 4 real poles and 27 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 149/307...
+  energy: 4.599e+03 to 4.730e+03 eV (4808 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Order=80(13/74)
+Found 4 real poles and 28 conjugate complex pairs.
+Final number of poles: 32
+Vector fitting piece 150/307...
+  energy: 4.662e+03 to 4.793e+03 eV (4403 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 4 real poles and 24 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 151/307...
+  energy: 4.725e+03 to 4.857e+03 eV (4423 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 152/307...
+  energy: 4.788e+03 to 4.922e+03 eV (4498 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 21 peaks
+Fitting orders from 42 to 200
+Order=42(0/80)
+Order=44(1/80)
+Order=46(2/80)
+Order=48(3/80)
+Order=50(4/80)
+Order=52(5/80)
+Order=54(6/80)
+Order=56(7/80)
+Order=58(8/80)
+Order=60(9/80)
+Order=62(10/80)
+Order=64(11/80)
+Order=66(12/80)
+Order=68(13/80)
+Order=70(14/80)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 153/307...
+  energy: 4.852e+03 to 4.987e+03 eV (4295 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 4 real poles and 19 conjugate complex pairs.
+Final number of poles: 23
+Vector fitting piece 154/307...
+  energy: 4.917e+03 to 5.052e+03 eV (3925 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 18 peaks
+Fitting orders from 36 to 200
+Order=36(0/83)
+Order=38(1/83)
+Order=40(2/83)
+Order=42(3/83)
+Order=44(4/83)
+Order=46(5/83)
+Order=48(6/83)
+Order=50(7/83)
+Order=52(8/83)
+Order=54(9/83)
+Order=56(10/83)
+Order=58(11/83)
+Order=60(12/83)
+Order=62(13/83)
+Order=64(14/83)
+Order=66(15/83)
+Order=68(16/83)
+Order=70(17/83)
+Found 6 real poles and 19 conjugate complex pairs.
+Final number of poles: 25
+Vector fitting piece 155/307...
+  energy: 4.981e+03 to 5.117e+03 eV (4324 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 2 real poles and 25 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 156/307...
+  energy: 5.047e+03 to 5.184e+03 eV (4442 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Found 4 real poles and 24 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 157/307...
+  energy: 5.112e+03 to 5.250e+03 eV (3917 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 20 peaks
+Fitting orders from 40 to 200
+Order=40(0/81)
+Order=42(1/81)
+Order=44(2/81)
+Order=46(3/81)
+Order=48(4/81)
+Order=50(5/81)
+Order=52(6/81)
+Order=54(7/81)
+Order=56(8/81)
+Order=58(9/81)
+Order=60(10/81)
+Order=62(11/81)
+Order=64(12/81)
+Order=66(13/81)
+Order=68(14/81)
+Order=70(15/81)
+Found 4 real poles and 21 conjugate complex pairs.
+Final number of poles: 25
+Vector fitting piece 158/307...
+  energy: 5.178e+03 to 5.318e+03 eV (4333 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 4 real poles and 24 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 159/307...
+  energy: 5.245e+03 to 5.385e+03 eV (3952 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 19 peaks
+Fitting orders from 38 to 200
+Order=38(0/82)
+Order=40(1/82)
+Order=42(2/82)
+Order=44(3/82)
+Order=46(4/82)
+Order=48(5/82)
+Order=50(6/82)
+Order=52(7/82)
+Order=54(8/82)
+Order=56(9/82)
+Order=58(10/82)
+Order=60(11/82)
+Order=62(12/82)
+Order=64(13/82)
+Order=66(14/82)
+Order=68(15/82)
+Order=70(16/82)
+Found 4 real poles and 21 conjugate complex pairs.
+Final number of poles: 25
+Vector fitting piece 160/307...
+  energy: 5.312e+03 to 5.452e+03 eV (3721 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 20 peaks
+Fitting orders from 40 to 200
+Order=40(0/81)
+Order=42(1/81)
+Order=44(2/81)
+Order=46(3/81)
+Order=48(4/81)
+Order=50(5/81)
+Order=52(6/81)
+Order=54(7/81)
+Order=56(8/81)
+Order=58(9/81)
+Order=60(10/81)
+Order=62(11/81)
+Order=64(12/81)
+Order=66(13/81)
+Order=68(14/81)
+Order=70(15/81)
+Found 4 real poles and 21 conjugate complex pairs.
+Final number of poles: 25
+Vector fitting piece 161/307...
+  energy: 5.379e+03 to 5.521e+03 eV (4212 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Found 6 real poles and 24 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 162/307...
+  energy: 5.447e+03 to 5.590e+03 eV (4298 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Order=72(14/79)
+Order=74(15/79)
+Found 6 real poles and 24 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 163/307...
+  energy: 5.515e+03 to 5.658e+03 eV (3899 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 20 peaks
+Fitting orders from 40 to 200
+Order=40(0/81)
+Order=42(1/81)
+Order=44(2/81)
+Order=46(3/81)
+Order=48(4/81)
+Order=50(5/81)
+Order=52(6/81)
+Order=54(7/81)
+Order=56(8/81)
+Order=58(9/81)
+Order=60(10/81)
+Order=62(11/81)
+Order=64(12/81)
+Order=66(13/81)
+Order=68(14/81)
+Order=70(15/81)
+Order=72(16/81)
+Order=74(17/81)
+Found 6 real poles and 24 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 164/307...
+  energy: 5.584e+03 to 5.728e+03 eV (4492 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Order=76(14/77)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 165/307...
+  energy: 5.653e+03 to 5.798e+03 eV (5202 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Order=80(13/74)
+Order=82(14/74)
+Found 4 real poles and 29 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 166/307...
+  energy: 5.722e+03 to 5.868e+03 eV (5387 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Order=80(13/74)
+Found 6 real poles and 27 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 167/307...
+  energy: 5.792e+03 to 5.939e+03 eV (4911 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 168/307...
+  energy: 5.863e+03 to 6.010e+03 eV (4390 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Order=72(14/79)
+Found 6 real poles and 23 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 169/307...
+  energy: 5.933e+03 to 6.082e+03 eV (4388 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 21 peaks
+Fitting orders from 42 to 200
+Order=42(0/80)
+Order=44(1/80)
+Order=46(2/80)
+Order=48(3/80)
+Order=50(4/80)
+Order=52(5/80)
+Order=54(6/80)
+Order=56(7/80)
+Order=58(8/80)
+Order=60(9/80)
+Order=62(10/80)
+Order=64(11/80)
+Order=66(12/80)
+Order=68(13/80)
+Order=70(14/80)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 170/307...
+  energy: 6.005e+03 to 6.154e+03 eV (4123 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Order=72(14/79)
+Order=74(15/79)
+Found 8 real poles and 23 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 171/307...
+  energy: 6.076e+03 to 6.227e+03 eV (4415 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Found 6 real poles and 24 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 172/307...
+  energy: 6.148e+03 to 6.299e+03 eV (4658 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 173/307...
+  energy: 6.221e+03 to 6.373e+03 eV (4516 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 6 real poles and 25 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 174/307...
+  energy: 6.294e+03 to 6.446e+03 eV (4263 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 175/307...
+  energy: 6.367e+03 to 6.520e+03 eV (4100 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 176/307...
+  energy: 6.440e+03 to 6.595e+03 eV (4605 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 177/307...
+  energy: 6.515e+03 to 6.670e+03 eV (4440 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 6 real poles and 23 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 178/307...
+  energy: 6.589e+03 to 6.745e+03 eV (4383 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 179/307...
+  energy: 6.664e+03 to 6.821e+03 eV (4433 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Order=76(14/77)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 180/307...
+  energy: 6.739e+03 to 6.898e+03 eV (5014 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 6 real poles and 25 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 181/307...
+  energy: 6.816e+03 to 6.975e+03 eV (5336 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Found 4 real poles and 27 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 182/307...
+  energy: 6.892e+03 to 7.052e+03 eV (4964 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 183/307...
+  energy: 6.969e+03 to 7.129e+03 eV (4583 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 184/307...
+  energy: 7.045e+03 to 7.207e+03 eV (4659 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Found 6 real poles and 23 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 185/307...
+  energy: 7.123e+03 to 7.286e+03 eV (4816 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Order=76(14/77)
+Found 2 real poles and 27 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 186/307...
+  energy: 7.201e+03 to 7.364e+03 eV (4683 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 23 peaks
+Fitting orders from 46 to 200
+Order=46(0/78)
+Order=48(1/78)
+Order=50(2/78)
+Order=52(3/78)
+Order=54(4/78)
+Order=56(5/78)
+Order=58(6/78)
+Order=60(7/78)
+Order=62(8/78)
+Order=64(9/78)
+Order=66(10/78)
+Order=68(11/78)
+Order=70(12/78)
+Order=72(13/78)
+Order=74(14/78)
+Found 4 real poles and 25 conjugate complex pairs.
+Final number of poles: 29
+Vector fitting piece 187/307...
+  energy: 7.280e+03 to 7.444e+03 eV (4916 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Order=80(14/75)
+Found 4 real poles and 28 conjugate complex pairs.
+Final number of poles: 32
+Vector fitting piece 188/307...
+  energy: 7.358e+03 to 7.523e+03 eV (4464 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Order=76(14/77)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 189/307...
+  energy: 7.438e+03 to 7.604e+03 eV (4421 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Order=72(14/79)
+Found 4 real poles and 24 conjugate complex pairs.
+Final number of poles: 28
+Vector fitting piece 190/307...
+  energy: 7.517e+03 to 7.684e+03 eV (4671 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 21 peaks
+Fitting orders from 42 to 200
+Order=42(0/80)
+Order=44(1/80)
+Order=46(2/80)
+Order=48(3/80)
+Order=50(4/80)
+Order=52(5/80)
+Order=54(6/80)
+Order=56(7/80)
+Order=58(8/80)
+Order=60(9/80)
+Order=62(10/80)
+Order=64(11/80)
+Order=66(12/80)
+Order=68(13/80)
+Order=70(14/80)
+Found 6 real poles and 21 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 191/307...
+  energy: 7.597e+03 to 7.765e+03 eV (4744 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 24 peaks
+Fitting orders from 48 to 200
+Order=48(0/77)
+Order=50(1/77)
+Order=52(2/77)
+Order=54(3/77)
+Order=56(4/77)
+Order=58(5/77)
+Order=60(6/77)
+Order=62(7/77)
+Order=64(8/77)
+Order=66(9/77)
+Order=68(10/77)
+Order=70(11/77)
+Order=72(12/77)
+Order=74(13/77)
+Order=76(14/77)
+Found 6 real poles and 25 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 192/307...
+  energy: 7.678e+03 to 7.847e+03 eV (5281 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Found 4 real poles and 27 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 193/307...
+  energy: 7.759e+03 to 7.928e+03 eV (5057 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Order=80(13/74)
+Found 4 real poles and 28 conjugate complex pairs.
+Final number of poles: 32
+Vector fitting piece 194/307...
+  energy: 7.840e+03 to 8.012e+03 eV (5744 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 6 real poles and 33 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 195/307...
+  energy: 7.922e+03 to 8.093e+03 eV (5058 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 27 peaks
+Fitting orders from 54 to 200
+Order=54(0/74)
+Order=56(1/74)
+Order=58(2/74)
+Order=60(3/74)
+Order=62(4/74)
+Order=64(5/74)
+Order=66(6/74)
+Order=68(7/74)
+Order=70(8/74)
+Order=72(9/74)
+Order=74(10/74)
+Order=76(11/74)
+Order=78(12/74)
+Order=80(13/74)
+Found 4 real poles and 28 conjugate complex pairs.
+Final number of poles: 32
+Vector fitting piece 196/307...
+  energy: 8.004e+03 to 8.177e+03 eV (4772 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 25 peaks
+Fitting orders from 50 to 200
+Order=50(0/76)
+Order=52(1/76)
+Order=54(2/76)
+Order=56(3/76)
+Order=58(4/76)
+Order=60(5/76)
+Order=62(6/76)
+Order=64(7/76)
+Order=66(8/76)
+Order=68(9/76)
+Order=70(10/76)
+Order=72(11/76)
+Order=74(12/76)
+Order=76(13/76)
+Found 4 real poles and 26 conjugate complex pairs.
+Final number of poles: 30
+Vector fitting piece 197/307...
+  energy: 8.087e+03 to 8.260e+03 eV (5228 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 28 peaks
+Fitting orders from 56 to 200
+Order=56(0/73)
+Order=58(1/73)
+Order=60(2/73)
+Order=62(3/73)
+Order=64(4/73)
+Order=66(5/73)
+Order=68(6/73)
+Order=70(7/73)
+Order=72(8/73)
+Order=74(9/73)
+Order=76(10/73)
+Order=78(11/73)
+Order=80(12/73)
+Order=82(13/73)
+Found 4 real poles and 29 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 198/307...
+  energy: 8.170e+03 to 8.344e+03 eV (4618 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 199/307...
+  energy: 8.253e+03 to 8.428e+03 eV (4497 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 22 peaks
+Fitting orders from 44 to 200
+Order=44(0/79)
+Order=46(1/79)
+Order=48(2/79)
+Order=50(3/79)
+Order=52(4/79)
+Order=54(5/79)
+Order=56(6/79)
+Order=58(7/79)
+Order=60(8/79)
+Order=62(9/79)
+Order=64(10/79)
+Order=66(11/79)
+Order=68(12/79)
+Order=70(13/79)
+Found 4 real poles and 23 conjugate complex pairs.
+Final number of poles: 27
+Vector fitting piece 200/307...
+  energy: 8.337e+03 to 8.513e+03 eV (4486 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Found 4 real poles and 27 conjugate complex pairs.
+Final number of poles: 31
+Vector fitting piece 201/307...
+  energy: 8.422e+03 to 8.598e+03 eV (4514 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Order=80(14/75)
+Found 6 real poles and 27 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 202/307...
+  energy: 8.506e+03 to 8.684e+03 eV (5084 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 28 peaks
+Fitting orders from 56 to 200
+Order=56(0/73)
+Order=58(1/73)
+Order=60(2/73)
+Order=62(3/73)
+Order=64(4/73)
+Order=66(5/73)
+Order=68(6/73)
+Order=70(7/73)
+Order=72(8/73)
+Order=74(9/73)
+Order=76(10/73)
+Order=78(11/73)
+Order=80(12/73)
+Order=82(13/73)
+Found 6 real poles and 28 conjugate complex pairs.
+Final number of poles: 34
+Vector fitting piece 203/307...
+  energy: 8.591e+03 to 8.770e+03 eV (5124 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 28 peaks
+Fitting orders from 56 to 200
+Order=56(0/73)
+Order=58(1/73)
+Order=60(2/73)
+Order=62(3/73)
+Order=64(4/73)
+Order=66(5/73)
+Order=68(6/73)
+Order=70(7/73)
+Order=72(8/73)
+Order=74(9/73)
+Order=76(10/73)
+Order=78(11/73)
+Order=80(12/73)
+Order=82(13/73)
+Found 6 real poles and 28 conjugate complex pairs.
+Final number of poles: 34
+Vector fitting piece 204/307...
+  energy: 8.677e+03 to 8.856e+03 eV (4856 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Order=80(14/75)
+Found 6 real poles and 27 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 205/307...
+  energy: 8.763e+03 to 8.943e+03 eV (5352 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 30 peaks
+Fitting orders from 60 to 200
+Order=60(0/71)
+Order=62(1/71)
+Order=64(2/71)
+Order=66(3/71)
+Order=68(4/71)
+Order=70(5/71)
+Order=72(6/71)
+Order=74(7/71)
+Order=76(8/71)
+Order=78(9/71)
+Order=80(10/71)
+Order=82(11/71)
+Order=84(12/71)
+Order=86(13/71)
+Order=88(14/71)
+Found 6 real poles and 31 conjugate complex pairs.
+Final number of poles: 37
+Vector fitting piece 206/307...
+  energy: 8.850e+03 to 9.031e+03 eV (5863 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 6 real poles and 33 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 207/307...
+  energy: 8.936e+03 to 9.119e+03 eV (6046 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Order=94(13/67)
+Found 6 real poles and 34 conjugate complex pairs.
+Final number of poles: 40
+Vector fitting piece 208/307...
+  energy: 9.024e+03 to 9.206e+03 eV (5869 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Order=94(14/68)
+Found 6 real poles and 34 conjugate complex pairs.
+Final number of poles: 40
+Vector fitting piece 209/307...
+  energy: 9.111e+03 to 9.295e+03 eV (5382 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 31 peaks
+Fitting orders from 62 to 200
+Order=62(0/70)
+Order=64(1/70)
+Order=66(2/70)
+Order=68(3/70)
+Order=70(4/70)
+Order=72(5/70)
+Order=74(6/70)
+Order=76(7/70)
+Order=78(8/70)
+Order=80(9/70)
+Order=82(10/70)
+Order=84(11/70)
+Order=86(12/70)
+Order=88(13/70)
+Order=90(14/70)
+Found 4 real poles and 33 conjugate complex pairs.
+Final number of poles: 37
+Vector fitting piece 210/307...
+  energy: 9.200e+03 to 9.384e+03 eV (5143 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 31 peaks
+Fitting orders from 62 to 200
+Order=62(0/70)
+Order=64(1/70)
+Order=66(2/70)
+Order=68(3/70)
+Order=70(4/70)
+Order=72(5/70)
+Order=74(6/70)
+Order=76(7/70)
+Order=78(8/70)
+Order=80(9/70)
+Order=82(10/70)
+Order=84(11/70)
+Order=86(12/70)
+Order=88(13/70)
+Found 3 real poles and 33 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 211/307...
+  energy: 9.288e+03 to 9.474e+03 eV (5579 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Order=94(13/67)
+Order=96(14/67)
+Found 4 real poles and 36 conjugate complex pairs.
+Final number of poles: 40
+Vector fitting piece 212/307...
+  energy: 9.377e+03 to 9.563e+03 eV (5641 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Found 6 real poles and 35 conjugate complex pairs.
+Final number of poles: 41
+Vector fitting piece 213/307...
+  energy: 9.467e+03 to 9.654e+03 eV (5522 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 31 peaks
+Fitting orders from 62 to 200
+Order=62(0/70)
+Order=64(1/70)
+Order=66(2/70)
+Order=68(3/70)
+Order=70(4/70)
+Order=72(5/70)
+Order=74(6/70)
+Order=76(7/70)
+Order=78(8/70)
+Order=80(9/70)
+Order=82(10/70)
+Order=84(11/70)
+Order=86(12/70)
+Order=88(13/70)
+Found 4 real poles and 32 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 214/307...
+  energy: 9.557e+03 to 9.744e+03 eV (5600 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 31 peaks
+Fitting orders from 62 to 200
+Order=62(0/70)
+Order=64(1/70)
+Order=66(2/70)
+Order=68(3/70)
+Order=70(4/70)
+Order=72(5/70)
+Order=74(6/70)
+Order=76(7/70)
+Order=78(8/70)
+Order=80(9/70)
+Order=82(10/70)
+Order=84(11/70)
+Order=86(12/70)
+Order=88(13/70)
+Found 4 real poles and 32 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 215/307...
+  energy: 9.647e+03 to 9.836e+03 eV (5805 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 32 peaks
+Fitting orders from 64 to 200
+Order=64(0/69)
+Order=66(1/69)
+Order=68(2/69)
+Order=70(3/69)
+Order=72(4/69)
+Order=74(5/69)
+Order=76(6/69)
+Order=78(7/69)
+Order=80(8/69)
+Order=82(9/69)
+Order=84(10/69)
+Order=86(11/69)
+Order=88(12/69)
+Order=90(13/69)
+Found 6 real poles and 32 conjugate complex pairs.
+Final number of poles: 38
+Vector fitting piece 216/307...
+  energy: 9.738e+03 to 9.928e+03 eV (5635 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Order=94(13/67)
+Found 4 real poles and 35 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 217/307...
+  energy: 9.829e+03 to 1.002e+04 eV (6121 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 37 peaks
+Fitting orders from 74 to 200
+Order=74(0/64)
+Order=76(1/64)
+Order=78(2/64)
+Order=80(3/64)
+Order=82(4/64)
+Order=84(5/64)
+Order=86(6/64)
+Order=88(7/64)
+Order=90(8/64)
+Order=92(9/64)
+Order=94(10/64)
+Order=96(11/64)
+Order=98(12/64)
+Order=100(13/64)
+Found 6 real poles and 37 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 218/307...
+  energy: 9.920e+03 to 1.011e+04 eV (5982 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Found 4 real poles and 33 conjugate complex pairs.
+Final number of poles: 37
+Vector fitting piece 219/307...
+  energy: 1.001e+04 to 1.020e+04 eV (5523 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 30 peaks
+Fitting orders from 60 to 200
+Order=60(0/71)
+Order=62(1/71)
+Order=64(2/71)
+Order=66(3/71)
+Order=68(4/71)
+Order=70(5/71)
+Order=72(6/71)
+Order=74(7/71)
+Order=76(8/71)
+Order=78(9/71)
+Order=80(10/71)
+Order=82(11/71)
+Order=84(12/71)
+Order=86(13/71)
+Order=88(14/71)
+Found 4 real poles and 32 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 220/307...
+  energy: 1.010e+04 to 1.030e+04 eV (6330 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 38 peaks
+Fitting orders from 76 to 200
+Order=76(0/63)
+Order=78(1/63)
+Order=80(2/63)
+Order=82(3/63)
+Order=84(4/63)
+Order=86(5/63)
+Order=88(6/63)
+Order=90(7/63)
+Order=92(8/63)
+Order=94(9/63)
+Order=96(10/63)
+Order=98(11/63)
+Order=100(12/63)
+Found 4 real poles and 38 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 221/307...
+  energy: 1.020e+04 to 1.039e+04 eV (5732 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Order=98(14/66)
+Found 6 real poles and 36 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 222/307...
+  energy: 1.029e+04 to 1.049e+04 eV (4835 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Order=86(14/72)
+Found 6 real poles and 30 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 223/307...
+  energy: 1.038e+04 to 1.058e+04 eV (4935 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Found 4 real poles and 30 conjugate complex pairs.
+Final number of poles: 34
+Vector fitting piece 224/307...
+  energy: 1.048e+04 to 1.068e+04 eV (5486 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Found 6 real poles and 29 conjugate complex pairs.
+Final number of poles: 35
+Vector fitting piece 225/307...
+  energy: 1.057e+04 to 1.077e+04 eV (5882 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 4 real poles and 34 conjugate complex pairs.
+Final number of poles: 38
+Vector fitting piece 226/307...
+  energy: 1.067e+04 to 1.087e+04 eV (5708 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Order=94(13/67)
+Order=96(14/67)
+Found 8 real poles and 34 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 227/307...
+  energy: 1.076e+04 to 1.096e+04 eV (5133 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Found 6 real poles and 29 conjugate complex pairs.
+Final number of poles: 35
+Vector fitting piece 228/307...
+  energy: 1.086e+04 to 1.106e+04 eV (5075 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Found 4 real poles and 30 conjugate complex pairs.
+Final number of poles: 34
+Vector fitting piece 229/307...
+  energy: 1.096e+04 to 1.116e+04 eV (5968 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Found 4 real poles and 35 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 230/307...
+  energy: 1.105e+04 to 1.125e+04 eV (6107 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Found 4 real poles and 38 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 231/307...
+  energy: 1.115e+04 to 1.135e+04 eV (5821 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Order=94(14/68)
+Found 4 real poles and 35 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 232/307...
+  energy: 1.125e+04 to 1.145e+04 eV (5903 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Order=98(14/66)
+Found 4 real poles and 37 conjugate complex pairs.
+Final number of poles: 41
+Vector fitting piece 233/307...
+  energy: 1.134e+04 to 1.155e+04 eV (6618 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 41 peaks
+Fitting orders from 82 to 200
+Order=82(0/60)
+Order=84(1/60)
+Order=86(2/60)
+Order=88(3/60)
+Order=90(4/60)
+Order=92(5/60)
+Order=94(6/60)
+Order=96(7/60)
+Order=98(8/60)
+Order=100(9/60)
+Order=102(10/60)
+Order=104(11/60)
+Order=106(12/60)
+Order=108(13/60)
+Order=110(14/60)
+Found 6 real poles and 42 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 234/307...
+  energy: 1.144e+04 to 1.165e+04 eV (6644 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Found 6 real poles and 40 conjugate complex pairs.
+Final number of poles: 46
+Vector fitting piece 235/307...
+  energy: 1.154e+04 to 1.175e+04 eV (6438 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Found 6 real poles and 37 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 236/307...
+  energy: 1.164e+04 to 1.185e+04 eV (6633 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 39 peaks
+Fitting orders from 78 to 200
+Order=78(0/62)
+Order=80(1/62)
+Order=82(2/62)
+Order=84(3/62)
+Order=86(4/62)
+Order=88(5/62)
+Order=90(6/62)
+Order=92(7/62)
+Order=94(8/62)
+Order=96(9/62)
+Order=98(10/62)
+Order=100(11/62)
+Order=102(12/62)
+Order=104(13/62)
+Order=106(14/62)
+Found 8 real poles and 39 conjugate complex pairs.
+Final number of poles: 47
+Vector fitting piece 237/307...
+  energy: 1.174e+04 to 1.195e+04 eV (6017 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Found 6 real poles and 37 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 238/307...
+  energy: 1.184e+04 to 1.205e+04 eV (5608 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 31 peaks
+Fitting orders from 62 to 200
+Order=62(0/70)
+Order=64(1/70)
+Order=66(2/70)
+Order=68(3/70)
+Order=70(4/70)
+Order=72(5/70)
+Order=74(6/70)
+Order=76(7/70)
+Order=78(8/70)
+Order=80(9/70)
+Order=82(10/70)
+Order=84(11/70)
+Order=86(12/70)
+Order=88(13/70)
+Order=90(14/70)
+Found 4 real poles and 33 conjugate complex pairs.
+Final number of poles: 37
+Vector fitting piece 239/307...
+  energy: 1.194e+04 to 1.215e+04 eV (6009 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Found 4 real poles and 34 conjugate complex pairs.
+Final number of poles: 38
+Vector fitting piece 240/307...
+  energy: 1.204e+04 to 1.225e+04 eV (5101 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Order=86(14/72)
+Found 6 real poles and 30 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 241/307...
+  energy: 1.214e+04 to 1.235e+04 eV (4692 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 26 peaks
+Fitting orders from 52 to 200
+Order=52(0/75)
+Order=54(1/75)
+Order=56(2/75)
+Order=58(3/75)
+Order=60(4/75)
+Order=62(5/75)
+Order=64(6/75)
+Order=66(7/75)
+Order=68(8/75)
+Order=70(9/75)
+Order=72(10/75)
+Order=74(11/75)
+Order=76(12/75)
+Order=78(13/75)
+Order=80(14/75)
+Found 6 real poles and 27 conjugate complex pairs.
+Final number of poles: 33
+Vector fitting piece 242/307...
+  energy: 1.224e+04 to 1.246e+04 eV (5049 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 29 peaks
+Fitting orders from 58 to 200
+Order=58(0/72)
+Order=60(1/72)
+Order=62(2/72)
+Order=64(3/72)
+Order=66(4/72)
+Order=68(5/72)
+Order=70(6/72)
+Order=72(7/72)
+Order=74(8/72)
+Order=76(9/72)
+Order=78(10/72)
+Order=80(11/72)
+Order=82(12/72)
+Order=84(13/72)
+Found 6 real poles and 29 conjugate complex pairs.
+Final number of poles: 35
+Vector fitting piece 243/307...
+  energy: 1.235e+04 to 1.256e+04 eV (5577 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 6 real poles and 33 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 244/307...
+  energy: 1.245e+04 to 1.266e+04 eV (5644 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 32 peaks
+Fitting orders from 64 to 200
+Order=64(0/69)
+Order=66(1/69)
+Order=68(2/69)
+Order=70(3/69)
+Order=72(4/69)
+Order=74(5/69)
+Order=76(6/69)
+Order=78(7/69)
+Order=80(8/69)
+Order=82(9/69)
+Order=84(10/69)
+Order=86(11/69)
+Order=88(12/69)
+Found 4 real poles and 32 conjugate complex pairs.
+Final number of poles: 36
+Vector fitting piece 245/307...
+  energy: 1.255e+04 to 1.277e+04 eV (5614 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 4 real poles and 34 conjugate complex pairs.
+Final number of poles: 38
+Vector fitting piece 246/307...
+  energy: 1.266e+04 to 1.287e+04 eV (6500 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 41 peaks
+Fitting orders from 82 to 200
+Order=82(0/60)
+Order=84(1/60)
+Order=86(2/60)
+Order=88(3/60)
+Order=90(4/60)
+Order=92(5/60)
+Order=94(6/60)
+Order=96(7/60)
+Order=98(8/60)
+Order=100(9/60)
+Order=102(10/60)
+Order=104(11/60)
+Order=106(12/60)
+Order=108(13/60)
+Found 2 real poles and 43 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 247/307...
+  energy: 1.276e+04 to 1.298e+04 eV (6386 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Order=108(14/61)
+Order=110(15/61)
+Found 6 real poles and 42 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 248/307...
+  energy: 1.286e+04 to 1.308e+04 eV (6393 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Found 6 real poles and 40 conjugate complex pairs.
+Final number of poles: 46
+Vector fitting piece 249/307...
+  energy: 1.297e+04 to 1.319e+04 eV (6505 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 39 peaks
+Fitting orders from 78 to 200
+Order=78(0/62)
+Order=80(1/62)
+Order=82(2/62)
+Order=84(3/62)
+Order=86(4/62)
+Order=88(5/62)
+Order=90(6/62)
+Order=92(7/62)
+Order=94(8/62)
+Order=96(9/62)
+Order=98(10/62)
+Order=100(11/62)
+Order=102(12/62)
+Order=104(13/62)
+Found 4 real poles and 40 conjugate complex pairs.
+Final number of poles: 44
+Vector fitting piece 250/307...
+  energy: 1.307e+04 to 1.329e+04 eV (6205 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Order=98(14/66)
+Order=100(15/66)
+Found 6 real poles and 37 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 251/307...
+  energy: 1.318e+04 to 1.340e+04 eV (5991 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Order=98(14/66)
+Found 6 real poles and 36 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 252/307...
+  energy: 1.329e+04 to 1.351e+04 eV (6221 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 38 peaks
+Fitting orders from 76 to 200
+Order=76(0/63)
+Order=78(1/63)
+Order=80(2/63)
+Order=82(3/63)
+Order=84(4/63)
+Order=86(5/63)
+Order=88(6/63)
+Order=90(7/63)
+Order=92(8/63)
+Order=94(9/63)
+Order=96(10/63)
+Order=98(11/63)
+Order=100(12/63)
+Order=102(13/63)
+Order=104(14/63)
+Found 6 real poles and 39 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 253/307...
+  energy: 1.339e+04 to 1.361e+04 eV (6302 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 38 peaks
+Fitting orders from 76 to 200
+Order=76(0/63)
+Order=78(1/63)
+Order=80(2/63)
+Order=82(3/63)
+Order=84(4/63)
+Order=86(5/63)
+Order=88(6/63)
+Order=90(7/63)
+Order=92(8/63)
+Order=94(9/63)
+Order=96(10/63)
+Order=98(11/63)
+Order=100(12/63)
+Order=102(13/63)
+Order=104(14/63)
+Found 6 real poles and 39 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 254/307...
+  energy: 1.350e+04 to 1.372e+04 eV (7273 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 45 peaks
+Fitting orders from 90 to 200
+Order=90(0/56)
+Order=92(1/56)
+Order=94(2/56)
+Order=96(3/56)
+Order=98(4/56)
+Order=100(5/56)
+Order=102(6/56)
+Order=104(7/56)
+Order=106(8/56)
+Order=108(9/56)
+Order=110(10/56)
+Order=112(11/56)
+Order=114(12/56)
+Order=116(13/56)
+Found 4 real poles and 46 conjugate complex pairs.
+Final number of poles: 50
+Vector fitting piece 255/307...
+  energy: 1.361e+04 to 1.383e+04 eV (7492 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 47 peaks
+Fitting orders from 94 to 200
+Order=94(0/54)
+Order=96(1/54)
+Order=98(2/54)
+Order=100(3/54)
+Order=102(4/54)
+Order=104(5/54)
+Order=106(6/54)
+Order=108(7/54)
+Order=110(8/54)
+Order=112(9/54)
+Order=114(10/54)
+Order=116(11/54)
+Order=118(12/54)
+Order=120(13/54)
+Order=122(14/54)
+Found 4 real poles and 49 conjugate complex pairs.
+Final number of poles: 53
+Vector fitting piece 256/307...
+  energy: 1.371e+04 to 1.394e+04 eV (6907 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Found 6 real poles and 43 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 257/307...
+  energy: 1.382e+04 to 1.405e+04 eV (6760 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 41 peaks
+Fitting orders from 82 to 200
+Order=82(0/60)
+Order=84(1/60)
+Order=86(2/60)
+Order=88(3/60)
+Order=90(4/60)
+Order=92(5/60)
+Order=94(6/60)
+Order=96(7/60)
+Order=98(8/60)
+Order=100(9/60)
+Order=102(10/60)
+Order=104(11/60)
+Order=106(12/60)
+Order=108(13/60)
+Order=110(14/60)
+Found 8 real poles and 41 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 258/307...
+  energy: 1.393e+04 to 1.416e+04 eV (6906 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Order=112(14/59)
+Found 4 real poles and 44 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 259/307...
+  energy: 1.404e+04 to 1.427e+04 eV (5949 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 35 peaks
+Fitting orders from 70 to 200
+Order=70(0/66)
+Order=72(1/66)
+Order=74(2/66)
+Order=76(3/66)
+Order=78(4/66)
+Order=80(5/66)
+Order=82(6/66)
+Order=84(7/66)
+Order=86(8/66)
+Order=88(9/66)
+Order=90(10/66)
+Order=92(11/66)
+Order=94(12/66)
+Order=96(13/66)
+Order=98(14/66)
+Found 6 real poles and 36 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 260/307...
+  energy: 1.415e+04 to 1.438e+04 eV (5769 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 33 peaks
+Fitting orders from 66 to 200
+Order=66(0/68)
+Order=68(1/68)
+Order=70(2/68)
+Order=72(3/68)
+Order=74(4/68)
+Order=76(5/68)
+Order=78(6/68)
+Order=80(7/68)
+Order=82(8/68)
+Order=84(9/68)
+Order=86(10/68)
+Order=88(11/68)
+Order=90(12/68)
+Order=92(13/68)
+Found 6 real poles and 33 conjugate complex pairs.
+Final number of poles: 39
+Vector fitting piece 261/307...
+  energy: 1.426e+04 to 1.449e+04 eV (6334 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 38 peaks
+Fitting orders from 76 to 200
+Order=76(0/63)
+Order=78(1/63)
+Order=80(2/63)
+Order=82(3/63)
+Order=84(4/63)
+Order=86(5/63)
+Order=88(6/63)
+Order=90(7/63)
+Order=92(8/63)
+Order=94(9/63)
+Order=96(10/63)
+Order=98(11/63)
+Order=100(12/63)
+Order=102(13/63)
+Found 6 real poles and 38 conjugate complex pairs.
+Final number of poles: 44
+Vector fitting piece 262/307...
+  energy: 1.437e+04 to 1.460e+04 eV (6118 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 37 peaks
+Fitting orders from 74 to 200
+Order=74(0/64)
+Order=76(1/64)
+Order=78(2/64)
+Order=80(3/64)
+Order=82(4/64)
+Order=84(5/64)
+Order=86(6/64)
+Order=88(7/64)
+Order=90(8/64)
+Order=92(9/64)
+Order=94(10/64)
+Order=96(11/64)
+Order=98(12/64)
+Order=100(13/64)
+Order=102(14/64)
+Order=104(15/64)
+Found 2 real poles and 41 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 263/307...
+  energy: 1.448e+04 to 1.471e+04 eV (6241 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Order=102(15/65)
+Order=104(16/65)
+Order=106(17/65)
+Found 4 real poles and 41 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 264/307...
+  energy: 1.459e+04 to 1.482e+04 eV (6991 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Order=114(14/58)
+Found 6 real poles and 44 conjugate complex pairs.
+Final number of poles: 50
+Vector fitting piece 265/307...
+  energy: 1.470e+04 to 1.494e+04 eV (7171 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 45 peaks
+Fitting orders from 90 to 200
+Order=90(0/56)
+Order=92(1/56)
+Order=94(2/56)
+Order=96(3/56)
+Order=98(4/56)
+Order=100(5/56)
+Order=102(6/56)
+Order=104(7/56)
+Order=106(8/56)
+Order=108(9/56)
+Order=110(10/56)
+Order=112(11/56)
+Order=114(12/56)
+Order=116(13/56)
+Found 6 real poles and 45 conjugate complex pairs.
+Final number of poles: 51
+Vector fitting piece 266/307...
+  energy: 1.481e+04 to 1.505e+04 eV (6938 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Order=112(14/59)
+Order=114(15/59)
+Found 8 real poles and 43 conjugate complex pairs.
+Final number of poles: 51
+Vector fitting piece 267/307...
+  energy: 1.493e+04 to 1.516e+04 eV (6533 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Order=108(14/61)
+Order=110(15/61)
+Found 6 real poles and 42 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 268/307...
+  energy: 1.504e+04 to 1.527e+04 eV (7549 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 47 peaks
+Fitting orders from 94 to 200
+Order=94(0/54)
+Order=96(1/54)
+Order=98(2/54)
+Order=100(3/54)
+Order=102(4/54)
+Order=104(5/54)
+Order=106(6/54)
+Order=108(7/54)
+Order=110(8/54)
+Order=112(9/54)
+Order=114(10/54)
+Order=116(11/54)
+Order=118(12/54)
+Order=120(13/54)
+Order=122(14/54)
+Found 4 real poles and 49 conjugate complex pairs.
+Final number of poles: 53
+Vector fitting piece 269/307...
+  energy: 1.515e+04 to 1.539e+04 eV (7162 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 46 peaks
+Fitting orders from 92 to 200
+Order=92(0/55)
+Order=94(1/55)
+Order=96(2/55)
+Order=98(3/55)
+Order=100(4/55)
+Order=102(5/55)
+Order=104(6/55)
+Order=106(7/55)
+Order=108(8/55)
+Order=110(9/55)
+Order=112(10/55)
+Order=114(11/55)
+Order=116(12/55)
+Order=118(13/55)
+Order=120(14/55)
+Found 6 real poles and 47 conjugate complex pairs.
+Final number of poles: 53
+Vector fitting piece 270/307...
+  energy: 1.527e+04 to 1.550e+04 eV (6653 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 39 peaks
+Fitting orders from 78 to 200
+Order=78(0/62)
+Order=80(1/62)
+Order=82(2/62)
+Order=84(3/62)
+Order=86(4/62)
+Order=88(5/62)
+Order=90(6/62)
+Order=92(7/62)
+Order=94(8/62)
+Order=96(9/62)
+Order=98(10/62)
+Order=100(11/62)
+Order=102(12/62)
+Order=104(13/62)
+Order=106(14/62)
+Order=108(15/62)
+Order=110(16/62)
+Found 8 real poles and 41 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 271/307...
+  energy: 1.538e+04 to 1.562e+04 eV (6502 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 38 peaks
+Fitting orders from 76 to 200
+Order=76(0/63)
+Order=78(1/63)
+Order=80(2/63)
+Order=82(3/63)
+Order=84(4/63)
+Order=86(5/63)
+Order=88(6/63)
+Order=90(7/63)
+Order=92(8/63)
+Order=94(9/63)
+Order=96(10/63)
+Order=98(11/63)
+Order=100(12/63)
+Order=102(13/63)
+Order=104(14/63)
+Found 6 real poles and 39 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 272/307...
+  energy: 1.549e+04 to 1.573e+04 eV (5525 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 34 peaks
+Fitting orders from 68 to 200
+Order=68(0/67)
+Order=70(1/67)
+Order=72(2/67)
+Order=74(3/67)
+Order=76(4/67)
+Order=78(5/67)
+Order=80(6/67)
+Order=82(7/67)
+Order=84(8/67)
+Order=86(9/67)
+Order=88(10/67)
+Order=90(11/67)
+Order=92(12/67)
+Order=94(13/67)
+Order=96(14/67)
+Found 4 real poles and 36 conjugate complex pairs.
+Final number of poles: 40
+Vector fitting piece 273/307...
+  energy: 1.561e+04 to 1.585e+04 eV (7097 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 44 peaks
+Fitting orders from 88 to 200
+Order=88(0/57)
+Order=90(1/57)
+Order=92(2/57)
+Order=94(3/57)
+Order=96(4/57)
+Order=98(5/57)
+Order=100(6/57)
+Order=102(7/57)
+Order=104(8/57)
+Order=106(9/57)
+Order=108(10/57)
+Order=110(11/57)
+Order=112(12/57)
+Order=114(13/57)
+Order=116(14/57)
+Found 6 real poles and 45 conjugate complex pairs.
+Final number of poles: 51
+Vector fitting piece 274/307...
+  energy: 1.572e+04 to 1.597e+04 eV (6948 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Order=114(14/58)
+Found 4 real poles and 45 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 275/307...
+  energy: 1.584e+04 to 1.608e+04 eV (6308 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 39 peaks
+Fitting orders from 78 to 200
+Order=78(0/62)
+Order=80(1/62)
+Order=82(2/62)
+Order=84(3/62)
+Order=86(4/62)
+Order=88(5/62)
+Order=90(6/62)
+Order=92(7/62)
+Order=94(8/62)
+Order=96(9/62)
+Order=98(10/62)
+Order=100(11/62)
+Order=102(12/62)
+Order=104(13/62)
+Found 4 real poles and 40 conjugate complex pairs.
+Final number of poles: 44
+Vector fitting piece 276/307...
+  energy: 1.596e+04 to 1.620e+04 eV (6455 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Found 6 real poles and 40 conjugate complex pairs.
+Final number of poles: 46
+Vector fitting piece 277/307...
+  energy: 1.607e+04 to 1.632e+04 eV (6716 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 41 peaks
+Fitting orders from 82 to 200
+Order=82(0/60)
+Order=84(1/60)
+Order=86(2/60)
+Order=88(3/60)
+Order=90(4/60)
+Order=92(5/60)
+Order=94(6/60)
+Order=96(7/60)
+Order=98(8/60)
+Order=100(9/60)
+Order=102(10/60)
+Order=104(11/60)
+Order=106(12/60)
+Found 2 real poles and 42 conjugate complex pairs.
+Final number of poles: 44
+Vector fitting piece 278/307...
+  energy: 1.619e+04 to 1.644e+04 eV (6112 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Found 4 real poles and 38 conjugate complex pairs.
+Final number of poles: 42
+Vector fitting piece 279/307...
+  energy: 1.631e+04 to 1.655e+04 eV (6714 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 41 peaks
+Fitting orders from 82 to 200
+Order=82(0/60)
+Order=84(1/60)
+Order=86(2/60)
+Order=88(3/60)
+Order=90(4/60)
+Order=92(5/60)
+Order=94(6/60)
+Order=96(7/60)
+Order=98(8/60)
+Order=100(9/60)
+Order=102(10/60)
+Order=104(11/60)
+Order=106(12/60)
+Order=108(13/60)
+Found 4 real poles and 42 conjugate complex pairs.
+Final number of poles: 46
+Vector fitting piece 280/307...
+  energy: 1.642e+04 to 1.667e+04 eV (6801 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Found 4 real poles and 43 conjugate complex pairs.
+Final number of poles: 47
+Vector fitting piece 281/307...
+  energy: 1.654e+04 to 1.679e+04 eV (7108 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Order=114(14/58)
+Found 6 real poles and 44 conjugate complex pairs.
+Final number of poles: 50
+Vector fitting piece 282/307...
+  energy: 1.666e+04 to 1.691e+04 eV (6933 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Order=112(14/59)
+Found 4 real poles and 44 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 283/307...
+  energy: 1.678e+04 to 1.703e+04 eV (7113 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 44 peaks
+Fitting orders from 88 to 200
+Order=88(0/57)
+Order=90(1/57)
+Order=92(2/57)
+Order=94(3/57)
+Order=96(4/57)
+Order=98(5/57)
+Order=100(6/57)
+Order=102(7/57)
+Order=104(8/57)
+Order=106(9/57)
+Order=108(10/57)
+Order=110(11/57)
+Order=112(12/57)
+Order=114(13/57)
+Found 4 real poles and 45 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 284/307...
+  energy: 1.690e+04 to 1.715e+04 eV (6975 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Found 4 real poles and 43 conjugate complex pairs.
+Final number of poles: 47
+Vector fitting piece 285/307...
+  energy: 1.702e+04 to 1.727e+04 eV (6188 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 37 peaks
+Fitting orders from 74 to 200
+Order=74(0/64)
+Order=76(1/64)
+Order=78(2/64)
+Order=80(3/64)
+Order=82(4/64)
+Order=84(5/64)
+Order=86(6/64)
+Order=88(7/64)
+Order=90(8/64)
+Order=92(9/64)
+Order=94(10/64)
+Order=96(11/64)
+Order=98(12/64)
+Order=100(13/64)
+Order=102(14/64)
+Found 4 real poles and 39 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 286/307...
+  energy: 1.714e+04 to 1.739e+04 eV (6325 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 39 peaks
+Fitting orders from 78 to 200
+Order=78(0/62)
+Order=80(1/62)
+Order=82(2/62)
+Order=84(3/62)
+Order=86(4/62)
+Order=88(5/62)
+Order=90(6/62)
+Order=92(7/62)
+Order=94(8/62)
+Order=96(9/62)
+Order=98(10/62)
+Order=100(11/62)
+Order=102(12/62)
+Order=104(13/62)
+Found 6 real poles and 39 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 287/307...
+  energy: 1.726e+04 to 1.751e+04 eV (6495 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Found 4 real poles and 41 conjugate complex pairs.
+Final number of poles: 45
+Vector fitting piece 288/307...
+  energy: 1.738e+04 to 1.764e+04 eV (7146 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 44 peaks
+Fitting orders from 88 to 200
+Order=88(0/57)
+Order=90(1/57)
+Order=92(2/57)
+Order=94(3/57)
+Order=96(4/57)
+Order=98(5/57)
+Order=100(6/57)
+Order=102(7/57)
+Order=104(8/57)
+Order=106(9/57)
+Order=108(10/57)
+Order=110(11/57)
+Order=112(12/57)
+Order=114(13/57)
+Order=116(14/57)
+Found 6 real poles and 45 conjugate complex pairs.
+Final number of poles: 51
+Vector fitting piece 289/307...
+  energy: 1.750e+04 to 1.776e+04 eV (6920 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Order=114(14/58)
+Found 4 real poles and 45 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 290/307...
+  energy: 1.763e+04 to 1.788e+04 eV (6489 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 40 peaks
+Fitting orders from 80 to 200
+Order=80(0/61)
+Order=82(1/61)
+Order=84(2/61)
+Order=86(3/61)
+Order=88(4/61)
+Order=90(5/61)
+Order=92(6/61)
+Order=94(7/61)
+Order=96(8/61)
+Order=98(9/61)
+Order=100(10/61)
+Order=102(11/61)
+Order=104(12/61)
+Order=106(13/61)
+Order=108(14/61)
+Found 6 real poles and 41 conjugate complex pairs.
+Final number of poles: 47
+Vector fitting piece 291/307...
+  energy: 1.775e+04 to 1.801e+04 eV (7242 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 48 peaks
+Fitting orders from 96 to 200
+Order=96(0/53)
+Order=98(1/53)
+Order=100(2/53)
+Order=102(3/53)
+Order=104(4/53)
+Order=106(5/53)
+Order=108(6/53)
+Order=110(7/53)
+Order=112(8/53)
+Order=114(9/53)
+Order=116(10/53)
+Order=118(11/53)
+Order=120(12/53)
+Order=122(13/53)
+Found 6 real poles and 48 conjugate complex pairs.
+Final number of poles: 54
+Vector fitting piece 292/307...
+  energy: 1.787e+04 to 1.813e+04 eV (7540 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 49 peaks
+Fitting orders from 98 to 200
+Order=98(0/52)
+Order=100(1/52)
+Order=102(2/52)
+Order=104(3/52)
+Order=106(4/52)
+Order=108(5/52)
+Order=110(6/52)
+Order=112(7/52)
+Order=114(8/52)
+Order=116(9/52)
+Order=118(10/52)
+Order=120(11/52)
+Order=122(12/52)
+Found 4 real poles and 49 conjugate complex pairs.
+Final number of poles: 53
+Vector fitting piece 293/307...
+  energy: 1.800e+04 to 1.825e+04 eV (7078 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Found 2 real poles and 44 conjugate complex pairs.
+Final number of poles: 46
+Vector fitting piece 294/307...
+  energy: 1.812e+04 to 1.838e+04 eV (6107 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 36 peaks
+Fitting orders from 72 to 200
+Order=72(0/65)
+Order=74(1/65)
+Order=76(2/65)
+Order=78(3/65)
+Order=80(4/65)
+Order=82(5/65)
+Order=84(6/65)
+Order=86(7/65)
+Order=88(8/65)
+Order=90(9/65)
+Order=92(10/65)
+Order=94(11/65)
+Order=96(12/65)
+Order=98(13/65)
+Order=100(14/65)
+Found 2 real poles and 39 conjugate complex pairs.
+Final number of poles: 41
+Vector fitting piece 295/307...
+  energy: 1.824e+04 to 1.850e+04 eV (6048 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 37 peaks
+Fitting orders from 74 to 200
+Order=74(0/64)
+Order=76(1/64)
+Order=78(2/64)
+Order=80(3/64)
+Order=82(4/64)
+Order=84(5/64)
+Order=86(6/64)
+Order=88(7/64)
+Order=90(8/64)
+Order=92(9/64)
+Order=94(10/64)
+Order=96(11/64)
+Order=98(12/64)
+Order=100(13/64)
+Found 6 real poles and 37 conjugate complex pairs.
+Final number of poles: 43
+Vector fitting piece 296/307...
+  energy: 1.837e+04 to 1.863e+04 eV (6820 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Found 4 real poles and 43 conjugate complex pairs.
+Final number of poles: 47
+Vector fitting piece 297/307...
+  energy: 1.849e+04 to 1.876e+04 eV (7003 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Order=112(14/59)
+Found 6 real poles and 43 conjugate complex pairs.
+Final number of poles: 49
+Vector fitting piece 298/307...
+  energy: 1.862e+04 to 1.888e+04 eV (6941 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Order=110(13/59)
+Order=112(14/59)
+Order=114(15/59)
+Found 6 real poles and 44 conjugate complex pairs.
+Final number of poles: 50
+Vector fitting piece 299/307...
+  energy: 1.875e+04 to 1.901e+04 eV (7360 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 47 peaks
+Fitting orders from 94 to 200
+Order=94(0/54)
+Order=96(1/54)
+Order=98(2/54)
+Order=100(3/54)
+Order=102(4/54)
+Order=104(5/54)
+Order=106(6/54)
+Order=108(7/54)
+Order=110(8/54)
+Order=112(9/54)
+Order=114(10/54)
+Order=116(11/54)
+Order=118(12/54)
+Order=120(13/54)
+Order=122(14/54)
+Found 4 real poles and 49 conjugate complex pairs.
+Final number of poles: 53
+Vector fitting piece 300/307...
+  energy: 1.887e+04 to 1.914e+04 eV (7840 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 49 peaks
+Fitting orders from 98 to 200
+Order=98(0/52)
+Order=100(1/52)
+Order=102(2/52)
+Order=104(3/52)
+Order=106(4/52)
+Order=108(5/52)
+Order=110(6/52)
+Order=112(7/52)
+Order=114(8/52)
+Order=116(9/52)
+Order=118(10/52)
+Order=120(11/52)
+Order=122(12/52)
+Order=124(13/52)
+Order=126(14/52)
+Found 4 real poles and 51 conjugate complex pairs.
+Final number of poles: 55
+Vector fitting piece 301/307...
+  energy: 1.900e+04 to 1.926e+04 eV (7670 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 49 peaks
+Fitting orders from 98 to 200
+Order=98(0/52)
+Order=100(1/52)
+Order=102(2/52)
+Order=104(3/52)
+Order=106(4/52)
+Order=108(5/52)
+Order=110(6/52)
+Order=112(7/52)
+Order=114(8/52)
+Order=116(9/52)
+Order=118(10/52)
+Order=120(11/52)
+Order=122(12/52)
+Order=124(13/52)
+Found 6 real poles and 49 conjugate complex pairs.
+Final number of poles: 55
+Vector fitting piece 302/307...
+  energy: 1.913e+04 to 1.939e+04 eV (7804 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 51 peaks
+Fitting orders from 102 to 204
+Order=102(0/52)
+Order=104(1/52)
+Order=106(2/52)
+Order=108(3/52)
+Order=110(4/52)
+Order=112(5/52)
+Order=114(6/52)
+Order=116(7/52)
+Order=118(8/52)
+Order=120(9/52)
+Order=122(10/52)
+Order=124(11/52)
+Order=126(12/52)
+Order=128(13/52)
+Found 4 real poles and 52 conjugate complex pairs.
+Final number of poles: 56
+Vector fitting piece 303/307...
+  energy: 1.925e+04 to 1.952e+04 eV (7625 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 49 peaks
+Fitting orders from 98 to 200
+Order=98(0/52)
+Order=100(1/52)
+Order=102(2/52)
+Order=104(3/52)
+Order=106(4/52)
+Order=108(5/52)
+Order=110(6/52)
+Order=112(7/52)
+Order=114(8/52)
+Order=116(9/52)
+Order=118(10/52)
+Order=120(11/52)
+Order=122(12/52)
+Order=124(13/52)
+Found 6 real poles and 49 conjugate complex pairs.
+Final number of poles: 55
+Vector fitting piece 304/307...
+  energy: 1.938e+04 to 1.965e+04 eV (7528 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 49 peaks
+Fitting orders from 98 to 200
+Order=98(0/52)
+Order=100(1/52)
+Order=102(2/52)
+Order=104(3/52)
+Order=106(4/52)
+Order=108(5/52)
+Order=110(6/52)
+Order=112(7/52)
+Order=114(8/52)
+Order=116(9/52)
+Order=118(10/52)
+Order=120(11/52)
+Order=122(12/52)
+Order=124(13/52)
+Found 4 real poles and 50 conjugate complex pairs.
+Final number of poles: 54
+Vector fitting piece 305/307...
+  energy: 1.951e+04 to 1.978e+04 eV (6924 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 44 peaks
+Fitting orders from 88 to 200
+Order=88(0/57)
+Order=90(1/57)
+Order=92(2/57)
+Order=94(3/57)
+Order=96(4/57)
+Order=98(5/57)
+Order=100(6/57)
+Order=102(7/57)
+Order=104(8/57)
+Order=106(9/57)
+Order=108(10/57)
+Order=110(11/57)
+Order=112(12/57)
+Order=114(13/57)
+Found 6 real poles and 44 conjugate complex pairs.
+Final number of poles: 50
+Vector fitting piece 306/307...
+  energy: 1.964e+04 to 1.991e+04 eV (6942 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 43 peaks
+Fitting orders from 86 to 200
+Order=86(0/58)
+Order=88(1/58)
+Order=90(2/58)
+Order=92(3/58)
+Order=94(4/58)
+Order=96(5/58)
+Order=98(6/58)
+Order=100(7/58)
+Order=102(8/58)
+Order=104(9/58)
+Order=106(10/58)
+Order=108(11/58)
+Order=110(12/58)
+Order=112(13/58)
+Found 4 real poles and 44 conjugate complex pairs.
+Final number of poles: 48
+Vector fitting piece 307/307...
+  energy: 1.977e+04 to 2.000e+04 eV (6706 points)
+  error tolerance: rtol=0.001, atol=1e-05
+Found 42 peaks
+Fitting orders from 84 to 200
+Order=84(0/59)
+Order=86(1/59)
+Order=88(2/59)
+Order=90(3/59)
+Order=92(4/59)
+Order=94(5/59)
+Order=96(6/59)
+Order=98(7/59)
+Order=100(8/59)
+Order=102(9/59)
+Order=104(10/59)
+Order=106(11/59)
+Order=108(12/59)
+Found 4 real poles and 42 conjugate complex pairs.
+Final number of poles: 46
+
+====================================
+CPU Time used: 1628:54:32
+CPU Percent: 5501%
+Memory usage: 1093908kb
+Approx Power usage: 19.546800000000005
+Walltime usage: 37:37:00
+
+====================================
