@@ -1,0 +1,108 @@
+# Compiled objects and modules
+*.a
+*.o
+*.log
+*.out
+*.pkl
+
+# Compiler python objects
+*.pyc
+
+# Python distribution
+.settings/
+dist/
+openmc.egg-info/
+
+# Inputs generated from Python API
+examples/**/*.xml
+
+# emacs and vim backups
+*~
+*.swp
+
+# OpenMC statepoints
+*.binary
+
+# Documentation builds
+docs/build
+docs/source/_images/*.pdf
+docs/source/_images/*.aux
+docs/source/pythonapi/generated/
+
+# Source build
+build
+
+# build from src/utils/setup.py
+src/utils/build
+
+# Test results error file
+results_error.dat
+inputs_error.dat
+results_test.dat
+
+# Test
+.pytest_cache/
+
+# HDF5 files
+*.h5
+
+# Build files
+src/CMakeCache.txt
+src/CMakeFiles/
+src/bin/
+src/cmake_install.cmake
+src/install_manifest.txt
+
+# Nuclear data
+scripts/nndc
+scripts/nndc_hdf5
+scripts/wmp
+scripts/JEFF32-ACE-*.zip
+scripts/TSLs.tar.gz
+scripts/jeff-3.2
+scripts/jeff-3.2-hdf5
+scripts/*.tar.*
+scripts/G4EMLOW*/
+
+# Images
+*.png
+*.ppm
+*.voxel
+*.vti
+
+# PyCharm project configuration files
+.idea
+.idea/*
+
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
+# Cython files
+*.c
+*.html
+*.so
+
+.cache/
+.tox/
+.python-version
+.coverage
+htmlcov
+
+# macOS
+*.DS_Store
+
+# Dynamic Library
+*.dylib
+*.lib
+*.dll
+
+# Visual Studio CMake project
+.vs/
+out/
+CMakeSettings.json
+
+# Visual Studio Code configuration files
+.vscode/
+
+# Python pickle files
+*.pkl
