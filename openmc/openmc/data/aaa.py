@@ -204,6 +204,10 @@ def aaa_xs(
         if sigma_f is not None:
             A_f *= col_w[None, :]
 
+        #TODO:
+        #divide every col by val of function
+        #normalize error across channels
+
         # Stack vertically to get a single shared w (length m)
         L = np.vstack((A_s, A_a)) if sigma_f is None else np.vstack((A_s, A_a, A_f))
 

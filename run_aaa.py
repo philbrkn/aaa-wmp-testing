@@ -9,7 +9,7 @@ path_out = Path(__file__).parent / "aaa_test"
 
 mp_data = vectfit_nuclide(
     endf_file,
-    vf_pieces=10,
+    vf_pieces=1,
     mmax=200,
     rtol=1e-3,
     path_out=path_out,
