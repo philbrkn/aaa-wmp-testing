@@ -40,6 +40,8 @@ def aaa_xs(
     sigma_s,
     sigma_a,
     sigma_f=None,
+    space='sqrt_E',
+    method='full_svd',
     rtol=1e-13,
     mmax=100,
     log=False,
@@ -91,7 +93,12 @@ def aaa_xs(
     """
     # Initialize the interpolation point indices
     n = E.shape[0]
-    s = np.sqrt(E)
+    if space == 'sqrt_E':
+        grid = np.sqrt(E)
+    elif space == 'E':
+        grid = E
+    else:
+        raise ValueError(f"Unknown space: {space}")
 
     # construct fit mask and core mask
     if fit_mask is None:
@@ -108,10 +115,9 @@ def aaa_xs(
     ff_list = [] if sigma_f is not None else None
 
     # Precompute once above the loop
-    dE = np.empty_like(E)
-    dE[1:-1] = 0.5 * (E[2:] - E[:-2])
-    dE[0] = E[1] - E[0]
-    dE[-1] = E[-1] - E[-2]
+    ds = np.zeros_like(grid)
+    ds[:-1] += 0.5 * np.diff(grid)
+    ds[1:] += 0.5 * np.diff(grid)
 
     # Initial constant guesses
     R_s = np.full_like(sigma_s, np.mean(sigma_s), dtype=float)
@@ -125,20 +131,6 @@ def aaa_xs(
     # eps = np.finfo(sigma_s.dtype).tiny
     eps = 1e-13
     tiny = np.finfo(float).tiny
-
-    # Estimate local spacing around z_j from the s grid
-    def local_E_spacing(zj, Egrid):
-        Ej = zj**2
-        k = np.searchsorted(Egrid, Ej)
-        if k <= 0:
-            left = Egrid[1] - Egrid[0]
-        else:
-            left = Ej - Egrid[k - 1]
-        if k >= len(Egrid):
-            right = Egrid[-1] - Egrid[-2]
-        else:
-            right = Egrid[k] - Ej
-        return 0.5 * (left + right)
 
     Fmax = max(
         np.max(np.abs(sigma_s)),
@@ -166,7 +158,7 @@ def aaa_xs(
         ]  # actual index into full arrays E, sigs of that worst error pt
 
         # Update zj, fs, fa with values at s[j*], sigma_s[j*], sigma_a[j*]
-        z_list.append(s[j_star])
+        z_list.append(grid[j_star])
         fs_list.append(sigma_s[j_star])
         fa_list.append(sigma_a[j_star])
         if sigma_f is not None:
@@ -185,24 +177,26 @@ def aaa_xs(
         ff = np.array(ff_list) if sigma_f is not None else None
 
         # Compute Loewner matrices A_s, A_a, A_f
-        delta = s[J_fit][:, None] - z[None, :]
+        delta = grid[J_fit][:, None] - z[None, :]
         A_s = (sigma_s[J_fit][:, None] - fs[None, :]) / delta
         A_a = (sigma_a[J_fit][:, None] - fa[None, :]) / delta
         if sigma_f is not None:
             A_f = (sigma_f[J_fit][:, None] - ff[None, :]) / delta
 
         # approximate approximate continuous LS
-        row_w = np.sqrt(np.maximum(dE[J_fit], np.finfo(float).tiny))[:, None]
-        A_s *= row_w
-        A_a *= row_w
+        A_s = ds[J_fit, None] * A_s
+        A_a = ds[J_fit, None] * A_a
         if sigma_f is not None:
-            A_f *= row_w
+            A_f = ds[J_fit, None] * A_f
 
-        col_w = np.sqrt(np.array([local_E_spacing(zj, E) for zj in z]))
-        A_s *= col_w[None, :]
-        A_a *= col_w[None, :]
+        # relative error weighting for svd
+        rel_w_s = 1.0 / np.maximum(np.abs(sigma_s[J_fit]), eps)
+        rel_w_a = 1.0 / np.maximum(np.abs(sigma_a[J_fit]), eps)
+        A_s *= rel_w_s[:, None]
+        A_a *= rel_w_a[:, None]
         if sigma_f is not None:
-            A_f *= col_w[None, :]
+            rel_w_f = 1.0 / np.maximum(np.abs(sigma_f[J_fit]), eps)
+            A_f *= rel_w_f[:, None]
 
         #TODO:
         #divide every col by val of function
@@ -212,17 +206,27 @@ def aaa_xs(
         L = np.vstack((A_s, A_a)) if sigma_f is None else np.vstack((A_s, A_a, A_f))
 
         # Compute SVD([A_s, A_a, A_f])
-        _, _, Vh = svd(L, full_matrices=False)
+        # Q, R = np.linalg.qr(L, mode='reduced')
+        if method == 'full_svd':
+            _, _, Vh = svd(L, full_matrices=False)
+        elif method == 'qr+svd':
+            Q, R = np.linalg.qr(L, mode='reduced')
+            _, _, Vh = svd(R, full_matrices=False)
+        elif method == 'randomized_svd':
+            from sklearn.utils.extmath import randomized_svd
+            U, s, Vh = randomized_svd(L, n_components=min(20, L.shape[1]),
+                                      random_state=42, n_iter=7)
+        else:
+            raise ValueError(f"Unknown method: {method}")
 
         # wj <- final right singular vector
         w = Vh[-1, :]
-        w = w * col_w  # undo column weighting
 
         # Update R on full grid via barycentric evaluation (interp at supports)
-        R_s = evaluate_aaa(E, w, z, fs)
-        R_a = evaluate_aaa(E, w, z, fa)
+        R_s = evaluate_aaa(E, w, z, fs, space)
+        R_a = evaluate_aaa(E, w, z, fa, space)
         if sigma_f is not None:
-            R_f = evaluate_aaa(E, w, z, ff)
+            R_f = evaluate_aaa(E, w, z, ff, space)
 
         rel = np.maximum.reduce(
             [
@@ -256,21 +260,27 @@ def aaa_xs(
     return outputs
 
 
-def evaluate_aaa(E, w, z, fz):
+def evaluate_aaa(E, w, z, fz, space='sqrt_E'):
     """Barycentric evaluation with exact support-point handling."""
-    s = np.sqrt(E)
+    if space == 'sqrt_E':
+        grid = np.sqrt(E)
+    elif space == 'E':
+        grid = E
+    else:
+        raise ValueError(f"Unknown space: {space}")
+
     # Cauchy matrix only once
     # Avoid division by zero at support points
     with np.errstate(divide="ignore", invalid="ignore"):
-        CC = 1.0 / (s[:, None] - z[None, :])
+        CC = 1.0 / (grid[:, None] - z[None, :])
     num = CC @ (w * fz)
     den = CC @ w
 
     # Handle support points exactly
     tol = 1e-12
     for j, zj in enumerate(z):
-        idx = np.argmin(np.abs(s - zj))
-        if np.abs(s[idx] - zj) < tol:
+        idx = np.argmin(np.abs(grid - zj))
+        if np.abs(grid[idx] - zj) < tol:
             # Use exact value at support point
             num[idx] = w[j] * fz[j]
             den[idx] = w[j]
@@ -278,10 +288,11 @@ def evaluate_aaa(E, w, z, fz):
     return num / den
 
 
-def extract_poles_and_residues(w, z, fvals, plane="s", log=False):
+def extract_poles_and_residues(w, z, fvals, space='sqrt_E', log=False):
     """
     plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
     """
+
     m = len(z)
     C = np.zeros((m + 1, m + 1), dtype=complex)
     C[0, 1:] = w
@@ -295,10 +306,12 @@ def extract_poles_and_residues(w, z, fvals, plane="s", log=False):
     lam, _ = la.eig(C, B)
     poles = lam[np.isfinite(lam)]  # finite eigenvalues
 
-    if plane.lower() == "e":
-        # a, b = poles.real, poles.imag
-        # poles = (a*a - b*b) + 1j*(2*a*b)
-        poles = poles**2
+    if space == 'sqrt_E':
+        poles = poles
+    elif space == 'E':
+        poles = np.sqrt(poles)
+    else:
+        raise ValueError(f"Unknown space: {space}")
 
     # residues for each component fk at these poles (in current plane's variable)
     def residues_for(fk):
@@ -335,6 +348,7 @@ def vectfit_nuclide(
     path_out=None,
     mp_filename=None,
     njoy_input=None,
+    bounds=None,
     **kwargs,
 ):
     r"""Generate multipole data for a nuclide from ENDF.
@@ -412,9 +426,12 @@ def vectfit_nuclide(
 
     # parse energy and cross sections
     energy = nuc_ce.energy["0K"][: E_max_idx + 1]
-    E_min, E_max = energy[0], energy[-1]
-    E_min = 0
-    E_max = 200
+    if bounds:
+        E_min = bounds['E_min']
+        E_max = bounds['E_max']
+    else:
+        E_min, E_max = energy[0], energy[-1]
+
     n_points = energy.size
     total_xs = nuc_ce[1].xs["0K"](energy)
     elastic_xs = nuc_ce[2].xs["0K"](energy)
@@ -441,7 +458,10 @@ def vectfit_nuclide(
 
     if log:
         print(f"  MTs: {mts}")
-        print(f"  Energy range: {E_min:.3e} to {E_max:.3e} eV ({n_points} points)")
+        i0 = np.searchsorted(energy, E_min, side='left')
+        i1 = np.searchsorted(energy, E_max, side='right')
+        bound_pts = max(0, i1 - i0)     # number of points in [E_min, E_max]
+        print(f"  Energy range: {E_min:.3e} to {E_max:.3e} eV ({bound_pts} points)")
 
     # ======================================================================
     # PERFORM VECTOR FITTING
@@ -492,9 +512,11 @@ def vectfit_nuclide(
             sig_s_piece,
             sig_a_piece,
             sigma_f=sig_f_piece,
+            method=kwargs.get('method', 'full_svd'),
             rtol=kwargs.get("rtol", 1e-13),
             mmax=kwargs.get("mmax", 100),
             log=log,
+            space=kwargs.get('space', 'sqrt_E')
         )
         # s_piece = np.sqrt(E_piece)
         # F_s = sig_s_piece * E_piece
@@ -547,35 +569,36 @@ def vectfit_nuclide(
         f_f_z = rest[0] if fissionable else None
         fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
         poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex), z.astype(complex), fvals_piece, log=log
+            w.astype(complex), z.astype(complex), fvals_piece, log=log, space=kwargs.get('space', 'sqrt_E')
         )
 
-        print("Cleaning up doublets...")
-        w, z, f_s_z, f_a_z, f_f_z = cleanup_doublets(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            z,
-            f_s_z,
-            f_a_z,
-            w,
-            sigma_f=sig_f_piece,
-            ff=(f_f_z if fissionable else None),
-            tol=1e-4,
-            max_passes=3,
-            log=True,
-        )
+        # print("Cleaning up doublets...")
+        # w, z, f_s_z, f_a_z, f_f_z = cleanup_doublets(
+        #     E_piece,
+        #     sig_s_piece,
+        #     sig_a_piece,
+        #     z,
+        #     f_s_z,
+        #     f_a_z,
+        #     w,
+        #     sigma_f=sig_f_piece,
+        #     ff=(f_f_z if fissionable else None),
+        #     tol=1e-4,
+        #     max_passes=3,
+        #     log=True,
+        #     space=kwargs.get('space', 'sqrt_E')
+        # )
 
-        fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
-        poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex), z.astype(complex), fvals_piece, log=log
-        )
+        # fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
+        # poles_s, residues_list = extract_poles_and_residues(
+        #     w.astype(complex), z.astype(complex), fvals_piece, log=log
+        # )
 
         poles.append(poles_s)
         residues.append(residues_list)
-        R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z)
-        R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z)
-        R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z) if fissionable else None
+        R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z, space=kwargs.get('space', 'sqrt_E'))
+        R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z, space=kwargs.get('space', 'sqrt_E'))
+        R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get('space', 'sqrt_E')) if fissionable else None
         plot_aaa_results(
             E_piece,
             sig_s_piece,
@@ -614,21 +637,21 @@ def vectfit_nuclide(
         if log:
             print(f"Dumped multipole data to file: {mp_filename}")
 
-        R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z)
-        R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z)
-        R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z) if fissionable else None
+        # R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z, space=kwargs.get('space', 'sqrt_E'))
+        # R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z, space=kwargs.get('space', 'sqrt_E'))
+        # R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get('space', 'sqrt_E')) if fissionable else None
         # R_s_piece = evaluate_aaa(E_piece, w, z, F_s_z) / E_piece
         # R_a_piece = evaluate_aaa(E_piece, w, z, F_a_z) / E_piece
         # R_f_piece = (evaluate_aaa(E_piece, w, z, F_f_z) / E_piece if fissionable else None)
-        plot_aaa_results(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            R_s_piece,
-            R_a_piece,
-            sigma_f=sig_f_piece,
-            R_f=R_f_piece,
-        )
+        # plot_aaa_results(
+        #     E_piece,
+        #     sig_s_piece,
+        #     sig_a_piece,
+        #     R_s_piece,
+        #     R_a_piece,
+        #     sigma_f=sig_f_piece,
+        #     R_f=R_f_piece,
+        # )
 
     return mp_data
 
@@ -719,14 +742,20 @@ def cleanup_doublets(
     tol=1e-13,
     max_passes=3,
     log=True,
+    space='sqrt_E'
 ):
-    sgrid = np.sqrt(E)
+    if space == 'sqrt_E':
+        grid = np.sqrt(E)
+    elif space == 'E':
+        grid = E
+    else:
+        raise ValueError(f"Unknown space: {space}")
 
     def extract_primitives(curr_w, curr_z, curr_fs, curr_fa, curr_ff):
         # poles in s-plane and residues for each component
         fvals = [curr_fs, curr_fa] + ([curr_ff] if curr_ff is not None else [])
         poles_s, residues_list = extract_poles_and_residues(
-            curr_w.astype(complex), curr_z.astype(complex), fvals, plane="s"
+            curr_w.astype(complex), curr_z.astype(complex), fvals, plane="s", space=space
         )
         # define a scale similar to Chebfun’s geometric-mean |F|
         # use medians to avoid huge spikes near resonances
@@ -740,14 +769,13 @@ def cleanup_doublets(
 
     def rebuild_w(curr_z, curr_fs, curr_fa, curr_ff):
         # re-solve the unweighted LS for w from stacked Loewner on non-support set
-        s = sgrid
         J = np.arange(len(E))
         for zj in curr_z:
-            jj = np.argmin(np.abs(s - zj))
+            jj = np.argmin(np.abs(grid - zj))
             take = np.where(J == jj)[0]
             if take.size:
                 J = np.delete(J, take[0])
-        delta = s[J][:, None] - curr_z[None, :]
+        delta = grid[J][:, None] - curr_z[None, :]
         A_s = (sigma_s[J][:, None] - curr_fs[None, :]) / delta
         A_a = (sigma_a[J][:, None] - curr_fa[None, :]) / delta
         blocks = [A_s, A_a]
@@ -765,7 +793,7 @@ def cleanup_doublets(
     for it in range(max_passes):
         poles_s, residues_list, Fscale = extract_primitives(wc, zc, fsc, fac, ffc)
         # Define a spuriousness test like Chebfun: |res| / dist_to_grid < tol * Fscale
-        sdist = np.array([np.min(np.abs(p - sgrid)) for p in poles_s])
+        sdist = np.array([np.min(np.abs(p - grid)) for p in poles_s])
         # magnitude across components (max)
         res_mag = np.max(np.vstack([np.abs(r) for r in residues_list]), axis=0)
         crit = res_mag / np.maximum(sdist, 1e-14)
