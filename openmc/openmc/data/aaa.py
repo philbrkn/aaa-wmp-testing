@@ -292,11 +292,86 @@ def evaluate_aaa(E, w, z, fz, space="E"):
     return num / den
 
 
-# def extract_poles_and_residues(w, z, fvals, space="E", log=False):
-#     """
-#     plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
-#     """
+def extract_poles_and_residues(w, z, fvals, space="E", log=False):
+    """
+    plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
+    """
 
+    m = len(z)
+    C = np.zeros((m + 1, m + 1), dtype=complex)
+    C[0, 1:] = w
+    C[1:, 0] = 1.0
+    C[1:, 1:] = np.diag(z)
+    C[0, 0] = 0.0
+
+    B = np.eye(m + 1, dtype=complex)
+    B[1:, 0] = 1.0
+    B[0, 0] = 0.0
+    lam, _ = la.eig(C, B)
+    poles = lam[np.isfinite(lam)]  # finite eigenvalues
+
+    if space == "sqrt_E":
+        # poles = poles
+        poles = poles**2
+    elif space == "E":
+        # poles = np.sqrt(poles)
+        poles = poles
+    else:
+        raise ValueError(f"Unknown space: {space}")
+
+    # residues for each component fk at these poles (in current plane's variable)
+    def residues_for(fk):
+        fk = np.asarray(fk, dtype=complex)
+        r = np.empty_like(poles, dtype=complex)
+        for i, p in enumerate(poles):
+            num = np.sum(w * fk / (p - z))
+            dprime = -np.sum(w / (p - z) ** 2)
+            r[i] = num / dprime
+        return r
+
+    residues = [residues_for(fk) for fk in fvals]
+
+    # sorted by real part for stable output
+    idx = np.argsort(poles.real)
+    poles = poles[idx]
+    residues = [r[idx] for r in residues]
+
+    if log:
+        # cosmetic: snap tiny Im parts to 0 for printing
+        imag_thr = 100 * np.finfo(float).eps * np.maximum(1.0, np.abs(poles.real))
+        poles_print = poles.real + 1j * np.where(np.abs(poles.imag) < imag_thr, 0.0, poles.imag)
+
+        for p in poles_print:
+            print(f"poles real {p.real:6.2f}   imag {p.imag:8.2e}")
+
+    if log:
+        print(f"Found {len(poles)} poles")
+        # Test reconstruction away from support points
+        test_E = (z[10] + z[11]) / 2  # Midpoint between first two support points
+
+        for i, fk in enumerate(fvals):
+            # Pole-residue reconstruction
+            recon = np.sum(residues[i] / (test_E - poles))
+
+            # Barycentric evaluation for comparison
+            bary_num = np.sum(w * fk / (test_E - z))
+            bary_den = np.sum(w / (test_E - z))
+            bary_val = bary_num / bary_den
+
+            print(
+                f"  Channel {i} at E={test_E:.3e}: "
+                f"bary={bary_val.real:.3e}, pole-res={recon.real:.3e}, "
+                f"ratio={recon.real/bary_val.real:.3f}"
+            )
+
+    return poles, residues
+
+
+# def extract_poles_and_residues(w, z, fvals, space="sqrt_E", log=False):
+#     # Find poles as zeros of the common denominator
+#     # D(x) = Σ w_j / (x - z_j)
+
+#     # Build the companion matrix for the denominator
 #     m = len(z)
 #     C = np.zeros((m + 1, m + 1), dtype=complex)
 #     C[0, 1:] = w
@@ -306,87 +381,67 @@ def evaluate_aaa(E, w, z, fz, space="E"):
 
 #     B = np.eye(m + 1, dtype=complex)
 #     B[0, 0] = 0.0
+#     # B = np.zeros((m + 1, m + 1), dtype=complex)
+#     B[1:, 0] = 1.0
+#     # B[1:, 1:]
 
 #     lam, _ = la.eig(C, B)
 #     poles = lam[np.isfinite(lam)]  # finite eigenvalues
 
+#     # Convert poles to E space if needed
 #     if space == "sqrt_E":
-#         # poles = poles
 #         poles = poles**2
-#     elif space == "E":
-#         # poles = np.sqrt(poles)
-#         poles = poles
-#     else:
-#         raise ValueError(f"Unknown space: {space}")
+#     poles = np.array(poles, dtype=complex)
 
-#     # residues for each component fk at these poles (in current plane's variable)
-#     def residues_for(fk):
-#         fk = np.asarray(fk, dtype=complex)
-#         r = np.empty_like(poles, dtype=complex)
-#         for i, p in enumerate(poles):
-#             num = np.sum(w * fk / (p - z))
-#             dprime = -np.sum(w / (p - z) ** 2)
-#             r[i] = num / dprime
-#         return r
+#     # Compute residues for each channel
+#     residues_list = []
 
-#     residues = [residues_for(fk) for fk in fvals]
+#     for i, fk in enumerate(fvals):
+#         residues = np.zeros(len(poles), dtype=complex)
 
-#     # sorted by real part for stable output
+#         # For each pole, compute residue using l'Hôpital's rule
+#         for j, pole in enumerate(poles):
+#             # Numerator at pole: N(pole) = Σ w_k * f_k / (pole - z_k)
+#             # Denominator derivative at pole: D'(pole) = Σ -w_k / (pole - z_k)^2
+
+#             # We need to be careful about numerical precision near poles
+#             # Use a small offset to evaluate near the pole
+#             eps = 1e-15
+#             pole_offset = pole + eps
+
+#             num = np.sum(w * fk / (pole_offset - z))
+#             denom_deriv = np.sum(-w / (pole_offset - z) ** 2)
+
+#             residues[j] = num / denom_deriv
+
+#         residues_list.append(residues)
+
+#     # Sort by real part of poles
 #     idx = np.argsort(poles.real)
 #     poles = poles[idx]
-#     residues = [r[idx] for r in residues]
+#     residues_list = [r[idx] for r in residues_list]
 
 #     if log:
-#         # cosmetic: snap tiny Im parts to 0 for printing
-#         imag_thr = 100 * np.finfo(float).eps * np.maximum(1.0, np.abs(poles.real))
-#         poles_print = poles.real + 1j * np.where(np.abs(poles.imag) < imag_thr, 0.0, poles.imag)
+#         print(f"Found {len(poles)} poles")
+#         # Test reconstruction away from support points
+#         test_E = (z[10] + z[11]) / 2  # Midpoint between first two support points
 
-#         for p in poles_print:
-#             print(f"poles real {p.real:6.2f}   imag {p.imag:8.2e}")
+#         for i, fk in enumerate(fvals):
+#             # Pole-residue reconstruction
+#             recon = np.sum(residues_list[i] / (test_E - poles))
 
-#     return poles, residues
+#             # Barycentric evaluation for comparison
+#             bary_num = np.sum(w * fk / (test_E - z))
+#             bary_den = np.sum(w / (test_E - z))
+#             bary_val = bary_num / bary_den
 
+#             print(
+#                 f"  Channel {i} at E={test_E:.3e}: "
+#                 f"bary={bary_val.real:.3e}, pole-res={recon.real:.3e}, "
+#                 f"ratio={recon.real/bary_val.real:.3f}"
+#             )
 
-def extract_poles_and_residues(w, z, fvals, space="sqrt_E", log=False):
-    """
-    Use baryrat to extract poles and residues from AAA representation
-    """
-    import baryrat
-    # Create BarycentricRational objects for each channel
-    residues_list = []
-
-    for i, fk in enumerate(fvals):
-        # Create barycentric rational for this channel
-        rat = baryrat.BarycentricRational(z, fk, w)
-
-        # Get poles and residues
-        poles_channel, res_channel = rat.polres()
-
-        # On first channel, store the poles (should be same for all channels)
-        if i == 0:
-            poles = np.array(poles_channel, dtype=complex)
-
-            # Transform poles if needed
-            if space == "sqrt_E":
-                poles = poles**2  # Transform from sqrt(E) to E space
-            elif space == "E":
-                pass  # Already in E space
-            else:
-                raise ValueError(f"Unknown space: {space}")
-
-        residues_list.append(np.array(res_channel, dtype=complex))
-
-    # Sort by real part of poles
-    idx = np.argsort(poles.real)
-    poles = poles[idx]
-    residues_list = [r[idx] for r in residues_list]
-
-    if log:
-        print(f"Found {len(poles)} poles")
-        for p in poles:  # Print first 5
-            print(f"  pole: {p.real:.2f} + {p.imag:.2e}j")
-
-    return poles, residues_list
+#     return poles, residues_list
 
 
 def plot_aaa_results(

@@ -4,8 +4,6 @@ from openmc.data.wmp import vectfit_nuclide
 from openmc.data.aaa import plot_aaa_results
 
 
-
-
 def open_wmp_h5(wmp_file):
     with h5py.File(wmp_file, "r") as f:
         # # List all options (groups and datasets) in the HDF5 file
@@ -49,7 +47,7 @@ if __name__ == "__main__":
         endf_file,
         vf_pieces=1,
         mmax=1000,
-        rtol=1e-2,
+        rtol=1e-3,
         path_out=path_out,
         log=2,
         njoy_input=njoy_input,
@@ -58,7 +56,7 @@ if __name__ == "__main__":
         bounds={"E_min": 17465, "E_max": 17596},
         space="E",
         # method='qr+svd',
-        cleanup=False,
+        cleanup=True,
         cleanup_tol=1e-6,  # Only remove if pole-zero distance < 1e-6
         plot_each_slice=True,
         fit_mask_guard=0.0,

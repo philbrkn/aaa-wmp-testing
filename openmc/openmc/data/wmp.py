@@ -233,7 +233,7 @@ def vectfit_nuclide(
             sig_a_piece = absorption_xs[mask_fit]
             sig_f_piece = fission_xs[mask_fit] if fissionable else None
 
-            w, z, f_s_z, f_a_z, *rest = aaa_xs(
+            w, z, fsz, faz, *rest = aaa_xs(
                 E_piece,
                 sig_s_piece,
                 sig_a_piece,
@@ -263,7 +263,7 @@ def vectfit_nuclide(
                 space=space,
             )
 
-        # EXTRACT AND FROISSART
+        # EXTRACT
         ffz = rest[0] if fissionable else None
         fvals_piece = [fsz, faz] + ([ffz] if fissionable else [])
         poles_s, residues_list = extract_poles_and_residues(
@@ -430,7 +430,7 @@ def analyze_constant_background(
     elastic_pole, absorption_pole, fission_pole = evaluate_multipole_xs(
         E,
         mc_data,
-        include_background=False,
+        include_background=True,
     )
 
     # Calculate remainders (original - pole contributions)
@@ -478,11 +478,12 @@ def analyze_constant_background(
     print(f"\nBackground Analysis for {name}:")
     # print(f"Elastic background: {elastic_mean:.4f} ± {elastic_std:.4f} b")
     # print(f"Absorption background: {absorption_mean:.4f} ± {absorption_std:.4f} b")
-    print(f"Elastic background median: {elastic_median:.4f} b")
+    print(f"Elastic background median: {elastic_median:.8f} b")
     print(f"Elastic mode {elastic_modes.mode} and count {elastic_modes.count}")
-    print(f"Absorption background median: {absorption_median:.4f} b")
+    print(f"Absorption background median: {absorption_median:.8f} b")
     if fission_remainder is not None:
-        print(f"Fission background: {fission_mean:.4f} ± {fission_std:.4f} b")
+        print(f"Fission background: {fission_mean:.8f} ± {fission_std:.4f} b")
+        print(f"Fission background median: {fission_median} b")
 
     # Create plots showing the decomposition
     if path_out:
@@ -652,33 +653,33 @@ def evaluate_multipole_xs(E, data_dict, include_background=True):
             # Simple pole evaluation: residue / (E - pole)
             denominator = energy - pole
 
-            if abs(denominator) > 1e-12:  # Avoid division by zero
-                contribution = 1.0 / (denominator)  # Include 1/E factor
+            # if abs(denominator) > 1e-12:  # Avoid division by zero
+            contribution = 1.0 / (denominator)  # Include 1/E factor
 
-                # Elastic (column 1)
-                elastic_xs[i] += (data[pole_idx, 1] * contribution).real
+            # Elastic (column 1)
+            elastic_xs[i] += (data[pole_idx, 1] * contribution).real
 
-                # Absorption (column 2)
-                absorption_xs[i] += (data[pole_idx, 2] * contribution).real
+            # Absorption (column 2)
+            absorption_xs[i] += (data[pole_idx, 2] * contribution).real
 
-                # Fission (column 3, if present)
-                if fissionable:
-                    fission_xs[i] += (data[pole_idx, 3] * contribution).real
+            # Fission (column 3, if present)
+            if fissionable:
+                fission_xs[i] += (data[pole_idx, 3] * contribution).real
 
     # Add constant background as per Gavin's insight
     if include_background:
         # These are rough estimates - in practice you'd determine these
         # from the nearly constant remainder after subtracting pole contributions
-        elastic_xs += 0  # Typical hard sphere elastic scattering (barns)
-        absorption_xs += -0.0008  # Small constant absorption background
+        elastic_xs += 0.66909653  # Typical hard sphere elastic scattering (barns)
+        absorption_xs += -0.00003699 # Small constant absorption background
         if fissionable:
-            fission_xs += 0.0  # Small fission background
+            fission_xs += 1.2838614686081672e-06  # Small fission background
 
     # Ensure non-negative cross sections
-    elastic_xs = np.maximum(elastic_xs, 0.0)
-    absorption_xs = np.maximum(absorption_xs, 0.0)
-    if fissionable:
-        fission_xs = np.maximum(fission_xs, 0.0)
+    # elastic_xs = np.maximum(elastic_xs, 0.0)
+    # absorption_xs = np.maximum(absorption_xs, 0.0)
+    # if fissionable:
+    #     fission_xs = np.maximum(fission_xs, 0.0)
 
     return elastic_xs, absorption_xs, fission_xs
 
