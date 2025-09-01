@@ -42,7 +42,7 @@ def aaa_xs(
     sigma_s,
     sigma_a,
     sigma_f=None,
-    space="sqrt_E",
+    space="E",
     method="full_svd",
     rtol=1e-13,
     mmax=100,
@@ -264,7 +264,7 @@ def aaa_xs(
     return outputs
 
 
-def evaluate_aaa(E, w, z, fz, space="sqrt_E"):
+def evaluate_aaa(E, w, z, fz, space="E"):
     """Barycentric evaluation with exact support-point handling."""
     if space == "sqrt_E":
         grid = np.sqrt(E)
@@ -292,392 +292,101 @@ def evaluate_aaa(E, w, z, fz, space="sqrt_E"):
     return num / den
 
 
+# def extract_poles_and_residues(w, z, fvals, space="E", log=False):
+#     """
+#     plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
+#     """
+
+#     m = len(z)
+#     C = np.zeros((m + 1, m + 1), dtype=complex)
+#     C[0, 1:] = w
+#     C[1:, 0] = 1.0
+#     C[1:, 1:] = np.diag(z)
+#     C[0, 0] = 0.0
+
+#     B = np.eye(m + 1, dtype=complex)
+#     B[0, 0] = 0.0
+
+#     lam, _ = la.eig(C, B)
+#     poles = lam[np.isfinite(lam)]  # finite eigenvalues
+
+#     if space == "sqrt_E":
+#         # poles = poles
+#         poles = poles**2
+#     elif space == "E":
+#         # poles = np.sqrt(poles)
+#         poles = poles
+#     else:
+#         raise ValueError(f"Unknown space: {space}")
+
+#     # residues for each component fk at these poles (in current plane's variable)
+#     def residues_for(fk):
+#         fk = np.asarray(fk, dtype=complex)
+#         r = np.empty_like(poles, dtype=complex)
+#         for i, p in enumerate(poles):
+#             num = np.sum(w * fk / (p - z))
+#             dprime = -np.sum(w / (p - z) ** 2)
+#             r[i] = num / dprime
+#         return r
+
+#     residues = [residues_for(fk) for fk in fvals]
+
+#     # sorted by real part for stable output
+#     idx = np.argsort(poles.real)
+#     poles = poles[idx]
+#     residues = [r[idx] for r in residues]
+
+#     if log:
+#         # cosmetic: snap tiny Im parts to 0 for printing
+#         imag_thr = 100 * np.finfo(float).eps * np.maximum(1.0, np.abs(poles.real))
+#         poles_print = poles.real + 1j * np.where(np.abs(poles.imag) < imag_thr, 0.0, poles.imag)
+
+#         for p in poles_print:
+#             print(f"poles real {p.real:6.2f}   imag {p.imag:8.2e}")
+
+#     return poles, residues
+
+
 def extract_poles_and_residues(w, z, fvals, space="sqrt_E", log=False):
     """
-    plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
+    Use baryrat to extract poles and residues from AAA representation
     """
+    import baryrat
+    # Create BarycentricRational objects for each channel
+    residues_list = []
 
-    m = len(z)
-    C = np.zeros((m + 1, m + 1), dtype=complex)
-    C[0, 1:] = w
-    C[1:, 0] = 1.0
-    C[1:, 1:] = np.diag(z)
-    C[0, 0] = 0.0
+    for i, fk in enumerate(fvals):
+        # Create barycentric rational for this channel
+        rat = baryrat.BarycentricRational(z, fk, w)
 
-    B = np.eye(m + 1, dtype=complex)
-    B[0, 0] = 0.0
+        # Get poles and residues
+        poles_channel, res_channel = rat.polres()
 
-    lam, _ = la.eig(C, B)
-    poles = lam[np.isfinite(lam)]  # finite eigenvalues
+        # On first channel, store the poles (should be same for all channels)
+        if i == 0:
+            poles = np.array(poles_channel, dtype=complex)
 
-    if space == "sqrt_E":
-        # poles = poles
-        poles = poles**2
-    elif space == "E":
-        # poles = np.sqrt(poles)
-        poles = poles
-    else:
-        raise ValueError(f"Unknown space: {space}")
+            # Transform poles if needed
+            if space == "sqrt_E":
+                poles = poles**2  # Transform from sqrt(E) to E space
+            elif space == "E":
+                pass  # Already in E space
+            else:
+                raise ValueError(f"Unknown space: {space}")
 
-    # residues for each component fk at these poles (in current plane's variable)
-    def residues_for(fk):
-        fk = np.asarray(fk, dtype=complex)
-        r = np.empty_like(poles, dtype=complex)
-        for i, p in enumerate(poles):
-            num = np.sum(w * fk / (p - z))
-            dprime = -np.sum(w / (p - z) ** 2)
-            r[i] = num / dprime
-        return r
+        residues_list.append(np.array(res_channel, dtype=complex))
 
-    residues = [residues_for(fk) for fk in fvals]
-
-    # cosmetic: snap tiny Im parts to 0 for printing
-    imag_thr = 100 * np.finfo(float).eps * np.maximum(1.0, np.abs(poles.real))
-    poles = poles.real + 1j * np.where(np.abs(poles.imag) < imag_thr, 0.0, poles.imag)
-
-    # sorted by real part for stable output
+    # Sort by real part of poles
     idx = np.argsort(poles.real)
     poles = poles[idx]
-    residues = [r[idx] for r in residues]
+    residues_list = [r[idx] for r in residues_list]
 
     if log:
-        for p in poles:
-            print(f"poles real {p.real:6.2f}   imag {p.imag:8.2e}")
-    return poles, residues
+        print(f"Found {len(poles)} poles")
+        for p in poles:  # Print first 5
+            print(f"  pole: {p.real:.2f} + {p.imag:.2e}j")
 
-
-def vectfit_nuclide(
-    endf_file,
-    njoy_error=5e-4,
-    vf_pieces=None,
-    log=False,
-    path_out=None,
-    mp_filename=None,
-    njoy_input=None,
-    bounds=None,
-    **kwargs,
-):
-    r"""Generate multipole data for a nuclide from ENDF.
-
-    Parameters
-    ----------
-    endf_file : str
-        Path to ENDF evaluation
-    njoy_error : float, optional
-        Fractional error tolerance for processing point-wise data with NJOY
-    vf_pieces : integer, optional
-        Number of equal-in-momentum spaced energy pieces for data fitting
-    log : bool or int, optional
-        Whether to print running logs (use int for verbosity control)
-    path_out : str, optional
-        Path to write out mutipole data file and vector fitting figures
-    mp_filename : str, optional
-        File name to write out multipole data
-    **kwargs
-        Keyword arguments passed to :func:`openmc.data.multipole._vectfit_xs`
-
-    Returns
-    -------
-    mp_data
-        Dictionary containing necessary multipole data of the nuclide
-
-    """
-
-    # ======================================================================
-    # PREPARE POINT-WISE XS
-    # make 0K ACE data using njoy
-    if njoy_input is None:
-        if log:
-            print(f"Running NJOY to get 0K point-wise data (error={njoy_error})...")
-
-        nuc_ce = IncidentNeutron.from_njoy(
-            endf_file,
-            temperatures=[0.0],
-            error=njoy_error,
-            broadr=False,
-            heatr=False,
-            purr=False,
-        )
-        # dump the NJOY input for later use
-        base_dir = Path(
-            path_out
-        ).parent  # TODO: this assumes path_out is a subdirectory
-        njoy_path_out = base_dir / "NJOY_pickles"
-        njoy_path_out.mkdir(parents=True, exist_ok=True)
-        with open(njoy_path_out / "U238_NJOY.pickle", "wb") as f:
-            pickle.dump(nuc_ce, f)
-    else:
-        # pickle in
-        nuc_ce = pickle.load(open(njoy_input, "rb"))
-
-    if log:
-        print("Parsing cross sections within resolved resonance range...")
-
-    # Determine upper energy: the lower of RRR upper bound and first threshold
-    endf_res = IncidentNeutron.from_endf(endf_file).resonances
-    if (
-        hasattr(endf_res, "resolved")
-        and hasattr(endf_res.resolved, "energy_max")
-        and type(endf_res.resolved) is not ResonanceRange
-    ):
-        E_max = endf_res.resolved.energy_max
-    elif hasattr(endf_res, "unresolved") and hasattr(endf_res.unresolved, "energy_min"):
-        E_max = endf_res.unresolved.energy_min
-    else:
-        E_max = nuc_ce.energy["0K"][-1]
-    E_max_idx = np.searchsorted(nuc_ce.energy["0K"], E_max, side="right") - 1
-    for mt in nuc_ce.reactions:
-        if hasattr(nuc_ce.reactions[mt].xs["0K"], "_threshold_idx"):
-            threshold_idx = nuc_ce.reactions[mt].xs["0K"]._threshold_idx
-            if 0 < threshold_idx < E_max_idx:
-                E_max_idx = threshold_idx
-
-    # parse energy and cross sections
-    energy = nuc_ce.energy["0K"][: E_max_idx + 1]
-    if bounds:
-        E_min = bounds["E_min"]
-        E_max = bounds["E_max"]
-    else:
-        E_min, E_max = energy[0], energy[-1]
-
-    n_points = energy.size
-    total_xs = nuc_ce[1].xs["0K"](energy)
-    elastic_xs = nuc_ce[2].xs["0K"](energy)
-
-    try:
-        absorption_xs = nuc_ce[27].xs["0K"](energy)
-    except KeyError:
-        absorption_xs = np.zeros_like(total_xs)
-
-    fissionable = False
-    try:
-        fission_xs = nuc_ce[18].xs["0K"](energy)
-        fissionable = True
-    except KeyError:
-        pass
-
-    # make vectors
-    if fissionable:
-        ce_xs = np.vstack((elastic_xs, absorption_xs, fission_xs))
-        mts = [2, 27, 18]
-    else:
-        ce_xs = np.vstack((elastic_xs, absorption_xs))
-        mts = [2, 27]
-
-    if log:
-        print(f"  MTs: {mts}")
-        i0 = np.searchsorted(energy, E_min, side="left")
-        i1 = np.searchsorted(energy, E_max, side="right")
-        bound_pts = max(0, i1 - i0)  # number of points in [E_min, E_max]
-        print(f"  Energy range: {E_min:.3e} to {E_max:.3e} eV ({bound_pts} points)")
-
-    # ======================================================================
-    # PERFORM VECTOR FITTING
-
-    if vf_pieces is None:
-        # divide into pieces for complex nuclides
-        peaks, _ = find_peaks(total_xs)
-        n_peaks = peaks.size
-        if n_peaks > 200 or n_points > 30000 or n_peaks * n_points > 100 * 10000:
-            vf_pieces = max(5, n_peaks // 50, n_points // 2000)
-        else:
-            vf_pieces = 1
-    piece_width = (E_max - E_min) / vf_pieces
-    # print(f"Piece width {piece_width}")
-    alpha = nuc_ce.atomic_weight_ratio / (K_BOLTZMANN * TEMPERATURE_LIMIT)
-
-    poles, residues = [], []
-    # VF piece by piece
-    for i_piece in range(vf_pieces):
-        if log:
-            print(f"Vector fitting piece {i_piece + 1}/{vf_pieces}...")
-        # start E of this piece
-        e_bound = (sqrt(E_min) + piece_width * (i_piece - 0.5)) ** 2
-        if i_piece == 0 or sqrt(alpha * e_bound) < 4.0:
-            # if E_min == 0:
-            e_start = E_min
-            e_start_idx = 0
-        else:
-            e_start = max(E_min, (sqrt(alpha * e_bound) - 4.0) ** 2 / alpha)
-            e_start_idx = np.searchsorted(energy, e_start, side="right") - 1
-        # end E of this piece
-        e_bound = (sqrt(E_min) + piece_width * (i_piece + 1)) ** 2
-        e_end = min(E_max, (sqrt(alpha * e_bound) + 4.0) ** 2 / alpha)
-        e_end_idx = np.searchsorted(energy, e_end, side="left") + 1
-        e_idx = range(e_start_idx, min(e_end_idx + 1, n_points))
-        print(
-            f"  Piece {i_piece + 1}: E={energy[e_start_idx]:.3e} to {energy[e_end_idx - 1]:.3e} eV"
-        )
-
-        # no boundary mask
-        E_piece = energy[e_idx]
-        sig_s_piece = ce_xs[0, e_idx]
-        sig_a_piece = ce_xs[1, e_idx]
-        sig_f_piece = ce_xs[2, e_idx] if fissionable else None
-
-        w, z, f_s_z, f_a_z, *rest = aaa_xs(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            sigma_f=sig_f_piece,
-            method=kwargs.get("method", "full_svd"),
-            rtol=kwargs.get("rtol", 1e-13),
-            mmax=kwargs.get("mmax", 100),
-            log=log,
-            space=kwargs.get("space", "sqrt_E"),
-        )
-        # s_piece = np.sqrt(E_piece)
-        # F_s = sig_s_piece * E_piece
-        # F_a = sig_a_piece * E_piece
-        # F_f = sig_f_piece * E_piece if fissionable else None
-
-        # w, z, F_s_z, F_a_z, *rest = aaa_xs(
-        #     s_piece,
-        #     F_s,
-        #     F_a,
-        #     sigma_f=F_f,
-        #     rtol=kwargs.get("rtol", 1e-13),
-        #     mmax=kwargs.get("mmax", 100),
-        #     log=log,
-        # )
-
-        # F_f_z = rest[0] if fissionable else None
-
-        # # Evaluate in s, then back to sigma by dividing by E
-        # R_s_piece = evaluate_aaa(s_piece, w, z, F_s_z) / E_piece
-        # R_a_piece = evaluate_aaa(s_piece, w, z, F_a_z) / E_piece
-        # R_f_piece = (evaluate_aaa(s_piece, w, z, F_f_z) / E_piece) if fissionable else None
-        # fvals_piece = [F_s_z, F_a_z] + ([F_f_z] if fissionable else [])
-        # poles_s, residues_list = extract_poles_and_residues(
-        #     w.astype(complex), z.astype(complex), fvals_piece, log=log
-        # )
-
-        # # boundary mask
-        # g = 0.1 * (e_end - e_start)
-        # mask_fit = (energy >= e_start-g) & (energy <= e_end + g)
-        # mask_core = (energy >= e_start) & (energy <= e_end)
-        # E_piece      = energy[mask_fit]
-        # sig_s_piece  = elastic_xs[mask_fit]
-        # sig_a_piece  = absorption_xs[mask_fit]
-        # sig_f_piece  = fission_xs[mask_fit] if fissionable else None
-
-        # w, z, f_s_z, f_a_z, *rest = aaa_xs(
-        #     E_piece,
-        #     sig_s_piece,
-        #     sig_a_piece,
-        #     sigma_f=sig_f_piece,
-        #     rtol=kwargs.get("rtol", 1e-13),
-        #     mmax=kwargs.get("mmax", 100),
-        #     log=log,
-        #     fit_mask=np.ones_like(E_piece, dtype=bool),
-        #     core_mask=mask_core[mask_fit],
-        # )
-
-        # EXTRACT AND FROISSART
-        f_f_z = rest[0] if fissionable else None
-        fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
-        poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex),
-            z.astype(complex),
-            fvals_piece,
-            log=log,
-            space=kwargs.get("space", "sqrt_E"),
-        )
-
-        # print("Cleaning up doublets...")
-        w, z, f_s_z, f_a_z, f_f_z = cleanup_doublets(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            z,
-            f_s_z,
-            f_a_z,
-            w,
-            sigma_f=sig_f_piece,
-            ff=(f_f_z if fissionable else None),
-            tol=1e-3,
-            max_passes=2,
-            log=True,
-            space=kwargs.get("space", "sqrt_E"),
-        )
-
-        fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
-        poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex),
-            z.astype(complex),
-            fvals_piece,
-            log=log,
-            space=kwargs.get("space", "sqrt_E"),
-        )
-
-        poles.append(poles_s)
-        residues.append(residues_list)
-        R_s_piece = evaluate_aaa(
-            E_piece, w, z, f_s_z, space=kwargs.get("space", "sqrt_E")
-        )
-        R_a_piece = evaluate_aaa(
-            E_piece, w, z, f_a_z, space=kwargs.get("space", "sqrt_E")
-        )
-        R_f_piece = (
-            evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get("space", "sqrt_E"))
-            if fissionable
-            else None
-        )
-        plot_aaa_results(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            R_s_piece,
-            R_a_piece,
-            sigma_f=sig_f_piece,
-            R_f=R_f_piece,
-            path_out="aaa_window",
-        )
-
-    # print number of poles
-    n_poles = sum([p.size for p in poles])
-    if log:
-        print(f"Total number of poles: {n_poles}")
-
-    # collect multipole data into a dictionary
-    mp_data = {
-        "name": nuc_ce.name,
-        "AWR": nuc_ce.atomic_weight_ratio,
-        "E_min": E_min,
-        "E_max": E_max,
-        "poles": poles,
-        "residues": residues,
-    }
-
-    # dump multipole data to file
-    if path_out:
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        if not mp_filename:
-            mp_filename = f"{nuc_ce.name}_mp.pickle"
-        mp_filename = os.path.join(path_out, mp_filename)
-        with open(mp_filename, "wb") as f:
-            pickle.dump(mp_data, f)
-        if log:
-            print(f"Dumped multipole data to file: {mp_filename}")
-
-        # R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z, space=kwargs.get('space', 'sqrt_E'))
-        # R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z, space=kwargs.get('space', 'sqrt_E'))
-        # R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get('space', 'sqrt_E')) if fissionable else None
-        # R_s_piece = evaluate_aaa(E_piece, w, z, F_s_z) / E_piece
-        # R_a_piece = evaluate_aaa(E_piece, w, z, F_a_z) / E_piece
-        # R_f_piece = (evaluate_aaa(E_piece, w, z, F_f_z) / E_piece if fissionable else None)
-        # plot_aaa_results(
-        #     E_piece,
-        #     sig_s_piece,
-        #     sig_a_piece,
-        #     R_s_piece,
-        #     R_a_piece,
-        #     sigma_f=sig_f_piece,
-        #     R_f=R_f_piece,
-        # )
-
-    return mp_data
+    return poles, residues_list
 
 
 def plot_aaa_results(
@@ -764,7 +473,7 @@ def cleanup(
     sigma_a,
     sigma_f=None,
     cleanup_tol=1e-13,
-    space="sqrt_E",
+    space="E",
     log=False,
 ):
     """
@@ -946,7 +655,7 @@ def apply_cleanup2_to_aaa(
     sigma_f=None,
     ff=None,
     cleanup_tol=1e-3,
-    space="sqrt_E",
+    space="E",
     log=False,
 ):
     """

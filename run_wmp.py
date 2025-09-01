@@ -11,7 +11,7 @@ path_out = Path(__file__).parent / "aaa_test"
 time1 = time.perf_counter()
 mp_data = vectfit_nuclide(
     endf_file,
-    # vf_pieces=1,
+    vf_pieces=1,
     mmax=1000,
     rtol=1e-3,
     path_out=path_out,
@@ -19,12 +19,12 @@ mp_data = vectfit_nuclide(
     njoy_input=njoy_input,
     njoy_error=5e-4,
     # bounds={'E_min': 0, 'E_max': 200},
-    # bounds={'E_min': 17465, 'E_max': 17596},
+    bounds={'E_min': 17465, 'E_max': 17596},
     space='E',
     # method='qr+svd',
     cleanup=False,
     cleanup_tol=1e-6,  # Only remove if pole-zero distance < 1e-6
-    plot_each_slice=False,
+    plot_each_slice=True,
     fit_mask_guard=0.0,
 )
 
