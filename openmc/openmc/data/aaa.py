@@ -1,6 +1,6 @@
 from math import sqrt
 from pathlib import Path
- 
+
 import os
 import pickle
 import matplotlib.pyplot as plt
@@ -8,6 +8,8 @@ import numpy as np
 from scipy.signal import find_peaks
 from scipy.linalg import svd
 import scipy.linalg as la
+import warnings
+from scipy.sparse import spdiags
 
 import openmc.checkvalue as cv
 
@@ -40,8 +42,8 @@ def aaa_xs(
     sigma_s,
     sigma_a,
     sigma_f=None,
-    space='sqrt_E',
-    method='full_svd',
+    space="sqrt_E",
+    method="full_svd",
     rtol=1e-13,
     mmax=100,
     log=False,
@@ -93,9 +95,9 @@ def aaa_xs(
     """
     # Initialize the interpolation point indices
     n = E.shape[0]
-    if space == 'sqrt_E':
+    if space == "sqrt_E":
         grid = np.sqrt(E)
-    elif space == 'E':
+    elif space == "E":
         grid = E
     else:
         raise ValueError(f"Unknown space: {space}")
@@ -198,24 +200,26 @@ def aaa_xs(
             rel_w_f = 1.0 / np.maximum(np.abs(sigma_f[J_fit]), eps)
             A_f *= rel_w_f[:, None]
 
-        #TODO:
-        #divide every col by val of function
-        #normalize error across channels
+        # TODO:
+        # divide every col by val of function
+        # normalize error across channels
 
         # Stack vertically to get a single shared w (length m)
         L = np.vstack((A_s, A_a)) if sigma_f is None else np.vstack((A_s, A_a, A_f))
 
         # Compute SVD([A_s, A_a, A_f])
         # Q, R = np.linalg.qr(L, mode='reduced')
-        if method == 'full_svd':
+        if method == "full_svd":
             _, _, Vh = svd(L, full_matrices=False)
-        elif method == 'qr+svd':
-            Q, R = np.linalg.qr(L, mode='reduced')
+        elif method == "qr+svd":
+            Q, R = np.linalg.qr(L, mode="reduced")
             _, _, Vh = svd(R, full_matrices=False)
-        elif method == 'randomized_svd':
+        elif method == "randomized_svd":
             from sklearn.utils.extmath import randomized_svd
-            U, s, Vh = randomized_svd(L, n_components=min(20, L.shape[1]),
-                                      random_state=42, n_iter=7)
+
+            U, s, Vh = randomized_svd(
+                L, n_components=min(20, L.shape[1]), random_state=42, n_iter=7
+            )
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -260,11 +264,11 @@ def aaa_xs(
     return outputs
 
 
-def evaluate_aaa(E, w, z, fz, space='sqrt_E'):
+def evaluate_aaa(E, w, z, fz, space="sqrt_E"):
     """Barycentric evaluation with exact support-point handling."""
-    if space == 'sqrt_E':
+    if space == "sqrt_E":
         grid = np.sqrt(E)
-    elif space == 'E':
+    elif space == "E":
         grid = E
     else:
         raise ValueError(f"Unknown space: {space}")
@@ -288,7 +292,7 @@ def evaluate_aaa(E, w, z, fz, space='sqrt_E'):
     return num / den
 
 
-def extract_poles_and_residues(w, z, fvals, space='sqrt_E', log=False):
+def extract_poles_and_residues(w, z, fvals, space="sqrt_E", log=False):
     """
     plane: "s" to return s-plane poles; "E" to return E-plane (E = s^2).
     """
@@ -306,10 +310,12 @@ def extract_poles_and_residues(w, z, fvals, space='sqrt_E', log=False):
     lam, _ = la.eig(C, B)
     poles = lam[np.isfinite(lam)]  # finite eigenvalues
 
-    if space == 'sqrt_E':
+    if space == "sqrt_E":
+        # poles = poles
+        poles = poles**2
+    elif space == "E":
+        # poles = np.sqrt(poles)
         poles = poles
-    elif space == 'E':
-        poles = np.sqrt(poles)
     else:
         raise ValueError(f"Unknown space: {space}")
 
@@ -393,7 +399,9 @@ def vectfit_nuclide(
             purr=False,
         )
         # dump the NJOY input for later use
-        base_dir = Path(path_out).parent  #TODO: this assumes path_out is a subdirectory
+        base_dir = Path(
+            path_out
+        ).parent  # TODO: this assumes path_out is a subdirectory
         njoy_path_out = base_dir / "NJOY_pickles"
         njoy_path_out.mkdir(parents=True, exist_ok=True)
         with open(njoy_path_out / "U238_NJOY.pickle", "wb") as f:
@@ -427,8 +435,8 @@ def vectfit_nuclide(
     # parse energy and cross sections
     energy = nuc_ce.energy["0K"][: E_max_idx + 1]
     if bounds:
-        E_min = bounds['E_min']
-        E_max = bounds['E_max']
+        E_min = bounds["E_min"]
+        E_max = bounds["E_max"]
     else:
         E_min, E_max = energy[0], energy[-1]
 
@@ -458,9 +466,9 @@ def vectfit_nuclide(
 
     if log:
         print(f"  MTs: {mts}")
-        i0 = np.searchsorted(energy, E_min, side='left')
-        i1 = np.searchsorted(energy, E_max, side='right')
-        bound_pts = max(0, i1 - i0)     # number of points in [E_min, E_max]
+        i0 = np.searchsorted(energy, E_min, side="left")
+        i1 = np.searchsorted(energy, E_max, side="right")
+        bound_pts = max(0, i1 - i0)  # number of points in [E_min, E_max]
         print(f"  Energy range: {E_min:.3e} to {E_max:.3e} eV ({bound_pts} points)")
 
     # ======================================================================
@@ -474,8 +482,8 @@ def vectfit_nuclide(
             vf_pieces = max(5, n_peaks // 50, n_points // 2000)
         else:
             vf_pieces = 1
-    piece_width = (sqrt(E_max) - sqrt(E_min)) / vf_pieces
-
+    piece_width = (E_max - E_min) / vf_pieces
+    # print(f"Piece width {piece_width}")
     alpha = nuc_ce.atomic_weight_ratio / (K_BOLTZMANN * TEMPERATURE_LIMIT)
 
     poles, residues = [], []
@@ -486,7 +494,7 @@ def vectfit_nuclide(
         # start E of this piece
         e_bound = (sqrt(E_min) + piece_width * (i_piece - 0.5)) ** 2
         if i_piece == 0 or sqrt(alpha * e_bound) < 4.0:
-        # if E_min == 0:
+            # if E_min == 0:
             e_start = E_min
             e_start_idx = 0
         else:
@@ -512,11 +520,11 @@ def vectfit_nuclide(
             sig_s_piece,
             sig_a_piece,
             sigma_f=sig_f_piece,
-            method=kwargs.get('method', 'full_svd'),
+            method=kwargs.get("method", "full_svd"),
             rtol=kwargs.get("rtol", 1e-13),
             mmax=kwargs.get("mmax", 100),
             log=log,
-            space=kwargs.get('space', 'sqrt_E')
+            space=kwargs.get("space", "sqrt_E"),
         )
         # s_piece = np.sqrt(E_piece)
         # F_s = sig_s_piece * E_piece
@@ -569,36 +577,52 @@ def vectfit_nuclide(
         f_f_z = rest[0] if fissionable else None
         fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
         poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex), z.astype(complex), fvals_piece, log=log, space=kwargs.get('space', 'sqrt_E')
+            w.astype(complex),
+            z.astype(complex),
+            fvals_piece,
+            log=log,
+            space=kwargs.get("space", "sqrt_E"),
         )
 
         # print("Cleaning up doublets...")
-        # w, z, f_s_z, f_a_z, f_f_z = cleanup_doublets(
-        #     E_piece,
-        #     sig_s_piece,
-        #     sig_a_piece,
-        #     z,
-        #     f_s_z,
-        #     f_a_z,
-        #     w,
-        #     sigma_f=sig_f_piece,
-        #     ff=(f_f_z if fissionable else None),
-        #     tol=1e-4,
-        #     max_passes=3,
-        #     log=True,
-        #     space=kwargs.get('space', 'sqrt_E')
-        # )
+        w, z, f_s_z, f_a_z, f_f_z = cleanup_doublets(
+            E_piece,
+            sig_s_piece,
+            sig_a_piece,
+            z,
+            f_s_z,
+            f_a_z,
+            w,
+            sigma_f=sig_f_piece,
+            ff=(f_f_z if fissionable else None),
+            tol=1e-3,
+            max_passes=2,
+            log=True,
+            space=kwargs.get("space", "sqrt_E"),
+        )
 
-        # fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
-        # poles_s, residues_list = extract_poles_and_residues(
-        #     w.astype(complex), z.astype(complex), fvals_piece, log=log
-        # )
+        fvals_piece = [f_s_z, f_a_z] + ([f_f_z] if fissionable else [])
+        poles_s, residues_list = extract_poles_and_residues(
+            w.astype(complex),
+            z.astype(complex),
+            fvals_piece,
+            log=log,
+            space=kwargs.get("space", "sqrt_E"),
+        )
 
         poles.append(poles_s)
         residues.append(residues_list)
-        R_s_piece = evaluate_aaa(E_piece, w, z, f_s_z, space=kwargs.get('space', 'sqrt_E'))
-        R_a_piece = evaluate_aaa(E_piece, w, z, f_a_z, space=kwargs.get('space', 'sqrt_E'))
-        R_f_piece = evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get('space', 'sqrt_E')) if fissionable else None
+        R_s_piece = evaluate_aaa(
+            E_piece, w, z, f_s_z, space=kwargs.get("space", "sqrt_E")
+        )
+        R_a_piece = evaluate_aaa(
+            E_piece, w, z, f_a_z, space=kwargs.get("space", "sqrt_E")
+        )
+        R_f_piece = (
+            evaluate_aaa(E_piece, w, z, f_f_z, space=kwargs.get("space", "sqrt_E"))
+            if fissionable
+            else None
+        )
         plot_aaa_results(
             E_piece,
             sig_s_piece,
@@ -729,7 +753,189 @@ def plot_aaa_results(
         plt.close()
 
 
-def cleanup_doublets(
+def cleanup(
+    z,
+    fs,
+    fa,
+    ff,
+    w,
+    Z,
+    sigma_s,
+    sigma_a,
+    sigma_f=None,
+    cleanup_tol=1e-13,
+    space="sqrt_E",
+    log=False,
+):
+    """
+    Simple Froissart doublet cleanup based on MATLAB's cleanup function.
+    Removes spurious pole-zero pairs by identifying negligible residues.
+
+    Parameters
+    ----------
+    z : array_like
+        Support points (in transformed space)
+    fs : array_like
+        Scattering cross-section values at support points
+    fa : array_like
+        Absorption cross-section values at support points
+    ff : array_like or None
+        Fission cross-section values at support points
+    w : array_like
+        Weights
+    Z : array_like
+        Sample points (energy grid in original space)
+    sigma_s : array_like
+        Scattering cross-section values at sample points
+    sigma_a : array_like
+        Absorption cross-section values at sample points
+    sigma_f : array_like or None
+        Fission cross-section values at sample points
+    cleanup_tol : float
+        Tolerance for cleanup (default 1e-13)
+    space : str
+        Space for transformation ('sqrt_E' or 'E')
+    log : bool
+        Whether to print information
+
+    Returns
+    -------
+    z, fs, fa, ff, w : arrays
+        Cleaned support points, function values, and weights
+    """
+    eps = 1e-13
+    has_fission = sigma_f is not None and ff is not None
+
+    # Transform grid
+    if space == "sqrt_E":
+        grid = np.sqrt(Z)
+    elif space == "E":
+        grid = Z
+    else:
+        raise ValueError(f"Unknown space: {space}")
+
+    # Compute poles and zeros for total function
+    f_total = fs + fa
+    if has_fission:
+        f_total = f_total + ff
+
+    pol, res, zer = prz(z, f_total, w)
+
+    if log:
+        print(f"  Before cleanup: {len(pol)} poles, {len(zer)} zeros")
+
+    # Find pole-zero pairs that are very close
+    poles_to_remove = []
+    zeros_matched = set()
+
+    for i, p in enumerate(pol):
+        if len(zer) == 0:
+            break
+        # Find closest zero to this pole
+        distances = np.abs(zer - p)
+        min_idx = np.argmin(distances)
+        min_dist = distances[min_idx]
+
+        # If pole and zero are extremely close and zero hasn't been matched yet
+        if min_dist < cleanup_tol and min_idx not in zeros_matched:
+            poles_to_remove.append(i)
+            zeros_matched.add(min_idx)
+            if log > 1:
+                print(
+                    f"    Pole-zero pair found: pole={p:.6e}, zero={zer[min_idx]:.6e}, dist={min_dist:.3e}"
+                )
+
+    if len(poles_to_remove) == 0:
+        if log:
+            print("  No close pole-zero pairs found")
+        return z, fs, fa, ff, w
+
+    if log:
+        print(f"  Found {len(poles_to_remove)} pole-zero pairs to remove")
+
+    # Find support points closest to these poles
+    indices_to_remove = []
+    for pole_idx in poles_to_remove:
+        p = pol[pole_idx]
+        distances = np.abs(z - p)
+        closest_idx = np.argmin(distances)
+        indices_to_remove.append(closest_idx)
+
+    # Remove duplicates and sort
+    indices_to_remove = sorted(set(indices_to_remove), reverse=True)
+
+    if log:
+        print(f"  Removing {len(indices_to_remove)} support points")
+
+    # Remove support points
+    for idx in indices_to_remove:
+        z = np.delete(z, idx)
+        fs = np.delete(fs, idx)
+        fa = np.delete(fa, idx)
+        if has_fission:
+            ff = np.delete(ff, idx)
+
+    m = len(z)
+    if m == 0:
+        warnings.warn("No support points left after cleanup", UserWarning)
+        return z, fs, fa, ff, w
+
+    # Rebuild approximation
+    # Remove coincident points from grid
+    delta = grid[:, None] - z[None, :]
+    row_mask = ~np.any(np.isclose(delta, 0.0, atol=1e-14), axis=1)
+
+    grid_clean = grid[row_mask]
+    sigma_s_clean = sigma_s[row_mask]
+    sigma_a_clean = sigma_a[row_mask]
+    if has_fission:
+        sigma_f_clean = sigma_f[row_mask] if sigma_f is not None else None
+
+    # Recompute delta
+    delta = grid_clean[:, None] - z[None, :]
+
+    # Build Loewner matrices
+    A_s = (sigma_s_clean[:, None] - fs[None, :]) / delta
+    A_a = (sigma_a_clean[:, None] - fa[None, :]) / delta
+
+    # Apply relative weighting
+    rel_w_s = 1.0 / np.maximum(np.abs(sigma_s_clean), eps)
+    rel_w_a = 1.0 / np.maximum(np.abs(sigma_a_clean), eps)
+    A_s *= rel_w_s[:, None]
+    A_a *= rel_w_a[:, None]
+
+    if has_fission:
+        A_f = (sigma_f_clean[:, None] - ff[None, :]) / delta
+        rel_w_f = 1.0 / np.maximum(np.abs(sigma_f_clean), eps)
+        A_f *= rel_w_f[:, None]
+        L = np.vstack((A_s, A_a, A_f))
+    else:
+        L = np.vstack((A_s, A_a))
+
+    # Solve for new weights
+    try:
+        _, _, Vh = svd(L, full_matrices=False)
+        w = Vh[-1, :].conj() if np.iscomplexobj(Vh) else Vh[-1, :]
+    except Exception as e:
+        warnings.warn(f"SVD failed: {e}", UserWarning)
+        return z, fs, fa, ff, w
+
+    if log:
+        # Verify result
+        f_total_new = fs + fa
+        if has_fission:
+            f_total_new = f_total_new + ff
+        pol_new, _, zer_new = prz(z, f_total_new, w)
+        print(f"  After cleanup: {len(pol_new)} poles, {len(zer_new)} zeros")
+
+    if has_fission:
+        return z, fs, fa, ff, w
+    else:
+        return z, fs, fa, None, w
+
+
+# Helper function to integrate with your existing code
+def apply_cleanup2_to_aaa(
     E,
     sigma_s,
     sigma_a,
@@ -739,88 +945,93 @@ def cleanup_doublets(
     w,
     sigma_f=None,
     ff=None,
-    tol=1e-13,
-    max_passes=3,
-    log=True,
-    space='sqrt_E'
+    cleanup_tol=1e-3,
+    space="sqrt_E",
+    log=False,
 ):
-    if space == 'sqrt_E':
-        grid = np.sqrt(E)
-    elif space == 'E':
-        grid = E
-    else:
-        raise ValueError(f"Unknown space: {space}")
+    """
+    Apply cleanup2 to AAA approximation results.
 
-    def extract_primitives(curr_w, curr_z, curr_fs, curr_fa, curr_ff):
-        # poles in s-plane and residues for each component
-        fvals = [curr_fs, curr_fa] + ([curr_ff] if curr_ff is not None else [])
-        poles_s, residues_list = extract_poles_and_residues(
-            curr_w.astype(complex), curr_z.astype(complex), fvals, plane="s", space=space
-        )
-        # define a scale similar to Chebfun’s geometric-mean |F|
-        # use medians to avoid huge spikes near resonances
-        Fscale = max(
-            np.median(np.abs(sigma_s)),
-            np.median(np.abs(sigma_a)),
-            np.median(np.abs(sigma_f)) if sigma_f is not None else 0.0,
-            np.finfo(float).tiny,
-        )
-        return poles_s, residues_list, Fscale
+    Returns cleaned z, fs, fa, ff (if applicable), and w
+    """
+    if log:
+        print("Applying simple Froissart cleanup...")
 
-    def rebuild_w(curr_z, curr_fs, curr_fa, curr_ff):
-        # re-solve the unweighted LS for w from stacked Loewner on non-support set
-        J = np.arange(len(E))
-        for zj in curr_z:
-            jj = np.argmin(np.abs(grid - zj))
-            take = np.where(J == jj)[0]
-            if take.size:
-                J = np.delete(J, take[0])
-        delta = grid[J][:, None] - curr_z[None, :]
-        A_s = (sigma_s[J][:, None] - curr_fs[None, :]) / delta
-        A_a = (sigma_a[J][:, None] - curr_fa[None, :]) / delta
-        blocks = [A_s, A_a]
-        if sigma_f is not None:
-            A_f = (sigma_f[J][:, None] - curr_ff[None, :]) / delta
-            blocks.append(A_f)
-        L = np.vstack(blocks)
-        _, _, Vh = la.svd(L, full_matrices=False)
-        return Vh[-1, :]
+    z_clean, fs_clean, fa_clean, ff_clean, w_clean = cleanup(
+        z,
+        fs,
+        fa,
+        ff,
+        w,
+        E,
+        sigma_s,
+        sigma_a,
+        sigma_f,
+        cleanup_tol=cleanup_tol,
+        space=space,
+        log=log,
+    )
 
-    zc, fsc, fac = z.copy(), fs.copy(), fa.copy()
-    ffc = ff.copy() if (ff is not None) else None
-    wc = w.copy()
+    if log:
+        print(f"  Reduced from {len(z)} to {len(z_clean)} support points")
 
-    for it in range(max_passes):
-        poles_s, residues_list, Fscale = extract_primitives(wc, zc, fsc, fac, ffc)
-        # Define a spuriousness test like Chebfun: |res| / dist_to_grid < tol * Fscale
-        sdist = np.array([np.min(np.abs(p - grid)) for p in poles_s])
-        # magnitude across components (max)
-        res_mag = np.max(np.vstack([np.abs(r) for r in residues_list]), axis=0)
-        crit = res_mag / np.maximum(sdist, 1e-14)
-        bad = np.where(crit < tol * Fscale)[0]
-        if bad.size == 0:
-            if log:
-                print(f"  cleanup: no doublets at pass {it+1}")
-            break
+    return z_clean, fs_clean, fa_clean, ff_clean, w_clean
 
-        if log:
-            print(f"  cleanup: removing {bad.size} suspected doublets at pass {it+1}")
 
-        # For each bad pole, remove the closest support point
-        to_prune = set()
-        for k in bad:
-            pole = poles_s[k]
-            jstar = int(np.argmin(np.abs(zc - pole)))
-            to_prune.add(jstar)
-        if not to_prune:
-            break
+def prz(z, f, w):
+    """
+    Compute poles, residues, and zeros of rational function in barycentric form.
+    This is an adapter that matches MATLAB's prz signature.
 
-        keep = np.array([j for j in range(zc.size) if j not in to_prune], dtype=int)
-        zc, fsc, fac = zc[keep], fsc[keep], fac[keep]
-        if ffc is not None:
-            ffc = ffc[keep]
-        if zc.size < 2:
-            break
-        wc = rebuild_w(zc, fsc, fac, ffc)
+    Parameters
+    ----------
+    z : array_like
+        Support points (already in transformed space)
+    f : array_like
+        Function values at support points
+    w : array_like
+        Weights
 
-    return wc, zc, fsc, fac, ffc
+    Returns
+    -------
+    pol : array
+        Poles of the rational approximation
+    res : array
+        Residues at the poles
+    zer : array
+        Zeros of the rational approximation
+    """
+    m = len(z)
+
+    # Build matrices for generalized eigenvalue problem
+    B = np.eye(m + 1, dtype=complex)
+    B[0, 0] = 0.0
+
+    # Matrix E for poles
+    E = np.zeros((m + 1, m + 1), dtype=complex)
+    E[0, 1:] = w
+    E[1:, 0] = 1.0
+    E[1:, 1:] = np.diag(z)
+
+    # Compute poles via generalized eigenvalue problem
+    lam, _ = la.eig(E, B)
+    pol = lam[np.isfinite(lam)]  # finite eigenvalues only
+
+    # Compute residues using formula for residue of quotient of analytic functions
+    res = np.zeros_like(pol, dtype=complex)
+    for i, p in enumerate(pol):
+        num = np.sum(w * f / (p - z))
+        dprime = -np.sum(w / (p - z) ** 2)
+        res[i] = num / dprime
+
+    # Matrix E for zeros (numerator)
+    E_zer = np.zeros((m + 1, m + 1), dtype=complex)
+    E_zer[0, 1:] = w * f  # Note: element-wise multiplication
+    E_zer[1:, 0] = 1.0
+    E_zer[1:, 1:] = np.diag(z)
+
+    # Compute zeros via generalized eigenvalue problem
+    lam_zer, _ = la.eig(E_zer, B)
+    zer = lam_zer[np.isfinite(lam_zer)]  # finite eigenvalues only
+
+    return pol, res, zer

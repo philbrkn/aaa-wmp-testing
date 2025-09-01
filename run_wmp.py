@@ -1,6 +1,6 @@
 from pathlib import Path
 # import pickle
-from openmc.data.aaa import vectfit_nuclide
+from openmc.data.wmp import vectfit_nuclide
 import time
 
 endf_file = Path(__file__).parent / "ENDF-VIII-data" / "n-092_U_238.endf"
@@ -11,17 +11,21 @@ path_out = Path(__file__).parent / "aaa_test"
 time1 = time.perf_counter()
 mp_data = vectfit_nuclide(
     endf_file,
-    vf_pieces=50,
+    # vf_pieces=1,
     mmax=1000,
-    rtol=1e-2,
+    rtol=1e-3,
     path_out=path_out,
     log=2,
     njoy_input=njoy_input,
     njoy_error=5e-4,
-    # bounds={'E_min': 0, 'E_max': 30},
-    # bounds={'E_min': 0, 'E_max': 500},
+    # bounds={'E_min': 0, 'E_max': 200},
+    # bounds={'E_min': 17465, 'E_max': 17596},
     space='E',
-    # method='qr+svd'
+    # method='qr+svd',
+    cleanup=False,
+    cleanup_tol=1e-6,  # Only remove if pole-zero distance < 1e-6
+    plot_each_slice=False,
+    fit_mask_guard=0.0,
 )
 
 print(f"Time taken: {time.perf_counter()-time1:.3f} s")
