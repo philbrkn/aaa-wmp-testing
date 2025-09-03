@@ -66,7 +66,7 @@ def plot_single_channel(
     ax1.tick_params(axis='y', labelcolor='black')
     ax1.grid(True, alpha=0.3)
 
-# Handle error plotting on secondary axis
+    # Handle error plotting on secondary axis
     if show_error:
         ax2 = ax1.twinx()
         
@@ -129,7 +129,7 @@ def plot_single_channel(
 
 def plot_reconstruction(
     E, original_data, poles, residues, name="Nuclide", path_out=None, plot_type="loglog",
-    show_error=False, error_type="relative"
+    show_error=False, error_type="relative",  poly_info=None
 ):
     """
     Plot original ACE data vs reconstructed from poles/residues.
@@ -154,6 +154,11 @@ def plot_reconstruction(
         Directory to save plots (if None, shows plots)
     plot_type : str
         Plotting scale: "loglog", "semilogx", "semilogy", or "linear"
+    poly_info : dict or list, optional
+        Polynomial coefficients info from proper_rational.
+        Can be either:
+        - dict with 'poly_coeffs' key containing list of polynomial coefficients
+        - list of polynomial coefficients directly
 
     Returns
     -------
@@ -164,6 +169,31 @@ def plot_reconstruction(
     # Convert to OpenMC format and evaluate
     mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
     elastic_recon, absorption_recon, fission_recon = evaluate_multipole_xs(E, mc_data)
+
+    # Add polynomial contribution if provided
+    if poly_info is not None:
+        # Handle different input formats
+        if isinstance(poly_info, dict):
+            poly_coeffs = poly_info.get('poly_coeffs', poly_info.get('polycoeffs', None))
+        else:
+            poly_coeffs = poly_info
+
+        if poly_coeffs is not None:
+            # Ensure it's a list
+            if not isinstance(poly_coeffs, list):
+                poly_coeffs = [poly_coeffs]
+
+            # Add polynomial contribution to each channel
+            # Take real part since cross sections should be real
+            if len(poly_coeffs) >= 1 and poly_coeffs[0] is not None:
+                poly_val = np.polyval(poly_coeffs[0], E)
+                elastic_recon = elastic_recon + np.real(poly_val)
+            if len(poly_coeffs) >= 2 and poly_coeffs[1] is not None:
+                poly_val = np.polyval(poly_coeffs[1], E)
+                absorption_recon = absorption_recon + np.real(poly_val)
+            if len(poly_coeffs) >= 3 and poly_coeffs[2] is not None:
+                poly_val = np.polyval(poly_coeffs[2], E)
+                fission_recon = fission_recon + np.real(poly_val)
 
     # Define channels to plot
     channels = [
@@ -439,3 +469,47 @@ def plot_aaa_results(
             out = os.path.join(path_out, out)
         plt.savefig(out, dpi=200)
         plt.close()
+
+
+def plot_miaaa_convergence(err_hist, rtol=None, path_out=None):
+    """
+    Plot the convergence of errors from miaaa_xs function.
+    
+    Parameters
+    ----------
+    err_hist : list or array
+        Error history returned by miaaa_xs (5th element of the return tuple)
+    rtol : float, optional
+        Relative tolerance line to show on plot
+    title : str
+        Plot title
+    figsize : tuple
+        Figure size (width, height)
+    
+    Returns
+    -------
+    fig, ax : matplotlib figure and axis objects
+    """
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    iterations = np.arange(len(err_hist))
+    
+    # Plot error history
+    ax.semilogy(iterations, err_hist, 'b.-', linewidth=2, markersize=6, label='Max Error')
+    
+    # Add tolerance line if provided
+    if rtol is not None:
+        ax.axhline(y=rtol, color='r', linestyle='--', linewidth=2, label=f'rtol = {rtol:.1e}')
+    
+    ax.set_xlabel('Iteration (m)')
+    ax.set_ylabel('Error')
+    ax.set_title("MIAAA Convergence")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    
+    # Make it look nice
+    plt.tight_layout()
+    out = "miaaa_convergence.png"
+    if path_out:
+        out = os.path.join(path_out, out)
+        plt.savefig(out, dpi=200)

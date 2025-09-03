@@ -20,13 +20,9 @@ from .aaa import (
     extract_poles_and_residues,
     apply_cleanup2_to_aaa,
 )
-from .miaaa import (
-    miaaa_xs,
-    evaluate_miaaa,
-    proper_rational,
-    extract_poles_residues
-)
-from .multipole.plotting import (plot_reconstruction, plot_aaa_results)
+from .multipole.fitting import (miaaa_xs, evaluate_miaaa)
+from .multipole.conversion import (proper_rational)
+from .multipole.plotting import (plot_reconstruction, plot_aaa_results, plot_miaaa_convergence)
 
 # Constants that determine which value to access
 _MP_EA = 0  # Pole
@@ -48,7 +44,7 @@ TEMPERATURE_LIMIT = 3000
 DETAILED_LOGGING = 2
 
 
-def vectfit_nuclide(
+def fit_nuclide(
     endf_file,
     njoy_error=5e-4,
     vf_pieces=None,
@@ -62,7 +58,6 @@ def vectfit_nuclide(
     plot_each_slice=True,
     fit_mask_guard=0,
     cleanup_tol=1e-6,
-    analyze_constant=False,
     **kwargs,
 ):
     r"""Generate multipole data for a nuclide from ENDF.
@@ -293,12 +288,14 @@ def vectfit_nuclide(
                     normalize=True,
                     lawson_iter=0
                 )
-                # w_num = w_den.copy()  # Same if no Lawson iteration
-                # poles_s, residues_list = extract_poles_residues(w, z, fz)
+
                 poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
-                    z, w, w, fz, R, E_piece, maxpolydegree=1
+                    z, w, w, fz, R, E_piece,
+                    # pole_extraction="polynomial", max_poly_degree=1,
+                    pole_extraction="pseudo_pole",
+                    n_pseudo_poles=2, pseudo_pole_strategy="optimize", pseudo_pole_scale=2.0
                 )
-                print(polycoeffs)
+                # print(polycoeffs)
             else:
                 raise ValueError("Unknown fitter passed in.")
 
@@ -374,7 +371,7 @@ def vectfit_nuclide(
     if log:
         print(f"Total number of poles: {n_poles}")
 
-    if vf_pieces == 1 and analyze_constant:
+    if vf_pieces == 1:
         channels_data = {"elastic": sig_s_piece,
                          "absorption": sig_a_piece,
                          "fission": sig_f_piece
@@ -383,8 +380,9 @@ def vectfit_nuclide(
         poles = poles[0]
         residues = residues[0]
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
-                            plot_type="loglog", show_error=True, error_type="relative")
-
+                            plot_type="loglog", show_error=True, error_type="relative",
+                            poly_info=polycoeffs)
+        plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
         # background_analysis = analyze_constant_background(
         #     E_piece,
         #     sig_s_piece,
@@ -429,191 +427,3 @@ def vectfit_nuclide(
             print(f"Dumped multipole data to file: {mp_filename}")
 
     return mp_data
-
-
-def analyze_constant_background(
-    E,
-    sigma_s,
-    sigma_a,
-    poles,
-    residues,
-    sigma_f=None,
-    path_out=None,
-    background_constants=None,
-    name="U238",
-):
-    """
-    Analyze the constant background by evaluating pole contributions
-    and examining the remainder
-
-    Parameters
-    ----------
-    E : array-like
-        Energy grid (eV)
-    sigma_s, sigma_a : array-like
-        Original elastic and absorption cross sections
-    poles : array-like
-        Complex poles in E space
-    residues : list
-        [elastic_residues, absorption_residues, (fission_residues)]
-    sigma_f : array-like, optional
-        Original fission cross sections
-    fission_residues : array-like, optional
-        Fission residues
-    path_out : str, optional
-        Directory to save plots
-    name : str, optional
-        Nuclide name for plots
-
-    Returns
-    -------
-    dict
-        Analysis results with background constants and pole contributions
-    """
-    poles = poles[0]
-    # print(residues)
-    # print(len(residues[0]))
-    residues = residues[0]
-    E = np.array(E)
-    poles = np.array(poles, dtype=complex)
-
-    mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
-    # Evaluate pole contributions only (no background)
-    elastic_pole, absorption_pole, fission_pole = evaluate_multipole_xs(
-        E,
-        mc_data,
-        background_constants=background_constants
-    )
-
-    # Calculate remainders (original - pole contributions)
-    elastic_remainder = sigma_s - elastic_pole
-    absorption_remainder = sigma_a - absorption_pole
-    fission_remainder = None
-    if sigma_f is not None and fission_pole is not None:
-        fission_remainder = sigma_f - fission_pole
-
-    # Analyze the remainder to find the "nearly constant" contribution
-    elastic_mean = np.mean(elastic_remainder)
-    elastic_std = np.std(elastic_remainder)
-    elastic_median = np.median(elastic_remainder)
-    from scipy import stats
-
-    elastic_modes = stats.mode(elastic_remainder)
-    absorption_mean = np.mean(absorption_remainder)
-    absorption_std = np.std(absorption_remainder)
-    absorption_median = np.median(absorption_remainder)
-
-    results = {
-        "elastic_background": elastic_mean,
-        "elastic_background_std": elastic_std,
-        "absorption_background": absorption_mean,
-        "absorption_background_std": absorption_std,
-        "elastic_remainder": elastic_remainder,
-        "absorption_remainder": absorption_remainder,
-        "elastic_pole_contribution": elastic_pole,
-        "absorption_pole_contribution": absorption_pole,
-    }
-
-    if fission_remainder is not None:
-        fission_median = np.median(fission_remainder)
-        fission_mean = np.mean(fission_remainder)
-        fission_std = np.std(fission_remainder)
-        results.update(
-            {
-                "fission_background": fission_mean,
-                "fission_background_std": fission_std,
-                "fission_remainder": fission_remainder,
-                "fission_pole_contribution": fission_pole,
-            }
-        )
-
-    print(f"\nBackground Analysis for {name}:")
-    # print(f"Elastic background: {elastic_mean:.4f} ± {elastic_std:.4f} b")
-    # print(f"Absorption background: {absorption_mean:.4f} ± {absorption_std:.4f} b")
-    print(f"Elastic background median: {elastic_median:.8f} b")
-    print(f"Elastic mode {elastic_modes.mode} and count {elastic_modes.count}")
-    print(f"Absorption background median: {absorption_median:.8f} b")
-    if fission_remainder is not None:
-        print(f"Fission background: {fission_mean:.8f} ± {fission_std:.4f} b")
-        print(f"Fission background median: {fission_median} b")
-
-    return results
-
-
-def verify_residues(poles, residues, E_test, sigma_s, sigma_a, sigma_f=None):
-    """
-    Verify that poles and residues reconstruct the original cross sections
-    """
-    poles = poles[0]  # First piece
-    residues = residues[0]  # First piece [elastic_res, absorption_res, ...]
-
-    print(f"\nResidue Analysis:")
-    print(f"Number of poles: {len(poles)}")
-    print(f"Number of residue channels: {len(residues)}")
-
-    # Analyze elastic residues
-    elastic_res = residues[0]
-    absorption_res = residues[1]
-
-    print(f"\nElastic residues:")
-    print(f"  Shape: {elastic_res.shape}")
-    print(f"  Max magnitude: {np.max(np.abs(elastic_res)):.3e}")
-    print(f"  Min magnitude: {np.min(np.abs(elastic_res)):.3e}")
-    print(f"  Mean magnitude: {np.mean(np.abs(elastic_res)):.3e}")
-    print(f"  Positive real: {np.sum(elastic_res.real > 0)}")
-    print(f"  Negative real: {np.sum(elastic_res.real < 0)}")
-    print(f"  First 5 residues: {elastic_res[:5]}")
-
-    print(f"\nAbsorption residues:")
-    print(f"  Shape: {absorption_res.shape}")
-    print(f"  Max magnitude: {np.max(np.abs(absorption_res)):.3e}")
-    print(f"  Min magnitude: {np.min(np.abs(absorption_res)):.3e}")
-    print(f"  Mean magnitude: {np.mean(np.abs(absorption_res)):.3e}")
-    print(f"  Positive real: {np.sum(absorption_res.real > 0)}")
-    print(f"  Negative real: {np.sum(absorption_res.real < 0)}")
-    print(f"  First 5 residues: {absorption_res[:5]}")
-
-    # Test reconstruction at a few energy points
-    print(f"\nTest reconstruction at sample energies:")
-    test_energies = E_test[:: len(E_test) // 10][:5]  # Sample 5 points
-
-    for E in test_energies:
-        elastic_recon = 0
-        absorption_recon = 0
-
-        for j, pole in enumerate(poles):
-            if abs(E - pole) > 1e-12:
-                elastic_recon += (elastic_res[j] / (E - pole)).real
-                absorption_recon += (absorption_res[j] / (E - pole)).real
-
-        # Find closest point in original data
-        idx = np.argmin(np.abs(E_test - E))
-
-        print(f"\n  E = {E:.3e} eV:")
-        print(
-            f"    Elastic:    orig = {sigma_s[idx]:.3e}, recon = {elastic_recon:.3e}, ratio = {elastic_recon/sigma_s[idx]:.3f}"
-        )
-        print(
-            f"    Absorption: orig = {sigma_a[idx]:.3e}, recon = {absorption_recon:.3e}, ratio = {absorption_recon/sigma_a[idx]:.3f}"
-        )
-
-    # Check for any huge residues that might cause instability
-    elastic_outliers = np.abs(elastic_res) > 10 * np.median(np.abs(elastic_res))
-    absorption_outliers = np.abs(absorption_res) > 10 * np.median(
-        np.abs(absorption_res)
-    )
-
-    print(f"\nOutlier analysis:")
-    print(f"  Elastic outliers: {np.sum(elastic_outliers)} / {len(elastic_res)}")
-    print(
-        f"  Absorption outliers: {np.sum(absorption_outliers)} / {len(absorption_res)}"
-    )
-
-    if np.sum(elastic_outliers) > 0:
-        print(
-            f"  Elastic outlier magnitudes: {np.abs(elastic_res[elastic_outliers])[:5]}"
-        )
-    if np.sum(absorption_outliers) > 0:
-        print(
-            f"  Absorption outlier magnitudes: {np.abs(absorption_res[absorption_outliers])[:5]}"
-        )

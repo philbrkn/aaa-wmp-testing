@@ -1,5 +1,6 @@
-
-
+import numpy as np
+from scipy.linalg import svd
+import scipy.linalg as la
 
 
 def miaaa_xs(
@@ -213,3 +214,253 @@ def miaaa_xs(
         R = R * norms[:, None]
 
     return w, z, fz, R, err_hist
+
+
+def evaluate_miaaa(grid, w, z, fz, space="E"):
+    """
+    Evaluate multi-channel AAA approximation using barycentric formula.
+    
+    Parameters
+    ----------
+    grid : ndarray
+        Evaluation points (in transformed space).
+    w : ndarray
+        Barycentric weights (length m).
+    z : ndarray
+        Support points (length m).
+    fz : ndarray
+        Function values at supports (k x m).
+    space : str
+        Interpolation space.
+    
+    Returns
+    -------
+    R : ndarray
+        Evaluated functions (k x len(grid)).
+    """
+    k, m = fz.shape
+    n = len(grid)
+    R = np.zeros((k, n), dtype=np.complex128)
+    
+    # Build full Cauchy matrix
+    C = 1.0 / (grid[:, None] - z[None, :])
+    
+    # Find support point indices (where grid matches z)
+    support_indices = []
+    for j, zj in enumerate(z):
+        idx = np.where(np.abs(grid - zj) < 1e-14)[0]
+        if len(idx) > 0:
+            support_indices.extend([(idx[0], j)])
+    
+    # Create mask for non-support points
+    is_support = np.zeros(n, dtype=bool)
+    for idx, _ in support_indices:
+        is_support[idx] = True
+    non_support = ~is_support
+    
+    # Compute denominator for non-support points
+    D = C @ w
+    
+    # Evaluate each channel
+    for i in range(k):
+        # Numerator
+        N = C @ (w * fz[i, :])
+        
+        # Non-support points: use barycentric formula
+        valid = non_support & (np.abs(D) > 1e-300)
+        R[i, valid] = N[valid] / D[valid]
+        
+        # Support points: exact interpolation
+        for idx, j in support_indices:
+            R[i, idx] = fz[i, j]
+    
+    return R
+
+def lawson_iteration(grid, F, z, fz, w_init, J_all, max_iter, space, log):
+    """
+    Full Lawson iteration following the MATLAB implementation.
+
+    Parameters
+    ----------
+    grid : ndarray
+        Full grid in transformed space.
+    F : ndarray
+        Function values (k x n).
+    z : ndarray
+        Support points.
+    fz : ndarray
+        Function values at supports (k x m).
+    w_init : ndarray
+        Initial weights.
+    J_all : ndarray
+        All indices (used for Jz calculation).
+    max_iter : int
+        Maximum Lawson iterations.
+    space : str
+        Interpolation space.
+    log : bool
+        Verbosity.
+
+    Returns
+    -------
+    w : ndarray
+        Optimized weights (2m for separated num/denom if Lawson succeeds).
+    R : ndarray
+        Optimized approximation.
+    """
+    k, n = F.shape
+    m = len(z)
+
+    if max_iter <= 0:
+        # No Lawson, return initial
+        return w_init, evaluate_miaaa(grid, w_init, z, fz, space)
+
+    # Find support point indices in grid
+    Jz = []  # Indices where grid points are support points
+    J = []  # Indices where grid points are NOT support points
+
+    for i in range(n):
+        is_support = False
+        for zj in z:
+            if np.abs(grid[i] - zj) < 1e-14:
+                is_support = True
+                Jz.append(i)
+                break
+        if not is_support:
+            J.append(i)
+
+    J = np.array(J, dtype=int)
+    Jz = np.array(Jz, dtype=int)
+
+    # Build full Cauchy matrix
+    C = 1.0 / (grid[:, None] - z[None, :])
+
+    # Initialize Lawson variables
+    gamma = 1.0
+    lw = np.ones(n) / np.sqrt(n)  # Lawson weights, normalized
+
+    # Initial approximation
+    bcr = evaluate_miaaa(grid, w_init, z, fz, space)
+    bestbcr = bcr.copy()
+    bestw = np.concatenate([w_init, w_init])  # Store as [w_den, w_num]
+    maxerror = np.max(np.abs(F - bestbcr))
+
+    # Build non-interpolatory Loewner matrix
+    # This separates numerator and denominator weights
+    L_blocks = []
+
+    # Support row replacement matrix
+    Lsupp = np.hstack([np.eye(m), -np.eye(m)])
+
+    for i in range(k):
+        # Build diagonal matrix of function values
+        # Li has shape (n, 2m): [diag(f_i)*C, -C*diag(fz_i)]
+        Li_left = F[i, :, np.newaxis] * C  # (n, m)
+        Li_right = -C * fz[i, :][np.newaxis, :]  # (n, m)
+        Li = np.hstack([Li_left, Li_right])  # (n, 2m)
+
+        # Replace support rows with interpolation conditions
+        if len(Jz) > 0:
+            Li[Jz, :] = Lsupp
+
+        L_blocks.append(Li)
+
+    L = np.vstack(L_blocks)  # (k*n, 2m)
+
+    if log:
+        print(f"  Starting Lawson iteration (max {max_iter} iterations)")
+
+    # Lawson iterations
+    for it in range(max_iter):
+        # Build diagonal weight matrix
+        lws = np.tile(lw, k)  # Repeat for each channel
+        d = np.sqrt(lws)  # Square root for weighting
+
+        # Weighted least squares
+        Lw = d[:, np.newaxis] * L
+
+        # SVD to find weights
+        _, _, Vh = svd(Lw, full_matrices=False)
+        w = Vh[-1, :]  # Last right singular vector
+
+        # Split weights
+        w_den = w[:m]
+        w_num = w[m:]
+
+        # Evaluate new approximation
+        lbcr = np.zeros((k, n), dtype=np.complex128)
+
+        if len(J) > 0:
+            # Non-support points
+            D = C[J, :] @ w_den
+            valid = np.abs(D) > 1e-300
+            J_valid = J[valid]
+
+            for i in range(k):
+                N = C[J, :] @ (w_num * fz[i, :])
+                lbcr[i, J_valid] = N[valid] / D[valid]
+
+        # Support points: use ratio of weights
+        if len(Jz) > 0:
+            for i in range(k):
+                for idx in Jz:
+                    # Find which support point this corresponds to
+                    for j, zj in enumerate(z):
+                        if np.abs(grid[idx] - zj) < 1e-14:
+                            if np.abs(w_den[j]) > 1e-300:
+                                lbcr[i, idx] = w_num[j] * F[i, idx] / w_den[j]
+                            else:
+                                lbcr[i, idx] = F[i, idx]
+                            break
+
+        # Compare with old approximation
+        lmaxerror = np.max(np.abs(F - lbcr))
+
+        if lmaxerror < maxerror:
+            if log:
+                print(
+                    f"    Lawson iter {it+1}: improved from {maxerror:.3e} to {lmaxerror:.3e}"
+                )
+            maxerror = lmaxerror
+            bestbcr = lbcr.copy()
+            bestw = w.copy()
+
+        # Update Lawson weights
+        col_err = np.max(np.abs(F - lbcr), axis=0)  # Max error across channels
+        testlw = lw * (col_err**gamma)
+
+        # Handle infinities and NaNs
+        mask_inf = np.isinf(testlw)
+        mask_nan = np.isnan(testlw)
+
+        if np.any(mask_inf):
+            testlw[mask_inf] = np.max(testlw[~mask_inf]) if np.any(~mask_inf) else 1.0
+
+        if np.any(mask_nan):
+            testlw[mask_nan] = np.mean(testlw[~mask_nan]) if np.any(~mask_nan) else 1.0
+
+        # Avoid zeros
+        mask_zero = testlw == 0
+        if np.any(mask_zero):
+            testlw[mask_zero] = (
+                np.mean(testlw[~mask_zero]) if np.any(~mask_zero) else 1e-10
+            )
+
+        # Normalize
+        testlw = testlw / np.linalg.norm(testlw)
+
+        # Check convergence
+        if np.linalg.norm(testlw - lw, ord=np.inf) < 1e-8:
+            if log:
+                print(f"    Lawson converged at iteration {it+1}")
+            break
+
+        lw = testlw
+
+    # Return best weights (as single vector for compatibility)
+    # For simple compatibility, return just denominator weights
+    # Full implementation would need to handle separated num/denom
+    if max_iter > 0:
+        return bestw[:m], bestbcr  # Return denominator weights and best approximation
+    else:
+        return w_init, bcr

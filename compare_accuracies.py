@@ -2,6 +2,7 @@ import openmc.data
 import numpy as np
 from openmc.data.wmp import vectfit_nuclide
 from pathlib import Path
+import h5py
 
 
 def compare_accuracy(energy_test, xs_reference, wmp_result, aaa_result):
@@ -69,3 +70,33 @@ def evaluate_aaa_poles(energy, aaa_res):
     )
 
 
+def open_wmp_h5(wmp_file):
+    with h5py.File(wmp_file, "r") as f:
+        # # List all options (groups and datasets) in the HDF5 file
+        def list_all(name, obj):
+            print(name, "(Group)" if isinstance(obj, h5py.Group) else "(Dataset)")
+
+        f.visititems(list_all)
+
+        # Find names
+        def walk(name, obj):
+            if isinstance(obj, h5py.Dataset) and "windows" in name.lower():
+                print("windows", name, obj.shape)
+
+        f.visititems(walk)
+
+        # expand data:
+        def expand(name, obj):
+            if isinstance(obj, h5py.Dataset) and "data" in name.lower():
+                print("data", name, obj.shape)
+
+        f.visititems(expand)
+
+        # Print the number of inner windows
+        windows = f["U238/windows"]
+        n_windows = windows.shape[0]
+        print("Number of inner windows:", n_windows)
+        print(windows)
+        poles = f["U238/data"]
+        n_poles = poles.shape[0]
+        print("Number of poles:", n_poles)

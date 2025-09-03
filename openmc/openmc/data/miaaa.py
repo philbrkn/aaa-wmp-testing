@@ -611,6 +611,7 @@ def przd_for_poles(z, w, tol=1e-10):
 
     # Deflation loop - remove pole-zero pairs when sum of residues is small
     while np.abs(np.sum(rv)) < tol and len(rv) > 0:
+        #TODO: say we deflated ....
         count += 1
 
         # Remove first residue and pole
