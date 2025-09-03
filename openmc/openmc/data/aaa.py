@@ -298,6 +298,29 @@ def extract_poles_and_residues(w, z, fvals, space="E", log=False):
     """
 
     m = len(z)
+    tol = 1e-2
+    
+    # Check if deflation is needed
+    w_sum = np.sum(w)
+    deflation_count = 0
+    w_working = w.copy()
+    deflated_indices = []
+    print(f"w_working sum {abs(np.sum(w_working))}")
+    
+    while abs(np.sum(w_working)) < tol and deflation_count < m-1:
+        # Choose a support point for deflation
+        available = [i for i in range(m) if i not in deflated_indices]
+        j = available[np.argmax([np.abs(z[i]) for i in available])]
+        
+        # Deflate: multiply by (z - z_j)
+        w_working = np.array([w_working[i] * (z[i] - z[j]) if i != j else 0 
+                              for i in range(m)])
+        deflated_indices.append(j)
+        deflation_count += 1
+        
+        if log:
+            print(f"Deflation {deflation_count}: removed z[{j}] = {z[j]:.3e}")
+    
     C = np.zeros((m + 1, m + 1), dtype=complex)
     C[0, 1:] = w
     C[1:, 0] = 1.0
@@ -344,25 +367,25 @@ def extract_poles_and_residues(w, z, fvals, space="E", log=False):
         for p in poles_print:
             print(f"poles real {p.real:6.2f}   imag {p.imag:8.2e}")
 
-    if log:
-        print(f"Found {len(poles)} poles")
-        # Test reconstruction away from support points
-        test_E = (z[10] + z[11]) / 2  # Midpoint between first two support points
+    # if log:
+    #     print(f"Found {len(poles)} poles")
+    #     # Test reconstruction away from support points
+    #     test_E = (z[10] + z[11]) / 2  # Midpoint between first two support points
 
-        for i, fk in enumerate(fvals):
-            # Pole-residue reconstruction
-            recon = np.sum(residues[i] / (test_E - poles))
+    #     for i, fk in enumerate(fvals):
+    #         # Pole-residue reconstruction
+    #         recon = np.sum(residues[i] / (test_E - poles))
 
-            # Barycentric evaluation for comparison
-            bary_num = np.sum(w * fk / (test_E - z))
-            bary_den = np.sum(w / (test_E - z))
-            bary_val = bary_num / bary_den
+    #         # Barycentric evaluation for comparison
+    #         bary_num = np.sum(w * fk / (test_E - z))
+    #         bary_den = np.sum(w / (test_E - z))
+    #         bary_val = bary_num / bary_den
 
-            print(
-                f"  Channel {i} at E={test_E:.3e}: "
-                f"bary={bary_val.real:.3e}, pole-res={recon.real:.3e}, "
-                f"ratio={recon.real/bary_val.real:.3f}"
-            )
+    #         print(
+    #             f"  Channel {i} at E={test_E:.3e}: "
+    #             f"bary={bary_val.real:.3e}, pole-res={recon.real:.3e}, "
+    #             f"ratio={recon.real/bary_val.real:.3f}"
+    #         )
 
     return poles, residues
 
@@ -482,7 +505,8 @@ def plot_aaa_results(
         if xs_true is None or xs_fit is None:
             continue
         xs_true = np.asarray(xs_true, dtype=float)
-        xs_fit = np.asarray(xs_fit, dtype=float)
+        # xs_fit = np.asarray(xs_fit, dtype=float)
+        xs_fit = np.real(xs_fit) if np.iscomplexobj(xs_fit) else xs_fit
 
         # Relative error exactly like trainer (no floor)
         with np.errstate(divide="ignore", invalid="ignore"):

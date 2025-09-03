@@ -42,6 +42,11 @@ if __name__ == "__main__":
     njoy_input_path = Path(__file__).parent / "NJOY_pickles" / "U238_NJOY.pickle"
     njoy_input = njoy_input_path if njoy_input_path.exists() else None
     path_out = Path(__file__).parent / "aaa_analyze_constant"
+    background_constants = {
+        "elastic": 14.04452808,
+        "absorption": -0.00053376,
+        "fission":  4.2125586016855946e-05,
+        }
 
     mp_data = vectfit_nuclide(
         endf_file,
@@ -50,17 +55,20 @@ if __name__ == "__main__":
         rtol=1e-3,
         path_out=path_out,
         log=2,
+        fitter="miaaa",
         njoy_input=njoy_input,
         njoy_error=5e-4,
-        # bounds={'E_min': 0, 'E_max': 200},
-        bounds={"E_min": 17465, "E_max": 17596},
+        # bounds={'E_min': 0, 'E_max': 30},
+        # bounds={"E_min": 17465, "E_max": 17596},
+        bounds={"E_min": 785, "E_max": 861},
         space="E",
         # method='qr+svd',
-        cleanup=True,
+        cleanup=False,
         cleanup_tol=1e-6,  # Only remove if pole-zero distance < 1e-6
         plot_each_slice=True,
         fit_mask_guard=0.0,
         analyze_constant=True,
+        # background_constants=background_constants
     )
 
 

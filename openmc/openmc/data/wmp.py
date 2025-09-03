@@ -21,6 +21,12 @@ from .aaa import (
     apply_cleanup2_to_aaa,
     plot_aaa_results,
 )
+from .miaaa import (
+    miaaa_xs,
+    evaluate_miaaa,
+    proper_rational,
+    extract_poles_residues
+)
 
 # Constants that determine which value to access
 _MP_EA = 0  # Pole
@@ -47,6 +53,7 @@ def vectfit_nuclide(
     njoy_error=5e-4,
     vf_pieces=None,
     log=False,
+    fitter="aaa",
     path_out=None,
     mp_filename=None,
     njoy_input=None,
@@ -251,28 +258,49 @@ def vectfit_nuclide(
             sig_a_piece = ce_xs[1, e_idx]
             sig_f_piece = ce_xs[2, e_idx] if fissionable else None
 
-            w, z, fsz, faz, *rest = aaa_xs(
-                E_piece,
-                sig_s_piece,
-                sig_a_piece,
-                sigma_f=sig_f_piece,
-                method=kwargs.get("method", "full_svd"),
-                rtol=kwargs.get("rtol", 1e-13),
-                mmax=kwargs.get("mmax", 100),
-                log=log,
-                space=space,
-            )
-
-        # EXTRACT
-        ffz = rest[0] if fissionable else None
-        fvals_piece = [fsz, faz] + ([ffz] if fissionable else [])
-        poles_s, residues_list = extract_poles_and_residues(
-            w.astype(complex),
-            z.astype(complex),
-            fvals_piece,
-            log=log,
-            space=space,
-        )
+            if fitter == "aaa":
+                w, z, fsz, faz, *rest = aaa_xs(
+                    E_piece,
+                    sig_s_piece,
+                    sig_a_piece,
+                    sigma_f=sig_f_piece,
+                    method=kwargs.get("method", "full_svd"),
+                    rtol=kwargs.get("rtol", 1e-13),
+                    mmax=kwargs.get("mmax", 100),
+                    log=log,
+                    space=space,
+                )
+                # EXTRACT
+                ffz = rest[0] if fissionable else None
+                fvals_piece = [fsz, faz] + ([ffz] if fissionable else [])
+                poles_s, residues_list = extract_poles_and_residues(
+                    w.astype(complex),
+                    z.astype(complex),
+                    fvals_piece,
+                    log=log,
+                    space=space
+                )
+            elif fitter == "miaaa":
+                w, z, fz, R, err_hist = miaaa_xs(
+                    E_piece,
+                    [sig_s_piece, sig_a_piece, sig_f_piece],
+                    method=kwargs.get("method", "full_svd"),
+                    rtol=kwargs.get("rtol", 1e-13),
+                    mmax=kwargs.get("mmax", 100),
+                    greedy_metric="relative",  # relative or absolute_sum
+                    log=log,
+                    space=space,
+                    normalize=True,
+                    lawson_iter=0
+                )
+                # w_num = w_den.copy()  # Same if no Lawson iteration
+                # poles_s, residues_list = extract_poles_residues(w, z, fz)
+                poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
+                    z, w, w, fz, R, E_piece, maxpolydegree=1
+                )
+                print(polycoeffs)
+            else:
+                raise ValueError("Unknown fitter passed in.")
 
         if cleanup:
             # Define the actual fitting window (not the extended data range)
@@ -312,7 +340,7 @@ def vectfit_nuclide(
         poles.append(poles_s)
         residues.append(residues_list)
 
-        if plot_each_slice:
+        if plot_each_slice and fitter == "aaa":
             R_s_piece = evaluate_aaa(E_piece, w, z, fsz, space=space)
             R_a_piece = evaluate_aaa(E_piece, w, z, faz, space=space)
             R_f_piece = (
@@ -326,6 +354,18 @@ def vectfit_nuclide(
                 R_a_piece,
                 sigma_f=sig_f_piece,
                 R_f=R_f_piece,
+                path_out=path_out,
+            )
+        elif plot_each_slice and fitter == "miaaa":
+            R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
+            plot_aaa_results(
+                E_piece,
+                sig_s_piece,
+                sig_a_piece,
+                R_pieces[0],
+                R_pieces[1],
+                sigma_f=sig_f_piece,
+                R_f=R_pieces[2],
                 path_out=path_out,
             )
 
@@ -344,6 +384,7 @@ def vectfit_nuclide(
             sig_f_piece,
             path_out,
             name="U238",
+            background_constants=kwargs.get("background_constants", None)
         )
 
         # verify_residues(
@@ -388,6 +429,7 @@ def analyze_constant_background(
     residues,
     sigma_f=None,
     path_out=None,
+    background_constants=None,
     name="U238",
 ):
     """
@@ -430,7 +472,7 @@ def analyze_constant_background(
     elastic_pole, absorption_pole, fission_pole = evaluate_multipole_xs(
         E,
         mc_data,
-        include_background=True,
+        background_constants=background_constants
     )
 
     # Calculate remainders (original - pole contributions)
@@ -586,16 +628,16 @@ def analyze_constant_background(
 
         plt.semilogy(E, sigma_f, "g-", label="Original σ_f", linewidth=2)
         plt.semilogy(E, fission_pole, "b--", label="Pole contribution", linewidth=2)
-        # plt.semilogy(
-        #     E, np.abs(fission_remainder), "r:", label="|Remainder|", linewidth=2
-        # )
-        # plt.axhline(
-        #     abs(fission_median),
-        #     color="r",
-        #     linestyle="-",
-        #     alpha=0.7,
-        #     label=f"Median |remainder| = {abs(fission_median):.4f} b",
-        # )
+        plt.semilogy(
+            E, np.abs(fission_remainder), "r:", label="|Remainder|", linewidth=2
+        )
+        plt.axhline(
+            abs(fission_median),
+            color="r",
+            linestyle="-",
+            alpha=0.7,
+            label=f"Median |remainder| = {abs(fission_median):.4f} b",
+        )
         plt.xlabel("Energy (eV)")
         plt.ylabel("Cross section (b)")
         plt.title(f"{name} Fission Decomposition")
@@ -612,7 +654,7 @@ def analyze_constant_background(
     return results
 
 
-def evaluate_multipole_xs(E, data_dict, include_background=True):
+def evaluate_multipole_xs(E, data_dict, background_constants=None):
     """
     Evaluate cross sections using the pole/residue representation.
 
@@ -625,9 +667,6 @@ def evaluate_multipole_xs(E, data_dict, include_background=True):
         Energy in eV
     data_dict : dict
         Output from poles_residues_to_openmc_data
-    include_background : bool, optional
-        Whether to include a simple constant background (default True)
-        This implements Gavin's insight about the nearly constant remainder
 
     Returns
     -------
@@ -667,13 +706,13 @@ def evaluate_multipole_xs(E, data_dict, include_background=True):
                 fission_xs[i] += (data[pole_idx, 3] * contribution).real
 
     # Add constant background as per Gavin's insight
-    if include_background:
+    if background_constants:
         # These are rough estimates - in practice you'd determine these
         # from the nearly constant remainder after subtracting pole contributions
-        elastic_xs += 0.66909653  # Typical hard sphere elastic scattering (barns)
-        absorption_xs += -0.00003699 # Small constant absorption background
+        elastic_xs += background_constants["elastic"]
+        absorption_xs +=  background_constants["absorption"]
         if fissionable:
-            fission_xs += 1.2838614686081672e-06  # Small fission background
+            fission_xs +=  background_constants["fission"]
 
     # Ensure non-negative cross sections
     # elastic_xs = np.maximum(elastic_xs, 0.0)
@@ -724,7 +763,8 @@ def poles_residues_to_openmc_data(poles, residues, name="test_nuclide", AWR=235.
         residue_arrays = [np.array(r, dtype=complex) for r in residues]
     else:
         # Assume it's a 2D array with shape (n_reactions, n_poles)
-        residue_arrays = [residues[i] for i in range(residues.shape[0])]
+        # residue_arrays = [residues[i] for i in range(residues.shape[0])]
+        residue_arrays = residues.T
         n_reactions = len(residue_arrays)
 
     fissionable = n_reactions > 2
