@@ -19,7 +19,6 @@ from .aaa import (
     aaa_xs,
     extract_poles_and_residues,
     apply_cleanup2_to_aaa,
-    plot_aaa_results,
 )
 from .miaaa import (
     miaaa_xs,
@@ -27,6 +26,7 @@ from .miaaa import (
     proper_rational,
     extract_poles_residues
 )
+from .multipole.plotting import (plot_reconstruction, plot_aaa_results)
 
 # Constants that determine which value to access
 _MP_EA = 0  # Pole
@@ -375,17 +375,27 @@ def vectfit_nuclide(
         print(f"Total number of poles: {n_poles}")
 
     if vf_pieces == 1 and analyze_constant:
-        background_analysis = analyze_constant_background(
-            E_piece,
-            sig_s_piece,
-            sig_a_piece,
-            poles,
-            residues,
-            sig_f_piece,
-            path_out,
-            name="U238",
-            background_constants=kwargs.get("background_constants", None)
-        )
+        channels_data = {"elastic": sig_s_piece,
+                         "absorption": sig_a_piece,
+                         "fission": sig_f_piece
+                         }
+        # Main reconstruction plot with remainder in subplot
+        poles = poles[0]
+        residues = residues[0]
+        plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
+                            plot_type="loglog", show_error=True, error_type="relative")
+
+        # background_analysis = analyze_constant_background(
+        #     E_piece,
+        #     sig_s_piece,
+        #     sig_a_piece,
+        #     poles,
+        #     residues,
+        #     sig_f_piece,
+        #     path_out,
+        #     name="U238",
+        #     background_constants=kwargs.get("background_constants", None)
+        # )
 
         # verify_residues(
         #     poles,
@@ -527,279 +537,7 @@ def analyze_constant_background(
         print(f"Fission background: {fission_mean:.8f} ± {fission_std:.4f} b")
         print(f"Fission background median: {fission_median} b")
 
-    # Create plots showing the decomposition
-    if path_out:
-        os.makedirs(path_out, exist_ok=True)
-
-        # Plot elastic decomposition
-        # fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
-        fig = plt.figure(figsize=(8, 6))
-
-        plt.semilogy(E, sigma_s, "g-", label="Original σ_s", linewidth=2)
-        plt.semilogy(E, elastic_pole, "b--", label="Pole contribution", linewidth=2)
-        plt.semilogy(E, elastic_remainder, "r:", label="Remainder", linewidth=2)
-        plt.axhline(
-            elastic_median,
-            color="r",
-            linestyle="-",
-            alpha=0.7,
-            label=f"Median remainder = {elastic_median:.4f} b",
-        )
-        plt.xlabel("Energy (eV)")
-        plt.ylabel("Cross section (b)")
-        plt.title(f"{name} Elastic Scattering Decomposition")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(path_out, f"{name}_elastic_decomposition.png"), dpi=200
-        )
-        plt.close()
-
-        fig2 = plt.figure(figsize=(8, 6))
-        # Plot remainder detail
-        plt.semilogy(E, elastic_remainder, "r-", linewidth=2, label="Remainder")
-        plt.axhline(
-            elastic_median,
-            color="k",
-            linestyle="--",
-            alpha=0.7,
-            label=f"Median = {elastic_median:.4f} b",
-        )
-        plt.xlabel("Energy (eV)")
-        plt.ylabel("Remainder (b)")
-        plt.title("Elastic Remainder Detail (Should be Nearly Constant)")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-
-        plt.tight_layout()
-        plt.savefig(os.path.join(path_out, f"{name}_elastic_remainder.png"), dpi=200)
-        plt.close()
-
-        # Similar plot for absorption
-        fig = plt.figure(figsize=(8, 6))
-
-        plt.semilogy(E, sigma_a, "g-", label="Original σ_a", linewidth=2)
-        plt.semilogy(E, absorption_pole, "b--", label="Pole contribution", linewidth=2)
-        plt.semilogy(
-            E, np.abs(absorption_remainder), "r:", label="|Remainder|", linewidth=2
-        )
-        plt.axhline(
-            abs(absorption_median),
-            color="r",
-            linestyle="-",
-            alpha=0.7,
-            label=f"Median |remainder| = {abs(absorption_median):.4f} b",
-        )
-        plt.xlabel("Energy (eV)")
-        plt.ylabel("Cross section (b)")
-        plt.title(f"{name} Absorption Decomposition")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(path_out, f"{name}_absorption_decomposition.png"), dpi=200
-        )
-        plt.close()
-
-        fig = plt.figure(figsize=(8, 6))
-
-        plt.semilogy(E, absorption_remainder, "r-", linewidth=2, label="Remainder")
-        plt.axhline(
-            absorption_median,
-            color="k",
-            linestyle="--",
-            alpha=0.7,
-            label=f"Median = {absorption_median:.4f} b",
-        )
-        plt.xlabel("Energy (eV)")
-        plt.ylabel("Remainder (b)")
-        plt.title("Absorption Remainder Detail")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-
-        plt.tight_layout()
-        plt.savefig(os.path.join(path_out, f"{name}_absorption_remainder.png"), dpi=200)
-        plt.close()
-
-        # Similar plot for absorption
-        fig = plt.figure(figsize=(8, 6))
-
-        plt.semilogy(E, sigma_f, "g-", label="Original σ_f", linewidth=2)
-        plt.semilogy(E, fission_pole, "b--", label="Pole contribution", linewidth=2)
-        plt.semilogy(
-            E, np.abs(fission_remainder), "r:", label="|Remainder|", linewidth=2
-        )
-        plt.axhline(
-            abs(fission_median),
-            color="r",
-            linestyle="-",
-            alpha=0.7,
-            label=f"Median |remainder| = {abs(fission_median):.4f} b",
-        )
-        plt.xlabel("Energy (eV)")
-        plt.ylabel("Cross section (b)")
-        plt.title(f"{name} Fission Decomposition")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(path_out, f"{name}_fission_decomposition.png"), dpi=200
-        )
-        plt.close()
-
-        print(f"Saved decomposition plots to {path_out}")
-
     return results
-
-
-def evaluate_multipole_xs(E, data_dict, background_constants=None):
-    """
-    Evaluate cross sections using the pole/residue representation.
-
-    This implements the basic multipole evaluation without windowing,
-    useful for prototyping and validation.
-
-    Parameters
-    ----------
-    E : float or array-like
-        Energy in eV
-    data_dict : dict
-        Output from poles_residues_to_openmc_data
-
-    Returns
-    -------
-    tuple
-        (elastic_xs, absorption_xs, fission_xs) where fission_xs is None
-        if not fissionable
-    """
-
-    E = np.atleast_1d(E)
-    data = data_dict["data"]
-    fissionable = data_dict["fissionable"]
-
-    # Initialize cross sections
-    elastic_xs = np.zeros_like(E, dtype=float)
-    absorption_xs = np.zeros_like(E, dtype=float)
-    fission_xs = np.zeros_like(E, dtype=float) if fissionable else None
-
-    # Add pole contributions
-    for i, energy in enumerate(E):
-        for pole_idx in range(data.shape[0]):
-            pole = data[pole_idx, 0]
-
-            # Simple pole evaluation: residue / (E - pole)
-            denominator = energy - pole
-
-            # if abs(denominator) > 1e-12:  # Avoid division by zero
-            contribution = 1.0 / (denominator)  # Include 1/E factor
-
-            # Elastic (column 1)
-            elastic_xs[i] += (data[pole_idx, 1] * contribution).real
-
-            # Absorption (column 2)
-            absorption_xs[i] += (data[pole_idx, 2] * contribution).real
-
-            # Fission (column 3, if present)
-            if fissionable:
-                fission_xs[i] += (data[pole_idx, 3] * contribution).real
-
-    # Add constant background as per Gavin's insight
-    if background_constants:
-        # These are rough estimates - in practice you'd determine these
-        # from the nearly constant remainder after subtracting pole contributions
-        elastic_xs += background_constants["elastic"]
-        absorption_xs +=  background_constants["absorption"]
-        if fissionable:
-            fission_xs +=  background_constants["fission"]
-
-    # Ensure non-negative cross sections
-    # elastic_xs = np.maximum(elastic_xs, 0.0)
-    # absorption_xs = np.maximum(absorption_xs, 0.0)
-    # if fissionable:
-    #     fission_xs = np.maximum(fission_xs, 0.0)
-
-    return elastic_xs, absorption_xs, fission_xs
-
-
-def poles_residues_to_openmc_data(poles, residues, name="test_nuclide", AWR=235.0):
-    """
-    Simple conversion of poles and residues to OpenMC multipole data format.
-
-    Takes poles and residues from AAA and creates the basic data structure
-    that OpenMC expects
-
-    Parameters
-    ----------
-    poles : array-like
-        Complex poles in energy space (eV)
-    residues : list or array
-        Residues for each reaction channel. Should be:
-        - [elastic_residues, absorption_residues] for non-fissionable
-        - [elastic_residues, absorption_residues, fission_residues] for fissionable
-        Each element should be an array of complex residues matching poles length
-    name : str, optional
-        Nuclide name (default "test_nuclide")
-    AWR : float, optional
-        Atomic weight ratio (default 235.0)
-
-    Returns
-    -------
-    dict
-        Dictionary with OpenMC-compatible data:
-        - 'data': 2D array [pole_energy, elastic_residue, absorption_residue, (fission_residue)]
-        - 'name': nuclide name
-        - 'sqrtAWR': sqrt of atomic weight ratio
-        - 'fissionable': boolean indicating if fission channel present
-        - 'n_poles': number of poles
-    """
-    poles = np.array(poles, dtype=complex)
-    n_poles = len(poles)
-
-    # Determine if fissionable and get residue arrays
-    if isinstance(residues, list):
-        n_reactions = len(residues)
-        residue_arrays = [np.array(r, dtype=complex) for r in residues]
-    else:
-        # Assume it's a 2D array with shape (n_reactions, n_poles)
-        # residue_arrays = [residues[i] for i in range(residues.shape[0])]
-        residue_arrays = residues.T
-        n_reactions = len(residue_arrays)
-
-    fissionable = n_reactions > 2
-
-    # Validate dimensions
-    for i, res_array in enumerate(residue_arrays):
-        if len(res_array) != n_poles:
-            raise ValueError(
-                f"Residue array {i} length ({len(res_array)}) "
-                f"doesn't match poles length ({n_poles})"
-            )
-
-    # Create the data array: [pole, elastic_residue, absorption_residue, (fission_residue)]
-    data_cols = 1 + n_reactions
-    data = np.zeros((n_poles, data_cols), dtype=complex)
-
-    # Fill in poles (first column)
-    data[:, 0] = poles
-
-    # Fill in residues
-    for i, res_array in enumerate(residue_arrays):
-        data[:, i + 1] = res_array
-
-    # Sort by pole energy (real part)
-    sort_idx = np.argsort(data[:, 0].real)
-    data = data[sort_idx]
-
-    return {
-        "data": data,
-        "name": name,
-        "sqrtAWR": np.sqrt(AWR),
-        "fissionable": fissionable,
-        "n_poles": n_poles,
-        "n_reactions": n_reactions,
-    }
 
 
 def verify_residues(poles, residues, E_test, sigma_s, sigma_a, sigma_f=None):

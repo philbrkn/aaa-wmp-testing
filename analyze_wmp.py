@@ -1,7 +1,6 @@
 import h5py
 from pathlib import Path
 from openmc.data.wmp import vectfit_nuclide
-from openmc.data.aaa import plot_aaa_results
 
 
 def open_wmp_h5(wmp_file):
