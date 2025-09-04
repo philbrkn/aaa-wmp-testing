@@ -11,8 +11,8 @@ if __name__ == "__main__":
     mp_data = fit_nuclide(
         endf_file,
         vf_pieces=1,
-        mmax=500,
-        rtol=1e-4,
+        mmax=200,
+        rtol=5e-3,
         path_out=path_out,
         log=2,
         fitter="miaaa",
@@ -20,6 +20,7 @@ if __name__ == "__main__":
         njoy_error=5e-4,
         # bounds={'E_min': 0, 'E_max': 30},
         # bounds={"E_min": 17465, "E_max": 17596},
+        # bounds={"E_min": 200, "E_max": 400},
         bounds={"E_min": 785, "E_max": 861},
         space="E",
         # method='qr+svd',

@@ -254,7 +254,7 @@ def fit_nuclide(
 
             poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
                 z, w, w, fz, R, E_piece,
-                # pole_extraction="polynomial", max_poly_degree=1,
+                pole_extraction="polynomial", max_poly_degree=2,
                 # pole_extraction="pseudo_pole", n_pseudo_poles=2,
             )
             # print(polycoeffs)
@@ -291,6 +291,9 @@ def fit_nuclide(
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
                             plot_type="loglog", show_error=True, error_type="relative",
                             poly_info=polycoeffs)
+        plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
+                    plot_type="loglog", show_error=True, error_type="absolute",
+                    poly_info=polycoeffs)
         plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
 
 

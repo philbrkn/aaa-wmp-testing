@@ -44,76 +44,102 @@ def plot_single_channel(
     error_type : str
         Type of error to plot: 'relative', 'absolute', or 'remainder'
     """
-    fig, ax1 = plt.subplots(figsize=(10, 6))
+    # fig, ax1 = plt.subplots(figsize=(10, 6))
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [3, 1]}, sharex=True
+    )
 
     # Choose plotting function
     if plot_type == "loglog":
-        plot_func = plt.loglog
+        plot_func = ax1.loglog
     elif plot_type == "semilogx":
-        plot_func = plt.semilogx
+        plot_func = ax1.semilogx
     elif plot_type == "semilogy":
-        plot_func = plt.semilogy
+        plot_func = ax1.semilogy
     else:  # linear
-        plot_func = plt.plot
+        plot_func = ax1.plot
 
     # Plot data
     plot_func(E, original, f"b-", label=f"Original {symbol}", linewidth=2)
     plot_func(E, reconstructed, "r--", label="Reconstructed", linewidth=2)
 
-   
     ax1.set_xlabel("Energy (eV)")
-    ax1.set_ylabel("Cross section (b)", color='black')
-    ax1.tick_params(axis='y', labelcolor='black')
+    ax1.set_ylabel("Cross section (b)", color="black")
+    ax1.tick_params(axis="y", labelcolor="black")
     ax1.grid(True, alpha=0.3)
 
     # Handle error plotting on secondary axis
     if show_error:
-        ax2 = ax1.twinx()
-        
+
         # Calculate error based on type
         original = np.array(original)
         reconstructed = np.array(reconstructed)
-        
+
         if error_type == "relative":
             # Avoid division by zero
             mask = original != 0
             error = np.full_like(original, np.nan)
-            error[mask] = np.abs((reconstructed[mask] - original[mask]) / original[mask]) * 100
+            error[mask] = (
+                np.abs((reconstructed[mask] - original[mask]) / original[mask]) * 100
+            )
             error_label = "Relative Error (%)"
-            error_color = 'black'
+            error_color = "black"
         elif error_type == "absolute":
             error = np.abs(reconstructed - original)
             error_label = "Absolute Error (b)"
-            error_color = 'black'
+            error_color = "black"
         elif error_type == "remainder":
             error = reconstructed - original
             error_label = "Remainder (b)"
-            error_color = 'black'
+            error_color = "black"
         else:
-            raise ValueError("error_type must be 'relative', 'absolute', or 'remainder'")
-        
+            raise ValueError(
+                "error_type must be 'relative', 'absolute', or 'remainder'"
+            )
+
         # Plot error with appropriate scale
         if plot_type in ["loglog", "semilogy"]:
             # For log y-scale, we need positive values
             if error_type == "remainder":
                 # For remainder, we might have negative values, so use regular plot
-                ax2.plot(E, error, color=error_color, alpha=0.7, linewidth=1.5, 
-                        label=error_label, linestyle=':')
+                ax2.plot(
+                    E,
+                    error,
+                    color=error_color,
+                    # alpha=1,
+                    linewidth=1.5,
+                    label=error_label,
+                    linestyle=":",
+                )
             else:
                 # For absolute and relative errors (always positive), we can use semilogy
-                ax2.semilogy(E, error, color=error_color, alpha=0.7, linewidth=1.5, 
-                           label=error_label, linestyle=':')
+                ax2.semilogy(
+                    E,
+                    error,
+                    color=error_color,
+                    # alpha=0.7,
+                    linewidth=1.5,
+                    label=error_label,
+                    # linestyle=":",
+                )
         else:
-            ax2.plot(E, error, color=error_color, alpha=0.7, linewidth=1.5, 
-                    label=error_label, linestyle=':')
-        
+            ax2.plot(
+                E,
+                error,
+                color=error_color,
+                # alpha=0.7,
+                linewidth=1.5,
+                label=error_label,
+                linestyle=":",
+            )
+
         ax2.set_ylabel(error_label, color=error_color)
-        ax2.tick_params(axis='y', labelcolor=error_color)
-        
+        ax2.tick_params(axis="y", labelcolor=error_color)
+        ax2.grid()
         # Combine legends from both axes
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(lines1 + lines2, labels1 + labels2, loc='best')
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc="best")
     else:
         ax1.legend()
 
@@ -121,15 +147,28 @@ def plot_single_channel(
         filename = f"{name}_{channel_name}_reconstruction"
         if show_error:
             filename += f"_{error_type}_error"
-        plt.savefig(os.path.join(path_out, f"{filename}.png"), dpi=200)
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(path_out, f"{filename}.png"),
+            dpi=300,
+            bbox_inches="tight",
+        )
         plt.close()
     else:
         plt.show()
 
 
 def plot_reconstruction(
-    E, original_data, poles, residues, name="Nuclide", path_out=None, plot_type="loglog",
-    show_error=False, error_type="relative",  poly_info=None
+    E,
+    original_data,
+    poles,
+    residues,
+    name="Nuclide",
+    path_out=None,
+    plot_type="loglog",
+    show_error=False,
+    error_type="relative",
+    poly_info=None,
 ):
     """
     Plot original ACE data vs reconstructed from poles/residues.
@@ -174,7 +213,9 @@ def plot_reconstruction(
     if poly_info is not None:
         # Handle different input formats
         if isinstance(poly_info, dict):
-            poly_coeffs = poly_info.get('poly_coeffs', poly_info.get('polycoeffs', None))
+            poly_coeffs = poly_info.get(
+                "poly_coeffs", poly_info.get("polycoeffs", None)
+            )
         else:
             poly_coeffs = poly_info
 
@@ -299,15 +340,6 @@ def evaluate_multipole_xs(E, data_dict, background_constants=None):
             # Fission (column 3, if present)
             if fissionable:
                 fission_xs[i] += (data[pole_idx, 3] * contribution).real
-
-    # # Add constant background as per Gavin's insight
-    # if background_constants:
-    #     # These are rough estimates - in practice you'd determine these
-    #     # from the nearly constant remainder after subtracting pole contributions
-    #     elastic_xs += background_constants["elastic"]
-    #     absorption_xs += background_constants["absorption"]
-    #     if fissionable:
-    #         fission_xs += background_constants["fission"]
 
     # Ensure non-negative cross sections
     # elastic_xs = np.maximum(elastic_xs, 0.0)
@@ -474,7 +506,7 @@ def plot_aaa_results(
 def plot_miaaa_convergence(err_hist, rtol=None, path_out=None):
     """
     Plot the convergence of errors from miaaa_xs function.
-    
+
     Parameters
     ----------
     err_hist : list or array
@@ -485,28 +517,32 @@ def plot_miaaa_convergence(err_hist, rtol=None, path_out=None):
         Plot title
     figsize : tuple
         Figure size (width, height)
-    
+
     Returns
     -------
     fig, ax : matplotlib figure and axis objects
     """
     fig, ax = plt.subplots(figsize=(8, 6))
-    
+
     iterations = np.arange(len(err_hist))
-    
+
     # Plot error history
-    ax.semilogy(iterations, err_hist, 'b.-', linewidth=2, markersize=6, label='Max Error')
-    
+    ax.semilogy(
+        iterations, err_hist, "b.-", linewidth=2, markersize=6, label="Max Error"
+    )
+
     # Add tolerance line if provided
     if rtol is not None:
-        ax.axhline(y=rtol, color='r', linestyle='--', linewidth=2, label=f'rtol = {rtol:.1e}')
-    
-    ax.set_xlabel('Iteration (m)')
-    ax.set_ylabel('Error')
+        ax.axhline(
+            y=rtol, color="r", linestyle="--", linewidth=2, label=f"rtol = {rtol:.1e}"
+        )
+
+    ax.set_xlabel("Iteration (m)")
+    ax.set_ylabel("Error")
     ax.set_title("MIAAA Convergence")
     ax.grid(True, alpha=0.3)
     ax.legend()
-    
+
     # Make it look nice
     plt.tight_layout()
     out = "miaaa_convergence.png"

@@ -219,7 +219,7 @@ def miaaa_xs(
 def evaluate_miaaa(grid, w, z, fz, space="E"):
     """
     Evaluate multi-channel AAA approximation using barycentric formula.
-    
+
     Parameters
     ----------
     grid : ndarray
@@ -232,7 +232,7 @@ def evaluate_miaaa(grid, w, z, fz, space="E"):
         Function values at supports (k x m).
     space : str
         Interpolation space.
-    
+
     Returns
     -------
     R : ndarray
@@ -241,8 +241,7 @@ def evaluate_miaaa(grid, w, z, fz, space="E"):
     k, m = fz.shape
     n = len(grid)
     R = np.zeros((k, n), dtype=np.complex128)
-    
-    
+
     # Check for coincident points
     min_distance = np.min(np.abs(grid[:, np.newaxis] - z[np.newaxis, :]))
     if min_distance < 1e-14:
@@ -252,37 +251,38 @@ def evaluate_miaaa(grid, w, z, fz, space="E"):
 
     # Build full Cauchy matrix
     C = 1.0 / (grid[:, None] - z[None, :])
-    
+
     # Find support point indices (where grid matches z)
     support_indices = []
     for j, zj in enumerate(z):
         idx = np.where(np.abs(grid - zj) < 1e-14)[0]
         if len(idx) > 0:
             support_indices.extend([(idx[0], j)])
-    
+
     # Create mask for non-support points
     is_support = np.zeros(n, dtype=bool)
     for idx, _ in support_indices:
         is_support[idx] = True
     non_support = ~is_support
-    
+
     # Compute denominator for non-support points
     D = C @ w
-    
+
     # Evaluate each channel
     for i in range(k):
         # Numerator
         N = C @ (w * fz[i, :])
-        
+
         # Non-support points: use barycentric formula
         valid = non_support & (np.abs(D) > 1e-300)
         R[i, valid] = N[valid] / D[valid]
-        
+
         # Support points: exact interpolation
         for idx, j in support_indices:
             R[i, idx] = fz[i, j]
-    
+
     return R
+
 
 def lawson_iteration(grid, F, z, fz, w_init, J_all, max_iter, space, log):
     """

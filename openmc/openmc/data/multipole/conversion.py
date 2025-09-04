@@ -87,8 +87,8 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         denom_deriv = Cden @ wden
 
         # Avoid division by zero
-        mask = np.abs(denom_deriv) > 1e-14
-        physical_res[mask, i] = num_at_poles[mask] / denom_deriv[mask]
+        mask_div = np.abs(denom_deriv) > 1e-14
+        physical_res[mask_div, i] = num_at_poles[mask_div] / denom_deriv[mask_div]
 
     # Evaluate partial fraction part on full grid Z
     # CC: (len(Z), n_poles) matrix with entries 1/(Z_i - pole_j)
@@ -160,9 +160,15 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         # This gives better coverage for wide energy ranges
         if Z_min > 0:  # For positive energy grids
             # Place poles logarithmically spaced below and above
-            left_poles = Z_min * np.logspace(0.5, -2, n_pseudo_poles//2, base=10)[::-1]
-            right_poles = Z_max * np.logspace(0.5, 1, (n_pseudo_poles+1)//2, base=10)
-            pseudo_poles = np.concatenate([left_poles, right_poles])
+            n_left = n_pseudo_poles // 2
+            n_right = (n_pseudo_poles + 1) // 2
+            left_factors = np.logspace(0.5, 2, n_left)  # [10, 100, ...1000]
+            pseudo_poles_left = Z_min / left_factors
+            # Right poles: above Z_max  
+            right_factors = np.logspace(0.5, 2, n_right)  # [10, 100, ...1000]
+            pseudo_poles_right = Z_max * right_factors
+
+            pseudo_poles = np.concatenate([pseudo_poles_left, pseudo_poles_right])
         else:
             # For grids including zero, use linear spacing
             left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles//2)
@@ -186,7 +192,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
                 
                 # Use Tikhonov regularization for stability
                 # The regularization parameter scales with the remainder magnitude
-                lambda_reg = 1e-10 * max_remainder
+                lambda_reg = 1e-20 * max_remainder
                 
                 # Solve normal equations with regularization
                 # (C^T C + lambda*I) * residues = C^T * remainder
@@ -221,7 +227,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         print(f"  Remainder before: {np.max(np.abs(remainder)):.3e}")
         print(f"  Remainder after:  {np.max(np.abs(final_remainder)):.3e}")
         print(f"  Improvement:      {improvement:.3e}")
-        
+
         # Append pseudo-poles to physical poles
         if len(poles) > 0:
             poles = np.concatenate([poles, pseudo_poles])
