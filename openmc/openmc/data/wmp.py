@@ -1,25 +1,14 @@
-from math import sqrt
 from pathlib import Path
 
 import os
 import pickle
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks
-from scipy.linalg import svd
-import scipy.linalg as la
-
-import openmc.checkvalue as cv
 
 from .data import K_BOLTZMANN
 from .neutron import IncidentNeutron
 from .resonance import ResonanceRange
-from .aaa import (
-    evaluate_aaa,
-    aaa_xs,
-    extract_poles_and_residues,
-    apply_cleanup2_to_aaa,
-)
+from .aaa import (aaa_xs)
 from .multipole.fitting import (miaaa_xs, evaluate_miaaa)
 from .multipole.conversion import (proper_rational)
 from .multipole.plotting import (plot_reconstruction, plot_aaa_results, plot_miaaa_convergence)
@@ -49,15 +38,12 @@ def fit_nuclide(
     njoy_error=5e-4,
     vf_pieces=None,
     log=False,
-    fitter="aaa",
     path_out=None,
     mp_filename=None,
     njoy_input=None,
     bounds=None,
-    cleanup=False,
     plot_each_slice=True,
     fit_mask_guard=0,
-    cleanup_tol=1e-6,
     **kwargs,
 ):
     r"""Generate multipole data for a nuclide from ENDF.
@@ -253,107 +239,30 @@ def fit_nuclide(
             sig_a_piece = ce_xs[1, e_idx]
             sig_f_piece = ce_xs[2, e_idx] if fissionable else None
 
-            if fitter == "aaa":
-                w, z, fsz, faz, *rest = aaa_xs(
-                    E_piece,
-                    sig_s_piece,
-                    sig_a_piece,
-                    sigma_f=sig_f_piece,
-                    method=kwargs.get("method", "full_svd"),
-                    rtol=kwargs.get("rtol", 1e-13),
-                    mmax=kwargs.get("mmax", 100),
-                    log=log,
-                    space=space,
-                )
-                # EXTRACT
-                ffz = rest[0] if fissionable else None
-                fvals_piece = [fsz, faz] + ([ffz] if fissionable else [])
-                poles_s, residues_list = extract_poles_and_residues(
-                    w.astype(complex),
-                    z.astype(complex),
-                    fvals_piece,
-                    log=log,
-                    space=space
-                )
-            elif fitter == "miaaa":
-                w, z, fz, R, err_hist = miaaa_xs(
-                    E_piece,
-                    [sig_s_piece, sig_a_piece, sig_f_piece],
-                    method=kwargs.get("method", "full_svd"),
-                    rtol=kwargs.get("rtol", 1e-13),
-                    mmax=kwargs.get("mmax", 100),
-                    greedy_metric="relative",  # relative or absolute_sum
-                    log=log,
-                    space=space,
-                    normalize=True,
-                    lawson_iter=0
-                )
-
-                poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
-                    z, w, w, fz, R, E_piece,
-                    # pole_extraction="polynomial", max_poly_degree=1,
-                    pole_extraction="pseudo_pole",
-                    n_pseudo_poles=2, pseudo_pole_strategy="optimize", pseudo_pole_scale=2.0
-                )
-                # print(polycoeffs)
-            else:
-                raise ValueError("Unknown fitter passed in.")
-
-        if cleanup:
-            # Define the actual fitting window (not the extended data range)
-            z_clean, fs_clean, fa_clean, ff_clean, w_clean = apply_cleanup2_to_aaa(
+            w, z, fz, R, err_hist = miaaa_xs(
                 E_piece,
-                sig_s_piece,
-                sig_a_piece,
-                z,
-                fsz,
-                faz,
-                w,
-                sigma_f=sig_f_piece,
-                ff=(ffz if fissionable else None),
-                cleanup_tol=cleanup_tol,  # Only remove if pole-zero distance < 1e-6
-                space=space,
-                log=log,
-            )
-
-            # Update the values
-            z = z_clean
-            fsz = fs_clean
-            faz = fa_clean
-            w = w_clean
-            if fissionable:
-                ffz = ff_clean
-
-            # Then extract poles and residues with cleaned values
-            fvals_piece = [fsz, faz] + ([ffz] if fissionable else [])
-            poles_s, residues_list = extract_poles_and_residues(
-                w.astype(complex),
-                z.astype(complex),
-                fvals_piece,
+                [sig_s_piece, sig_a_piece, sig_f_piece],
+                method=kwargs.get("method", "full_svd"),
+                rtol=kwargs.get("rtol", 1e-13),
+                mmax=kwargs.get("mmax", 100),
+                greedy_metric="relative",  # relative or absolute_sum
                 log=log,
                 space=space,
+                normalize=True,
+                lawson_iter=0
             )
+
+            poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
+                z, w, w, fz, R, E_piece,
+                # pole_extraction="polynomial", max_poly_degree=1,
+                # pole_extraction="pseudo_pole", n_pseudo_poles=2,
+            )
+            # print(polycoeffs)
 
         poles.append(poles_s)
         residues.append(residues_list)
 
-        if plot_each_slice and fitter == "aaa":
-            R_s_piece = evaluate_aaa(E_piece, w, z, fsz, space=space)
-            R_a_piece = evaluate_aaa(E_piece, w, z, faz, space=space)
-            R_f_piece = (
-                evaluate_aaa(E_piece, w, z, ffz, space=space) if fissionable else None
-            )
-            plot_aaa_results(
-                E_piece,
-                sig_s_piece,
-                sig_a_piece,
-                R_s_piece,
-                R_a_piece,
-                sigma_f=sig_f_piece,
-                R_f=R_f_piece,
-                path_out=path_out,
-            )
-        elif plot_each_slice and fitter == "miaaa":
+        if plot_each_slice:
             R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
             plot_aaa_results(
                 E_piece,
@@ -383,26 +292,7 @@ def fit_nuclide(
                             plot_type="loglog", show_error=True, error_type="relative",
                             poly_info=polycoeffs)
         plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
-        # background_analysis = analyze_constant_background(
-        #     E_piece,
-        #     sig_s_piece,
-        #     sig_a_piece,
-        #     poles,
-        #     residues,
-        #     sig_f_piece,
-        #     path_out,
-        #     name="U238",
-        #     background_constants=kwargs.get("background_constants", None)
-        # )
 
-        # verify_residues(
-        #     poles,
-        #     residues,
-        #     energy,  # The full energy grid
-        #     elastic_xs,
-        #     absorption_xs,
-        #     fission_xs if fissionable else None,
-        # )
 
     # collect multipole data into a dictionary
     mp_data = {

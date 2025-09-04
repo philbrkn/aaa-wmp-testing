@@ -242,6 +242,14 @@ def evaluate_miaaa(grid, w, z, fz, space="E"):
     n = len(grid)
     R = np.zeros((k, n), dtype=np.complex128)
     
+    
+    # Check for coincident points
+    min_distance = np.min(np.abs(grid[:, np.newaxis] - z[np.newaxis, :]))
+    if min_distance < 1e-14:
+        # print(f"  Warning: Grid point coincides with support point (min dist: {min_distance:.3e})")
+        # Add small perturbation to avoid singularity
+        grid = grid + 1e-14
+
     # Build full Cauchy matrix
     C = 1.0 / (grid[:, None] - z[None, :])
     
