@@ -46,7 +46,7 @@ def plot_single_channel(
     """
     # fig, ax1 = plt.subplots(figsize=(10, 6))
     fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [3, 1]}, sharex=True
+        2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [2, 1]}, sharex=True
     )
 
     # Choose plotting function
@@ -66,7 +66,12 @@ def plot_single_channel(
     ax1.set_xlabel("Energy (eV)")
     ax1.set_ylabel("Cross section (b)", color="black")
     ax1.tick_params(axis="y", labelcolor="black")
-    ax1.grid(True, alpha=0.3)
+    # ax1.grid(which="major", axis="x", linestyle=":", linewidth=1, zorder=0)
+    # ax1.grid(which="major", axis="y", linestyle="-", linewidth=0.3, zorder=0)
+    ax1.grid(True, which="both", alpha=0.3)
+    ax1.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.7)
+    ax1.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.7)
+
 
     # Handle error plotting on secondary axis
     if show_error:
@@ -106,10 +111,8 @@ def plot_single_channel(
                     E,
                     error,
                     color=error_color,
-                    # alpha=1,
                     linewidth=1.5,
                     label=error_label,
-                    linestyle=":",
                 )
             else:
                 # For absolute and relative errors (always positive), we can use semilogy
@@ -117,25 +120,31 @@ def plot_single_channel(
                     E,
                     error,
                     color=error_color,
-                    # alpha=0.7,
                     linewidth=1.5,
                     label=error_label,
-                    # linestyle=":",
                 )
         else:
             ax2.plot(
                 E,
                 error,
                 color=error_color,
-                # alpha=0.7,
                 linewidth=1.5,
                 label=error_label,
-                linestyle=":",
             )
 
         ax2.set_ylabel(error_label, color=error_color)
-        ax2.tick_params(axis="y", labelcolor=error_color)
-        ax2.grid()
+        # ax2.tick_params(axis="y", labelcolor=error_color)
+        ax2.set_ylim(1e-7, 1e1)
+        ax2.grid(True, which="both", alpha=0.3)
+        # horizontal lines
+        ax2.grid(which="major", axis="y", linestyle="--", linewidth=1)
+        # vertical lines. 
+        ax2.grid(which="major", axis="x", linestyle="-", linewidth=0.8, alpha=0.7)
+        ax2.grid(which="minor", axis="x", linestyle=":", linewidth=0.5, alpha=0.7)
+        from matplotlib.ticker import LogLocator
+        ax2.yaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
+        ax2.xaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
+
         # Combine legends from both axes
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()

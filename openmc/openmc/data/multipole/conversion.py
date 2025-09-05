@@ -69,7 +69,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         wnum = np.tile(wnum.reshape(1, -1), (k, 1))
 
     # Extract poles using the przd eigenvalue method
-    physical_poles = przd_for_poles(z, wden)
+    physical_poles = przd_for_poles(z, wden, deflation_tol=1e-10)
 
     # Compute residues via Cauchy matrices
     # Cnum: (n_poles, m) matrix with entries 1/(pole_i - z_j)
@@ -323,9 +323,6 @@ def przd_for_poles(z, w, deflation_tol=1e-10):
 
     # Remove poles at infinity
     poles = poles[~np.isinf(poles)]
-
-    if count > 0:
-        print(f"{count} deflations performed")
 
     return poles
 

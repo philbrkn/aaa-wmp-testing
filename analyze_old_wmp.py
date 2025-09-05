@@ -60,7 +60,7 @@ def plot_wmp_comparison(
 
         # Create figure with error subplot
         fig, (ax1, ax2) = plt.subplots(
-            2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [3, 1]}, sharex=True
+            2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [2, 1]}, sharex=True
         )
 
         # Main plot
@@ -69,7 +69,9 @@ def plot_wmp_comparison(
         ax1.set_ylabel("Cross section (b)")
         ax1.set_title(f"{name} - {channel_name.capitalize()} Channel")
         ax1.legend()
-        ax1.grid(True, alpha=0.3)
+        ax1.grid(True, which="both", alpha=0.3)
+        ax1.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.7)
+        ax1.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.7)
 
         # Error subplot
         mask = ref_xs != 0
@@ -80,8 +82,19 @@ def plot_wmp_comparison(
         ax2.loglog(E_grid, rel_error, "k-", linewidth=1.5)
         ax2.set_xlabel("Energy (eV)")
         ax2.set_ylabel("Relative Error (%)")
-        ax2.grid(True, alpha=0.3)
+
+        # grid lines and such
         ax2.axhline(y=0, color="k", linestyle="-", alpha=0.3)
+        ax2.set_ylim(1e-7, 1e1)
+        ax2.grid(True, which="both", alpha=0.3)
+        # horizontal lines
+        ax2.grid(which="major", axis="y", linestyle="--", linewidth=1)
+        # vertical lines. 
+        ax2.grid(which="major", axis="x", linestyle="-", linewidth=0.8, alpha=0.7)
+        ax2.grid(which="minor", axis="x", linestyle=":", linewidth=0.5, alpha=0.7)
+        from matplotlib.ticker import LogLocator
+        ax2.yaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
+        ax2.xaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
 
         plt.tight_layout()
         plt.savefig(
@@ -240,7 +253,8 @@ wmp = WindowedMultipole(name)
 wmp_data = wmp.from_hdf5(wmp_file)
 
 # bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
-bounds = {"E_min": 785, "E_max": 861}
+# bounds = {"E_min": 785, "E_max": 861}
+bounds = {"E_min": 17400, "E_max": 17475}
 reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
 E_grid = reference_data["energy"]
 

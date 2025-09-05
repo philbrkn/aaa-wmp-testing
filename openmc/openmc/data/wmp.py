@@ -12,6 +12,7 @@ from .aaa import (aaa_xs)
 from .multipole.fitting import (miaaa_xs, evaluate_miaaa)
 from .multipole.conversion import (proper_rational)
 from .multipole.plotting import (plot_reconstruction, plot_aaa_results, plot_miaaa_convergence)
+from .multipole.cleanup import spurious_cleanup
 
 # Constants that determine which value to access
 _MP_EA = 0  # Pole
@@ -44,6 +45,8 @@ def fit_nuclide(
     bounds=None,
     plot_each_slice=True,
     fit_mask_guard=0,
+    cleanup=False,
+    cleanup_tol=1e-6,
     **kwargs,
 ):
     r"""Generate multipole data for a nuclide from ENDF.
@@ -249,21 +252,40 @@ def fit_nuclide(
                 log=log,
                 space=space,
                 normalize=True,
-                lawson_iter=0
+                lawson_iter=0,
             )
 
-            poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
-                z, w, w, fz, R, E_piece,
-                pole_extraction="polynomial", max_poly_degree=2,
-                # pole_extraction="pseudo_pole", n_pseudo_poles=2,
-            )
+            if cleanup:
+                pol, res, pra, pr_handles, _ = proper_rational(
+                    z, w, w, fz, R, E_piece,
+                    pole_extraction=None, max_poly_degree=0,
+                )
+                z, fz, w = spurious_cleanup(pol, res, z, fz, w, E_piece, R.T, cleanup_tol=cleanup_tol)
+            if len(w) == 2 * len(z):  # YES LAWSON
+                m = len(z)
+                w_num = w[m:2*m]
+                w_den = w[:m]
+                poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
+                    z, w_num, w_den, fz, R, E_piece,
+                    # pole_extraction="polynomial", max_poly_degree=2,
+                    pole_extraction="pseudo_pole", n_pseudo_poles=2,
+                )
+            else:  # NO LAWSON
+                poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
+                    z, w, w, fz, R, E_piece,
+                    # pole_extraction="polynomial", max_poly_degree=2,
+                    pole_extraction="pseudo_pole", n_pseudo_poles=4,
+                )
             # print(polycoeffs)
 
         poles.append(poles_s)
         residues.append(residues_list)
 
         if plot_each_slice:
-            R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
+            if len(w) == 2 * len(z):  # YES LAWSON
+                R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space, w_num=w_num, w_den=w_den)
+            else:  # NO LAWSON
+                R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
             plot_aaa_results(
                 E_piece,
                 sig_s_piece,
@@ -278,6 +300,9 @@ def fit_nuclide(
     # print number of poles
     n_poles = sum([p.size for p in poles])
     if log:
+        # for p in poles[0]:
+        #     p = np.sqrt(p)
+        #     print(f"pole:  real {p.real:.2e} | imag {p.imag:.2e}")
         print(f"Total number of poles: {n_poles}")
 
     if vf_pieces == 1:
@@ -292,8 +317,8 @@ def fit_nuclide(
                             plot_type="loglog", show_error=True, error_type="relative",
                             poly_info=polycoeffs)
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
-                    plot_type="loglog", show_error=True, error_type="absolute",
-                    poly_info=polycoeffs)
+                            plot_type="loglog", show_error=True, error_type="absolute",
+                            poly_info=polycoeffs)
         plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
 
 

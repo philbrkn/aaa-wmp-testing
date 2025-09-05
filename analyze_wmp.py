@@ -12,30 +12,27 @@ if __name__ == "__main__":
         endf_file,
         vf_pieces=1,
         mmax=200,
-        rtol=5e-3,
+        rtol=5e-4,
         path_out=path_out,
         log=2,
         fitter="miaaa",
         njoy_input=njoy_input,
         njoy_error=5e-4,
         # bounds={'E_min': 0, 'E_max': 30},
-        # bounds={"E_min": 17465, "E_max": 17596},
-        # bounds={"E_min": 200, "E_max": 400},
-        bounds={"E_min": 785, "E_max": 861},
+        bounds={"E_min": 17400, "E_max": 17475},
+        # bounds={"E_min": 333, "E_max": 400},
         space="E",
         # method='qr+svd',
-        cleanup=False,
-        cleanup_tol=1e-6,  # Only remove if pole-zero distance < 1e-6
+        # cleanup=True,
+        # cleanup_tol=1e-12,  # Only remove if residue < tol
         plot_each_slice=True,
         fit_mask_guard=0.0,
     )
-
 
     # poles = mp_data["poles"]
     # residues = mp_data["residues"]
     # Convert to OpenMC format
     # data_dict = poles_residues_to_openmc_data(poles, residues, name="U238", AWR=238.0)
-
 
     wmp_file = Path(__file__).parent / "windowing_h5_output" / "U238-vf-wmp-VIII.h5"
     # with h5py.File("/home/philip/Research/WMP_Library/092238.h5", "r") as f:
