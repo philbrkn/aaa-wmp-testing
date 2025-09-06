@@ -72,7 +72,6 @@ def plot_single_channel(
     ax1.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.7)
     ax1.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.7)
 
-
     # Handle error plotting on secondary axis
     if show_error:
 
@@ -89,10 +88,24 @@ def plot_single_channel(
             )
             error_label = "Relative Error (%)"
             error_color = "black"
+            if np.any(mask):
+                max_err = np.max(np.abs(error[mask]))
+                rms_err = np.sqrt(np.mean(error[mask] ** 2))
+                print(
+                    f"{channel_name:<12} | Max rel error = {max_err:.2e}%  | RMS rel error = {rms_err:.2e}%"
+                )
+            ax2.set_ylim(1e-7, 1e1) 
         elif error_type == "absolute":
             error = np.abs(reconstructed - original)
             error_label = "Absolute Error (b)"
             error_color = "black"
+
+            max_err = np.max(np.abs(error))
+            rms_err = np.sqrt(np.mean(error ** 2))
+            print(
+                f"{channel_name:<12} | Max abs error = {max_err:.2e}  | RMS abs error = {rms_err:.2e}"
+            )
+            ax2.set_ylim(1e-10, 1e2)
         elif error_type == "remainder":
             error = reconstructed - original
             error_label = "Remainder (b)"
@@ -101,7 +114,6 @@ def plot_single_channel(
             raise ValueError(
                 "error_type must be 'relative', 'absolute', or 'remainder'"
             )
-
         # Plot error with appropriate scale
         if plot_type in ["loglog", "semilogy"]:
             # For log y-scale, we need positive values
@@ -134,7 +146,6 @@ def plot_single_channel(
 
         ax2.set_ylabel(error_label, color=error_color)
         # ax2.tick_params(axis="y", labelcolor=error_color)
-        ax2.set_ylim(1e-7, 1e1)
         ax2.grid(True, which="both", alpha=0.3)
         # horizontal lines
         ax2.grid(which="major", axis="y", linestyle="--", linewidth=1)

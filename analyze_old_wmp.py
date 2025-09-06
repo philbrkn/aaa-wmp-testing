@@ -243,18 +243,23 @@ def count_wmp_poles_in_range(wmp_data, bounds):
     return n_poles
 
 
-# wmp_file = Path(__file__).parent / "windowing_h5_output" / "U238-vf-wmp-VIII.h5"
-wmp_file = Path(__file__).parent / "ENDF-VIII-data" / "officialWMP-U238.h5"
-njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / "U238_NJOY.pickle"
+# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / "officialWMP-U238.h5"
+# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / "officialWMP-Zr91.h5"
+# name = "U238"
+# name = "Zr91"
+name = "O16"
+wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
+njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
 
-
-name = "U238"
 wmp = WindowedMultipole(name)
 wmp_data = wmp.from_hdf5(wmp_file)
+print(f"Total number of poles: {len(wmp_data.data)}")
 
 # bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
 # bounds = {"E_min": 785, "E_max": 861}
-bounds = {"E_min": 17400, "E_max": 17475}
+# bounds = {"E_min": 17400, "E_max": 17475}
+# bounds={"E_min": 0, "E_max": 20000}
+# bounds={"E_min": 0, "E_max":2.36e6}
 reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
 E_grid = reference_data["energy"]
 

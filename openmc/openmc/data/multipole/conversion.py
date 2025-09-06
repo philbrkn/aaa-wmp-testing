@@ -103,9 +103,9 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     poles = physical_poles.copy()
     res = physical_res.copy()
     bestpra = pra.copy()
-    info = {"method": pole_extraction}
-    
+
     if pole_extraction == "polynomial" and max_poly_degree > 0:
+        info = {"method": pole_extraction}
         # Fit polynomial to remainder
         poly_coeffs = []
         for i in range(k):
@@ -119,129 +119,19 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
             else:
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
-        
+
     elif pole_extraction == "pseudo_pole" and n_pseudo_poles > 0:
-        # Z_real = Z.real if np.iscomplexobj(Z) else Z
-        # Z_min, Z_max = np.min(Z_real), np.max(Z_real)
-        # Z_range = Z_max - Z_min
-        
-        # # g = 3 * Z_range
-        # # mask_supports = (Z_real >= Z_min - g) & (Z_real <= Z_max + g)
-        # # mask_fit = (Z_real >= Z_min) & (Z_real <= Z_max)
-        # # Z_real_fit = Z_real[mask_fit]
-
-        # w_p, z_p, fz_p, R_p, err_hist_p = miaaa_xs(
-        #     Z,
-        #     list(remainder),
-        #     space="E",
-        #     rtol=1e-4,
-        #     mmax=20,
-        #     log=2,
-        #     # fit_mask=mask_fit,
-        #     # core_mask=mask_supports,
-        #     normalize=True,
-        #     greedy_metric="relative",  # "relative" or "absolute_sum"
-        # )
-        # pseudo_poles, pseudo_residues = extract_poles_residues(w_p, z_p, fz_p)
-
-        # # Append pseudo-poles to physical poles
-        # poles = np.concatenate([poles, pseudo_poles])
-        # pseudo_residues = np.array(pseudo_residues).T
-        # res = np.vstack([res, pseudo_residues])
-
-        # SIMPLIFIED PSEUDO-POLE APPROACH
-        # Place pseudo-poles geometrically outside the domain
-        
-        Z_real = Z.real if np.iscomplexobj(Z) else Z
-        Z_min, Z_max = np.min(Z_real), np.max(Z_real)
-        Z_range = Z_max - Z_min
-        
-        # Strategy 1: Place pseudo-poles logarithmically outside domain
-        # This gives better coverage for wide energy ranges
-        if Z_min > 0:  # For positive energy grids
-            # Place poles logarithmically spaced below and above
-            n_left = n_pseudo_poles // 2
-            n_right = (n_pseudo_poles + 1) // 2
-            left_factors = np.logspace(0.5, 2, n_left)  # [10, 100, ...1000]
-            pseudo_poles_left = Z_min / left_factors
-            # Right poles: above Z_max  
-            right_factors = np.logspace(0.5, 2, n_right)  # [10, 100, ...1000]
-            pseudo_poles_right = Z_max * right_factors
-
-            pseudo_poles = np.concatenate([pseudo_poles_left, pseudo_poles_right])
-        else:
-            # For grids including zero, use linear spacing
-            left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles//2)
-            right_poles = Z_max + Z_range * np.linspace(0.5, 2.0, (n_pseudo_poles+1)//2)
-            pseudo_poles = np.concatenate([left_poles, right_poles])
-        
-        # Ensure pseudo-poles are real for real problems
-        if not np.iscomplexobj(Z) and not np.iscomplexobj(bcf):
-            pseudo_poles = pseudo_poles.real
-        
-        # Fit residues using regularized least squares
-        pseudo_residues = np.zeros((len(pseudo_poles), k), dtype=np.complex128)
-        
-        for i in range(k):
-            remainder_i = remainder[i, :]
-            max_remainder = np.max(np.abs(remainder_i))
-            
-            if max_remainder > 1e-12:
-                # Build Cauchy matrix for pseudo-poles
-                C_pseudo = 1.0 / (Z[:, np.newaxis] - pseudo_poles[np.newaxis, :])
-                
-                # Use Tikhonov regularization for stability
-                # The regularization parameter scales with the remainder magnitude
-                lambda_reg = 1e-20 * max_remainder
-                
-                # Solve normal equations with regularization
-                # (C^T C + lambda*I) * residues = C^T * remainder
-                CTC = C_pseudo.T @ C_pseudo
-                CTr = C_pseudo.T @ remainder_i
-                
-                # Add regularization to diagonal
-                CTC_reg = CTC + lambda_reg * np.eye(len(pseudo_poles))
-                
-                try:
-                    # Solve using Cholesky decomposition for better numerical stability
-                    pseudo_residues[:, i] = np.linalg.solve(CTC_reg, CTr)
-                except np.linalg.LinAlgError:
-                    # Fallback to least squares if Cholesky fails
-                    pseudo_residues[:, i], _, _, _ = np.linalg.lstsq(
-                        C_pseudo, remainder_i, rcond=1e-10
-                    )
-                
-                # Update approximation
-                bestpra[i, :] += C_pseudo @ pseudo_residues[:, i]
-        
-        # Check quality of pseudo-pole fit
-        final_remainder = bcf - bestpra
-        improvement = np.max(np.abs(remainder)) - np.max(np.abs(final_remainder))
-        
-        #DEBUG
-        print(f"Z range: [{Z_min:.3e}, {Z_max:.3e}]")
-        print(f"Pseudo-poles: {pseudo_poles}")
-        print(f"Min distance to grid: {np.min(np.abs(Z[:, None] - pseudo_poles[None, :])):.3e}")
-        
-        print(f"Pseudo-poles: Added {len(pseudo_poles)} poles")
-        print(f"  Remainder before: {np.max(np.abs(remainder)):.3e}")
-        print(f"  Remainder after:  {np.max(np.abs(final_remainder)):.3e}")
-        print(f"  Improvement:      {improvement:.3e}")
-
+        # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
+        info = fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6)
         # Append pseudo-poles to physical poles
         if len(poles) > 0:
-            poles = np.concatenate([poles, pseudo_poles])
-            res = np.vstack([res, pseudo_residues])
-        else:
-            poles = pseudo_poles
-            res = pseudo_residues
-        
-        info["pseudo_poles"] = pseudo_poles
-        info["pseudo_residues"] = pseudo_residues
-        info["n_pseudo_poles"] = n_pseudo_poles
+            poles = np.concatenate([poles, info["pseudo_poles"]])
+            res = np.vstack([res, info["pseudo_residues"]])
+
     else:
+        info = {"method": None}
         info["poly_coeffs"] = [None] * k
-    
+
     # Create function handles for evaluation
     pr_handles = []
     for i in range(k):
@@ -252,12 +142,226 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
             ))
         else:
             pr_handles.append(create_pr_function(poles, res[:, i], None))
-    
+
     # Return in appropriate format
     if single_function:
         return poles, res[:, 0], bestpra[0, :], pr_handles[0], info
     else:
         return poles, res, bestpra, pr_handles, info
+
+
+def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
+    # Place pseudo-poles geometrically outside the domain
+    info = {"method": "pseudo_pole"}
+    k = remainder.shape[0]
+
+    Z_real = Z.real if np.iscomplexobj(Z) else Z
+    Z_min, Z_max = np.min(Z_real), np.max(Z_real)
+    Z_range = Z_max - Z_min
+
+    # Strategy 1: Place pseudo-poles logarithmically outside domain
+    # This gives better coverage for wide energy ranges
+    if Z_min > 0:  # For positive energy grids
+        # Place poles logarithmically spaced below and above
+        n_left = n_pseudo_poles // 2
+        n_right = (n_pseudo_poles + 1) // 2
+        left_factors = np.logspace(4, 5, n_left)  # [10, 100, ...1000]
+        pseudo_poles_left = Z_min / left_factors
+        # Right poles: above Z_max
+        right_factors = np.logspace(4, 5, n_right)  # [10, 100, ...1000]
+        pseudo_poles_right = Z_max * right_factors
+
+        pseudo_poles = np.concatenate([pseudo_poles_left, pseudo_poles_right])
+    else:
+        # For grids including zero, use linear spacing
+        left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles//2)
+        right_poles = Z_max + Z_range * np.linspace(0.5, 2.0, (n_pseudo_poles+1)//2)
+        pseudo_poles = np.concatenate([left_poles, right_poles])
+
+    # Ensure pseudo-poles are real for real problems
+    if not np.iscomplexobj(Z) and not np.iscomplexobj(bcf):
+        pseudo_poles = pseudo_poles.real
+
+    # Fit residues using regularized least squares
+    pseudo_residues = np.zeros((len(pseudo_poles), k), dtype=np.complex128)
+
+    for i in range(k):
+        remainder_i = remainder[i, :]
+        max_remainder = np.max(np.abs(remainder_i))
+
+        if max_remainder > 1e-12:
+            # Build Cauchy matrix for pseudo-poles
+            C_pseudo = 1.0 / (Z[:, np.newaxis] - pseudo_poles[np.newaxis, :])
+
+            # Use Tikhonov regularization for stability
+            # The regularization parameter scales with the remainder magnitude
+            lambda_reg = 1e-20 * max_remainder
+
+            # Solve normal equations with regularization
+            # (C^T C + lambda*I) * residues = C^T * remainder
+            CTC = C_pseudo.T @ C_pseudo
+            CTr = C_pseudo.T @ remainder_i
+
+            # Add regularization to diagonal
+            CTC_reg = CTC + lambda_reg * np.eye(len(pseudo_poles))
+
+            try:
+                # Solve using Cholesky decomposition for better numerical stability
+                pseudo_residues[:, i] = np.linalg.solve(CTC_reg, CTr)
+            except np.linalg.LinAlgError:
+                # Fallback to least squares if Cholesky fails
+                pseudo_residues[:, i], _, _, _ = np.linalg.lstsq(
+                    C_pseudo, remainder_i, rcond=1e-10
+                )
+
+            # Update approximation
+            bestpra[i, :] += C_pseudo @ pseudo_residues[:, i]
+
+    # Check quality of pseudo-pole fit
+    final_remainder = bcf - bestpra
+    improvement = np.max(np.abs(remainder)) - np.max(np.abs(final_remainder))
+
+    # DEBUG
+    print(f"Z range: [{Z_min:.3e}, {Z_max:.3e}]")
+    print(f"Pseudo-poles: {pseudo_poles}")
+
+    print(f"Pseudo-poles: Added {len(pseudo_poles)} poles")
+    print(f"  Remainder before: {np.max(np.abs(remainder)):.3e}")
+    print(f"  Remainder after:  {np.max(np.abs(final_remainder)):.3e}")
+    print(f"  Improvement:      {improvement:.3e}")
+
+    info["pseudo_poles"] = pseudo_poles
+    info["pseudo_residues"] = pseudo_residues
+    info["n_pseudo_poles"] = n_pseudo_poles
+
+    return info
+
+
+def fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6, verbose=True):
+    """
+    Simple loop to find best pseudo-pole configuration.
+    
+    Try different numbers of poles and different distances.
+    Pick the best one.
+    """
+    k = remainder.shape[0]
+    Z_real = Z.real if np.iscomplexobj(Z) else Z
+    Z_min, Z_max = np.min(Z_real), np.max(Z_real)
+    Z_range = Z_max - Z_min
+
+    # Define distance multipliers to try
+    if Z_min > 0:
+        # For positive domains, use multiplicative factors
+        distance_factors = [2, 5, 10, 100, 1000, 1e4, 1e5, 1e6, 1e7, 1e8]
+    else:
+        # For domains with negative values, use range multiples
+        distance_factors = [0.5, 1, 2, 5, 10, 50, 100]
+
+    best_error = np.inf
+    best_config = None
+
+    # Simple loop: try different pole counts and distances
+    for n_poles in range(1, max_poles + 1):
+        for dist_factor in distance_factors:
+
+            # Place poles symmetrically
+            poles = []
+            if Z_min > 0:
+                # Multiplicative placement
+                n_left = n_poles // 2
+                n_right = n_poles - n_left  # Handles odd numbers
+
+                # Left poles
+                for i in range(n_left):
+                    pole = Z_min / dist_factor
+                    if pole > 0:  # Don't go below zero
+                        poles.append(pole)
+
+                # Right poles
+                for i in range(n_right):
+                    poles.append(Z_max * dist_factor)
+            else:
+                # Additive placement
+                n_left = n_poles // 2
+                n_right = n_poles - n_left
+
+                # Left poles
+                for i in range(n_left):
+                    poles.append(Z_min - Z_range * dist_factor)
+
+                # Right poles
+                for i in range(n_right):
+                    poles.append(Z_max + Z_range * dist_factor)
+
+            poles = np.array(poles)
+
+            # Skip if we couldn't place all poles
+            if len(poles) != n_poles:
+                continue
+
+            # Fit residues using least squares
+            C = 1.0 / (Z[:, np.newaxis] - poles[np.newaxis, :])
+            residues = np.zeros((n_poles, k), dtype=np.complex128)
+
+            for i in range(k):
+                if np.max(np.abs(remainder[i, :])) > 1e-12:
+                    residues[:, i], _, _, _ = np.linalg.lstsq(C, remainder[i, :], rcond=1e-12)
+
+            # Calculate approximation
+            approx = residues.T @ C.T
+            error_array = remainder - approx
+
+            # Calculate max relative error
+            max_rel_error = 0
+            for i in range(k):
+                nonzero = np.abs(bcf[i, :]) > 1e-15
+                if np.any(nonzero):
+                    rel_err = np.max(np.abs(error_array[i, nonzero] / bcf[i, nonzero]))
+                    max_rel_error = max(max_rel_error, rel_err)
+
+            # Check if this is better
+            if max_rel_error < best_error:
+                best_error = max_rel_error
+                best_config = {
+                    'n_poles': n_poles,
+                    'poles': poles,
+                    'residues': residues,
+                    'dist_factor': dist_factor,
+                    'error': max_rel_error
+                }
+
+                if verbose:
+                    print(f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best")
+
+                # Stop if good enough
+                if max_rel_error < rtol:
+                    break
+            elif verbose:  # Only print first few
+                print(f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}")
+
+        # Stop if we found good solution
+        if best_error < rtol:
+            break
+
+    # Apply best configuration
+    if best_config:
+        C_best = 1.0 / (Z[:, np.newaxis] - best_config['poles'][np.newaxis, :])
+        bestpra += best_config['residues'].T @ C_best.T
+
+        if verbose:
+            print(f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance")
+            print(f"Poles: {best_config['poles']}")
+            print(f"Final relative error: {best_config['error']:.3e}")
+
+        return {
+            "method": "pseudo_pole",
+            "pseudo_poles": best_config['poles'],
+            "pseudo_residues": best_config['residues'],
+            "n_pseudo_poles": best_config['n_poles'],
+            "distance_factor": best_config['dist_factor']
+        }
+
+    return {"method": "pseudo_pole", "error": "failed"}
 
 
 def przd_for_poles(z, w, deflation_tol=1e-10):
@@ -410,7 +514,7 @@ def extract_poles_residues(w, z, fz):
         return poles, all_residues
 
 
-#TODO: i dont believe this is necessary
+# TODO: i dont believe this is necessary
 def create_pr_function(poles, residues, polycoeffs=None):
     """
     Create a callable function for proper rational evaluation.

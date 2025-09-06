@@ -36,6 +36,7 @@ DETAILED_LOGGING = 2
 
 def fit_nuclide(
     endf_file,
+    name,
     njoy_error=5e-4,
     vf_pieces=None,
     log=False,
@@ -91,12 +92,11 @@ def fit_nuclide(
             purr=False,
         )
         # dump the NJOY input for later use
-        base_dir = Path(
-            path_out
-        ).parent  # TODO: this assumes path_out is a subdirectory
+        # TODO: this assumes path_out is a subdirectory
+        base_dir = Path(path_out).parent
         njoy_path_out = base_dir / "NJOY_pickles"
         njoy_path_out.mkdir(parents=True, exist_ok=True)
-        with open(njoy_path_out / "U238_NJOY.pickle", "wb") as f:
+        with open(njoy_path_out / f"{name}_NJOY.pickle", "wb") as f:
             pickle.dump(nuc_ce, f)
     else:
         # pickle in
@@ -241,14 +241,18 @@ def fit_nuclide(
             sig_s_piece = ce_xs[0, e_idx]
             sig_a_piece = ce_xs[1, e_idx]
             sig_f_piece = ce_xs[2, e_idx] if fissionable else None
-
+            if fissionable:
+                channels = [sig_s_piece, sig_a_piece, sig_f_piece]
+            else:
+                channels = [sig_s_piece, sig_a_piece]
             w, z, fz, R, err_hist = miaaa_xs(
                 E_piece,
-                [sig_s_piece, sig_a_piece, sig_f_piece],
+                channels,
                 method=kwargs.get("method", "full_svd"),
                 rtol=kwargs.get("rtol", 1e-13),
                 mmax=kwargs.get("mmax", 100),
                 greedy_metric="relative",  # relative or absolute_sum
+                # greedy_metric="absolute_sum",  # relative or absolute_sum
                 log=log,
                 space=space,
                 normalize=True,
@@ -273,8 +277,8 @@ def fit_nuclide(
             else:  # NO LAWSON
                 poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
                     z, w, w, fz, R, E_piece,
-                    # pole_extraction="polynomial", max_poly_degree=2,
-                    pole_extraction="pseudo_pole", n_pseudo_poles=4,
+                    pole_extraction="polynomial", max_poly_degree=2,
+                    # pole_extraction="pseudo_pole", n_pseudo_poles=4,
                 )
             # print(polycoeffs)
 
@@ -286,6 +290,7 @@ def fit_nuclide(
                 R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space, w_num=w_num, w_den=w_den)
             else:  # NO LAWSON
                 R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
+            R_fission = R_pieces[2] if fissionable else None
             plot_aaa_results(
                 E_piece,
                 sig_s_piece,
@@ -293,7 +298,7 @@ def fit_nuclide(
                 R_pieces[0],
                 R_pieces[1],
                 sigma_f=sig_f_piece,
-                R_f=R_pieces[2],
+                R_f=R_fission,
                 path_out=path_out,
             )
 
@@ -320,7 +325,6 @@ def fit_nuclide(
                             plot_type="loglog", show_error=True, error_type="absolute",
                             poly_info=polycoeffs)
         plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
-
 
     # collect multipole data into a dictionary
     mp_data = {
