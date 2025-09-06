@@ -1,21 +1,40 @@
 from numbers import Real
 from math import exp, erf, pi, sqrt
 from copy import deepcopy
+import warnings
+from multiprocessing import Pool, cpu_count
+import traceback
 
 import os
 import h5py
 import pickle
 import numpy as np
 from scipy.signal import find_peaks
+import matplotlib.pyplot as plt
 
 import openmc.checkvalue as cv
-from ..exceptions import DataError
-from ..mixin import EqualityMixin
-from . import WMP_VERSION, WMP_VERSION_MAJOR
-from .data import K_BOLTZMANN
-from .neutron import IncidentNeutron
-from .resonance import ResonanceRange
+from openmc.exceptions import DataError
+from openmc.mixin import EqualityMixin
+# from openmc.data import WMP_VERSION, WMP_VERSION_MAJOR, WMP_VERSION_MINOR
+# from openmc.data.data import K_BOLTZMANN
+from openmc.data.neutron import IncidentNeutron
+from openmc.data.resonance import ResonanceRange
+import openmc.data.vectfit as vf
 
+WMP_VERSION_MAJOR = 1 
+WMP_VERSION_MINOR = 3 # 1 for old, 2 for new 
+WMP_VERSION = (WMP_VERSION_MAJOR, WMP_VERSION_MINOR)
+K_BOLTZMANN = 8.617333262e-5
+
+# Unit conversions
+EV_PER_MEV = 1.0e6
+JOULE_PER_EV = 1.602176634e-19
+
+# Avogadro's constant
+AVOGADRO = 6.02214076e23
+
+# Neutron mass in units of amu
+NEUTRON_MASS = 1.00866491595
 
 # Constants that determine which value to access
 _MP_EA = 0       # Pole
@@ -23,18 +42,55 @@ _MP_EA = 0       # Pole
 # Residue indices
 _MP_RS = 1       # Residue scattering
 _MP_RA = 2       # Residue absorption
-_MP_RF = 3       # Residue fission
+_MP_RC = 3       # Residue capture
+_MP_RP = 4       # Residue proton MT=103
+_MP_RL = 5       # Residue alpha MT=107
+_MP_RF = 6       # Residue fission
+
 
 # Polynomial fit indices
 _FIT_S = 0       # Scattering
 _FIT_A = 1       # Absorption
-_FIT_F = 2       # Fission
+_FIT_C = 2       # Capture
+_FIT_P = 3       # Proton
+_FIT_L = 4       # Alpha
+_FIT_F = 5       # Fission
 
 # Upper temperature limit (K)
 TEMPERATURE_LIMIT = 3000
 
 # Logging control
 DETAILED_LOGGING = 2
+
+
+# Helper function for parallel processing
+def test_window_config(args):
+    """Test a single window configuration (n_w, n_cf) combination."""
+    mp_data, n_w, n_cf, kwargs, log = args
+
+    if log:
+        print("Testing N_win={} N_cf={}".format(n_w, n_cf))
+
+    # Update arguments dictionary
+    kwargs = kwargs.copy()  # Make a copy to avoid shared state issues
+    kwargs.update(n_win=n_w, n_cf=n_cf)
+
+    try:
+        wmp = _windowing(mp_data, log=log, **kwargs)
+
+        # Calculate metric
+        metric = -(wmp.poles_per_window * 10. + wmp.fit_order * 1. +
+                   wmp.n_windows * 0.01)
+
+        if log:
+            print("Completed N_win={} N_cf={}, metric={}".format(n_w, n_cf, metric))
+
+        return (metric, wmp, n_w, n_cf)
+    except Exception as e:
+        if log:
+            print('Failed N_win={} N_cf={}: {}'.format(n_w, n_cf, str(e)))
+            print(f"Traceback: {traceback.format_exc()}")
+        return (None, None, n_w, n_cf)
 
 
 def _faddeeva(z):
@@ -176,7 +232,6 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
     """
 
     # import vectfit package: https://github.com/liangjg/vectfit
-    import vectfit as vf
 
     ne = energy.size
     nmt = len(mts)
@@ -194,8 +249,9 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
         test_xs_ref[i] = np.interp(test_energy, energy, ce_xs[i])
 
     if log:
-        print(f"  energy: {energy[0]:.3e} to {energy[-1]:.3e} eV ({ne} points)")
-        print(f"  error tolerance: rtol={rtol}, atol={atol}")
+        print("  energy: {:.3e} to {:.3e} eV ({} points)".format(
+              energy[0], energy[-1], ne))
+        print("  error tolerance: rtol={}, atol={}".format(rtol, atol))
 
     # transform xs (sigma) and energy (E) to f (sigma*E) and s (sqrt(E)) to be
     # compatible with the multipole representation
@@ -229,8 +285,8 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
         orders = list(range(lowest_order, highest_order + 1, 2))
 
     if log:
-        print(f"Found {n_peaks} peaks")
-        print(f"Fitting orders from {orders[0]} to {orders[-1]}")
+        print("Found {} peaks".format(n_peaks))
+        print("Fitting orders from {} to {}".format(orders[0], orders[-1]))
 
     # perform VF with increasing orders
     found_ideal = False
@@ -238,7 +294,7 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
     best_quality = best_ratio = -np.inf
     for i, order in enumerate(orders):
         if log:
-            print(f"Order={order}({i}/{len(orders)})")
+            print("Order={}({}/{})".format(order, i, len(orders)))
         # initial guessed poles
         poles_r = np.linspace(s[0], s[-1], order//2)
         poles = poles_r + poles_r*0.01j
@@ -248,10 +304,10 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
         # fitting iteration
         for i_vf in range(n_vf_iter):
             if log >= DETAILED_LOGGING:
-                print(f"VF iteration {i_vf + 1}/{n_vf_iter}")
+                print("VF iteration {}/{}".format(i_vf + 1, n_vf_iter))
 
             # call vf
-            poles, residues, cf, f_fit, rms = vf.vectfit(f, s, poles, weight)
+            poles, residues, cf, f_fit, rms = vectfit(f, s, poles, weight)
 
             # convert real pole to conjugate pairs
             n_real_poles = 0
@@ -267,7 +323,7 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
             # re-calculate residues if poles changed
             if n_real_poles > 0:
                 if log >= DETAILED_LOGGING:
-                    print(f"  # real poles: {n_real_poles}")
+                    print("  # real poles: {}".format(n_real_poles))
                 new_poles, residues, cf, f_fit, rms = \
                       vf.vectfit(f, s, new_poles, weight, skip_pole=True)
 
@@ -295,10 +351,10 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
                 quality = -np.inf
 
             if log >= DETAILED_LOGGING:
-                print(f"  # poles: {new_poles.size}")
-                print(f"  Max relative error: {maxre * 100:.3f}%")
-                print(f"  Satisfaction: {ratio * 100:.1f}%, {ratio2 * 100:.1f}%")
-                print(f"  Quality: {quality:.2f}")
+                print("  # poles: {}".format(new_poles.size))
+                print("  Max relative error: {:.3f}%".format(maxre*100))
+                print("  Satisfaction: {:.1f}%, {:.1f}%".format(ratio*100, ratio2*100))
+                print("  Quality: {:.2f}".format(quality))
 
             if quality > best_quality:
                 if log >= DETAILED_LOGGING:
@@ -353,7 +409,7 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
     mp_residues = np.concatenate((best_residues[:, real_idx],
                                   best_residues[:, conj_idx]*2), axis=1)/1j
     if log:
-        print(f"Final number of poles: {mp_poles.size}")
+        print("Final number of poles: {}".format(mp_poles.size))
 
     if path_out:
         if not os.path.exists(path_out):
@@ -361,7 +417,6 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
         for i, mt in enumerate(mts):
             if not test_xs_ref[i].any():
                 continue
-            import matplotlib.pyplot as plt
             fig, ax1 = plt.subplots()
             lns1 = ax1.loglog(test_energy, test_xs_ref[i], 'g', label="ACE xs")
             lns2 = ax1.loglog(test_energy, best_test_xs[i], 'b', label="VF xs")
@@ -377,14 +432,14 @@ def _vectfit_xs(energy, ce_xs, mts, rtol=1e-3, atol=1e-5, orders=None,
             ax2.set_ylabel('relative error', color='r')
             ax2.tick_params('y', colors='r')
 
-            plt.title(f"MT {mt} vector fitted with {mp_poles.size} poles")
+            plt.title("MT {} vector fitted with {} poles".format(mt, mp_poles.size))
             fig.tight_layout()
             fig_file = os.path.join(path_out, "{:.0f}-{:.0f}_MT{}.png".format(
                                     energy[0], energy[-1], mt))
             plt.savefig(fig_file)
             plt.close()
             if log:
-                print(f"Saved figure: {fig_file}")
+                print("Saved figure: {}".format(fig_file))
 
     return (mp_poles, mp_residues)
 
@@ -422,9 +477,9 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
 
     # make 0K ACE data using njoy
     if log:
-        print(f"Running NJOY to get 0K point-wise data (error={njoy_error})...")
+        print("Running NJOY to get 0K point-wise data (error={})...".format(njoy_error))
 
-    nuc_ce = IncidentNeutron.from_njoy(endf_file, temperatures=[0.0],
+    nuc_ce = IncidentNeutron.from_njoy(endf_file, temperatures=[0.0], 
              error=njoy_error, broadr=False, heatr=False, purr=False)
 
     if log:
@@ -459,7 +514,21 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
         absorption_xs = nuc_ce[27].xs['0K'](energy)
     except KeyError:
         absorption_xs = np.zeros_like(total_xs)
-
+    
+    # wmp_viii0
+    try:
+        capture_xs = nuc_ce[102].xs['0K'](energy)
+    except KeyError:
+        capture_xs = np.zeros_like(total_xs)
+    try:
+        proton_xs = nuc_ce[103].xs['0K'](energy)
+    except KeyError:
+        proton_xs = np.zeros_like(total_xs)
+    try:
+        alpha_xs = nuc_ce[107].xs['0K'](energy)
+    except KeyError:
+        alpha_xs = np.zeros_like(total_xs)
+        
     fissionable = False
     try:
         fission_xs = nuc_ce[18].xs['0K'](energy)
@@ -469,15 +538,16 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
 
     # make vectors
     if fissionable:
-        ce_xs = np.vstack((elastic_xs, absorption_xs, fission_xs))
-        mts = [2, 27, 18]
+        ce_xs = np.vstack((elastic_xs, absorption_xs, capture_xs, proton_xs, alpha_xs, fission_xs))
+        mts = [2, 27, 102, 103, 107, 18]
     else:
-        ce_xs = np.vstack((elastic_xs, absorption_xs))
-        mts = [2, 27]
+        ce_xs = np.vstack((elastic_xs, absorption_xs, capture_xs, proton_xs, alpha_xs))
+        mts = [2, 27, 102, 103, 107]
 
     if log:
-        print(f"  MTs: {mts}")
-        print(f"  Energy range: {E_min:.3e} to {E_max:.3e} eV ({n_points} points)")
+        print("  MTs: {}".format(mts))
+        print("  Energy range: {:.3e} to {:.3e} eV ({} points)".format(
+              E_min, E_max, n_points))
 
     # ======================================================================
     # PERFORM VECTOR FITTING
@@ -498,7 +568,7 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
     # VF piece by piece
     for i_piece in range(vf_pieces):
         if log:
-            print(f"Vector fitting piece {i_piece + 1}/{vf_pieces}...")
+            print("Vector fitting piece {}/{}...".format(i_piece + 1, vf_pieces))
         # start E of this piece
         e_bound = (sqrt(E_min) + piece_width*(i_piece-0.5))**2
         if i_piece == 0 or sqrt(alpha*e_bound) < 4.0:
@@ -532,12 +602,12 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
         if not os.path.exists(path_out):
             os.makedirs(path_out)
         if not mp_filename:
-            mp_filename = f"{nuc_ce.name}_mp.pickle"
+            mp_filename = "{}_mp.pickle".format(nuc_ce.name)
         mp_filename = os.path.join(path_out, mp_filename)
         with open(mp_filename, 'wb') as f:
             pickle.dump(mp_data, f)
         if log:
-            print(f"Dumped multipole data to file: {mp_filename}")
+            print("Dumped multipole data to file: {}".format(mp_filename))
 
     return mp_data
 
@@ -573,7 +643,6 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
     """
 
     # import vectfit package: https://github.com/liangjg/vectfit
-    import vectfit as vf
 
     # unpack multipole data
     name = mp_data["name"]
@@ -603,15 +672,40 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
 
     if log:
         print("Windowing:")
-        print(f"  config: # windows={n_win}, spacing={spacing}, CF order={n_cf}")
-        print(f"  error tolerance: rtol={rtol}, atol={atol}")
+        print("  config: # windows={}, spacing={}, CF order={}".format(
+               n_win, spacing, n_cf))
+        print("  error tolerance: rtol={}, atol={}".format(rtol, atol))
 
     # sort poles (and residues) by the real component of the pole
     for ip in range(n_pieces):
-        indices = mp_poles[ip].argsort()
-        mp_poles[ip] = mp_poles[ip][indices]
-        mp_residues[ip] = mp_residues[ip][:, indices]
+        # indices = mp_poles[ip].argsort()
+        # mp_poles[ip] = mp_poles[ip][indices]
+        # mp_residues[ip] = mp_residues[ip][:, indices]
 
+        poles = np.asarray(mp_poles[ip])
+        residues = np.asarray(mp_residues[ip])
+        indices = poles.argsort()
+        poles = poles[indices]
+
+        residues = residues[indices, :]
+
+        mp_poles[ip] = poles
+        mp_residues[ip] = residues.T
+        # print(f"\n--- Piece {ip} ---")
+        # print(f"poles.shape: {poles.shape}")
+        # print(f"residues.shape: {residues.shape}")
+
+        # # sanity checks
+        # n_poles = poles.size
+        # if residues.shape[0] == n_poles:
+        #     print("Residues axis 0 matches n_poles")
+        # elif residues.shape[1] == n_poles:
+        #     print("Residues axis 1 matches n_poles")
+        # else:
+        #     print("WARNING: Neither axis matches n_poles")
+        # When loading or preparing multipole data
+    for i_piece in range(len(mp_poles)):
+        mp_poles[i_piece] = np.sqrt(mp_poles[i_piece])
     # initialize an array to record whether each pole is used or not
     poles_unused = [np.ones_like(p, dtype=int) for p in mp_poles]
 
@@ -620,7 +714,7 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
     win_data = []
     for iw in range(n_win):
         if log >= DETAILED_LOGGING:
-            print(f"Processing window {iw + 1}/{n_win}...")
+            print("Processing window {}/{}...".format(iw + 1, n_win))
 
         # inner window boundaries
         inbegin = sqrt(E_min) + spacing * iw
@@ -655,7 +749,7 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
         lp = rp = center_pole_ind
         while True:
             if log >= DETAILED_LOGGING:
-                print(f"Trying poles {lp} to {rp}")
+                print("Trying poles {} to {}".format(lp, rp))
 
             # calculate the cross sections contributed by the windowed poles
             if rp > lp:
@@ -744,12 +838,12 @@ class WindowedMultipole(EqualityMixin):
     Parameters
     ----------
     name : str
-        Name of the nuclide using the GNDS naming convention
+        Name of the nuclide using the GND naming convention
 
     Attributes
     ----------
     name : str
-        Name of the nuclide using the GNDS naming convention
+        Name of the nuclide using the GND naming convention
     spacing : float
         The width of each window in sqrt(E)-space.  For example, the frst window
         will end at (sqrt(E_min) + spacing)**2 and the second window at
@@ -791,15 +885,11 @@ class WindowedMultipole(EqualityMixin):
         self.windows = None
         self.broaden_poly = None
         self.curvefit = None
+        self.version_minor = None
 
     @property
     def name(self):
         return self._name
-
-    @name.setter
-    def name(self, name):
-        cv.check_type('name', name, str)
-        self._name = name
 
     @property
     def fit_order(self):
@@ -807,7 +897,12 @@ class WindowedMultipole(EqualityMixin):
 
     @property
     def fissionable(self):
-        return self.data.shape[1] == 4
+        if self.version_minor == 2:
+            return self.data.shape[1] == 5 
+        if self.version_minor == 3:
+            return self.data.shape[1] == 7             
+        if self.version_minor == 1:
+            return self.data.shape[1] == 4 
 
     @property
     def n_poles(self):
@@ -825,16 +920,45 @@ class WindowedMultipole(EqualityMixin):
     def spacing(self):
         return self._spacing
 
+    @property
+    def sqrtAWR(self):
+        return self._sqrtAWR
+
+    @property
+    def E_min(self):
+        return self._E_min
+
+    @property
+    def E_max(self):
+        return self._E_max
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def windows(self):
+        return self._windows
+
+    @property
+    def broaden_poly(self):
+        return self._broaden_poly
+
+    @property
+    def curvefit(self):
+        return self._curvefit
+
+    @name.setter
+    def name(self, name):
+        cv.check_type('name', name, str)
+        self._name = name
+
     @spacing.setter
     def spacing(self, spacing):
         if spacing is not None:
             cv.check_type('spacing', spacing, Real)
             cv.check_greater_than('spacing', spacing, 0.0, equality=False)
         self._spacing = spacing
-
-    @property
-    def sqrtAWR(self):
-        return self._sqrtAWR
 
     @sqrtAWR.setter
     def sqrtAWR(self, sqrtAWR):
@@ -843,20 +967,12 @@ class WindowedMultipole(EqualityMixin):
             cv.check_greater_than('sqrtAWR', sqrtAWR, 0.0, equality=False)
         self._sqrtAWR = sqrtAWR
 
-    @property
-    def E_min(self):
-        return self._E_min
-
     @E_min.setter
     def E_min(self, E_min):
         if E_min is not None:
             cv.check_type('E_min', E_min, Real)
             cv.check_greater_than('E_min', E_min, 0.0, equality=True)
         self._E_min = E_min
-
-    @property
-    def E_max(self):
-        return self._E_max
 
     @E_max.setter
     def E_max(self, E_max):
@@ -865,28 +981,33 @@ class WindowedMultipole(EqualityMixin):
             cv.check_greater_than('E_max', E_max, 0.0, equality=False)
         self._E_max = E_max
 
-    @property
-    def data(self):
-        return self._data
-
     @data.setter
     def data(self, data):
         if data is not None:
             cv.check_type('data', data, np.ndarray)
             if len(data.shape) != 2:
                 raise ValueError('Multipole data arrays must be 2D')
-            if data.shape[1] not in (3, 4):
-                raise ValueError(
-                     'data.shape[1] must be 3 or 4. One value for the pole.'
-                     ' One each for the scattering and absorption residues. '
-                     'Possibly one more for a fission residue.')
+            if self.version_minor == 2:
+                if data.shape[1] not in (4, 5): # new version of wmp 
+                    raise ValueError(
+                         'data.shape[1] must be 4 or 5. One value for the pole.'
+                         ' One each for the scattering and absorption residues. '
+                         'Possibly one more for a fission residue.')
+            if self.version_minor == 3:
+                if data.shape[1] not in (6, 7): # new version of wmp 
+                    raise ValueError(
+                         'data.shape[1] must be 6 or 7. One value for the pole.'
+                         ' One each for the scattering and absorption residues. '
+                         'Possibly one more for a fission residue.')
+            if self.version_minor == 1:
+                if data.shape[1] not in (3, 4): # old version of wmp 
+                    raise ValueError(
+                         'data.shape[1] must be 3 or 4. One value for the pole.'
+                         ' One each for the scattering and absorption residues. '
+                         'Possibly one more for a fission residue.')
             if not np.issubdtype(data.dtype, np.complexfloating):
                 raise TypeError('Multipole data arrays must be complex dtype')
         self._data = data
-
-    @property
-    def windows(self):
-        return self._windows
 
     @windows.setter
     def windows(self, windows):
@@ -899,10 +1020,6 @@ class WindowedMultipole(EqualityMixin):
                                 ' dtype')
         self._windows = windows
 
-    @property
-    def broaden_poly(self):
-        return self._broaden_poly
-
     @broaden_poly.setter
     def broaden_poly(self, broaden_poly):
         if broaden_poly is not None:
@@ -914,19 +1031,25 @@ class WindowedMultipole(EqualityMixin):
                                 ' dtype')
         self._broaden_poly = broaden_poly
 
-    @property
-    def curvefit(self):
-        return self._curvefit
-
     @curvefit.setter
     def curvefit(self, curvefit):
         if curvefit is not None:
             cv.check_type('curvefit', curvefit, np.ndarray)
             if len(curvefit.shape) != 3:
                 raise ValueError('Multipole curvefit arrays must be 3D')
-            if curvefit.shape[2] not in (2, 3):  # sig_s, sig_a (maybe sig_f)
-                raise ValueError('The third dimension of multipole curvefit'
-                                 ' arrays must have a length of 2 or 3')
+            # wmp_viii0
+            if self.version_minor == 2:
+                if curvefit.shape[2] not in (3, 4):  # sig_s, sig_a, sig_c, (maybe sig_f)
+                    raise ValueError('The third dimension of multipole curvefit'
+                                     ' arrays must have a length of 3 or 4')
+            if self.version_minor == 3:
+                if curvefit.shape[2] not in (5, 6):  
+                    raise ValueError('The third dimension of multipole curvefit'
+                                     ' arrays must have a length of 3 or 4')
+            if self.version_minor == 1:
+                if curvefit.shape[2] not in (2, 3):  # sig_s, sig_a (maybe sig_f)
+                    raise ValueError('The third dimension of multipole curvefit'
+                                     ' arrays must have a length of 2 or 3')
             if not np.issubdtype(curvefit.dtype, np.floating):
                 raise TypeError('Multipole curvefit arrays must be float dtype')
         self._curvefit = curvefit
@@ -956,7 +1079,7 @@ class WindowedMultipole(EqualityMixin):
         else:
             h5file = h5py.File(str(group_or_filename), 'r')
             need_to_close = True
-            print(h5file.values())
+
             # Make sure version matches
             if 'version' in h5file.attrs:
                 major, minor = h5file.attrs['version']
@@ -976,7 +1099,11 @@ class WindowedMultipole(EqualityMixin):
         name = group.name[1:]
         out = cls(name)
 
+        out.name = name
+        out.version_minor = minor
         # Read scalars.
+        # if hasattr(group, 'version'):
+        #    out.version_minor = group['version']
 
         out.spacing = group['spacing'][()]
         out.sqrtAWR = group['sqrtAWR'][()]
@@ -1049,7 +1176,6 @@ class WindowedMultipole(EqualityMixin):
 
         # generate multipole data from EDNF
         mp_data = vectfit_nuclide(endf_file, **vf_options)
-
         # windowing
         return cls.from_multipole(mp_data, **wmp_options)
 
@@ -1081,6 +1207,7 @@ class WindowedMultipole(EqualityMixin):
             # load multipole data from file
             with open(mp_data, 'rb') as f:
                 mp_data = pickle.load(f)
+        mp_data = mp_data["mp_data"] if isinstance(mp_data, dict) and set(mp_data.keys()) == {"mp_data"} else mp_data
 
         if search is None:
             if 'n_cf' in kwargs and ('n_win' in kwargs or 'spacing' in kwargs):
@@ -1102,32 +1229,63 @@ class WindowedMultipole(EqualityMixin):
         n_win_min = max(5, n_poles // 20)
         n_win_max = 2000 if n_poles < 2000 else 8000
         best_wmp = best_metric = None
-        for n_w in np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int)):
-            for n_cf in range(10, 1, -1):
-                if log:
-                    print(f"Testing N_win={n_w} N_cf={n_cf}")
 
-                # update arguments dictionary
-                kwargs.update(n_win=n_w, n_cf=n_cf)
+        window_sizes = np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int))
+        cf_orders = range(10, 1, -1)
+        # Create list of all combinations to test
+        test_configs = []
+        for n_w in window_sizes:
+            for n_cf in cf_orders:
+                test_configs.append((mp_data, n_w, n_cf, kwargs.copy(), log))
+        print(f"There are {len(window_sizes)} windows and {len(cf_orders)} to test for a combo of {len(test_configs)}.")
 
-                # windowing
-                try:
-                    wmp = _windowing(mp_data, log=log, **kwargs)
-                except Exception as e:
-                    if log:
-                        print('Failed: ' + str(e))
-                    break
+        # Run tests in parallel using 20 processes
+        n_threads = 25
+        with Pool(processes=n_threads) as pool:
+            results = pool.map(test_window_config, test_configs)
 
-                # select wmp library with metric:
-                # - performance: average # used poles per window and CF order
-                # - memory: # windows
-                metric = -(wmp.poles_per_window * 10. + wmp.fit_order * 1. +
-                           wmp.n_windows * 0.01)
+        # Find the best result
+        best_wmp = None
+        best_metric = None
+
+        for metric, wmp, n_w, n_cf in results:
+            if wmp is not None:  # Skip failed configurations
                 if best_wmp is None or metric > best_metric:
                     if log:
-                        print("Best library so far.")
+                        print(f"Best library so far: N_win={n_w}, N_cf={n_cf}, metric={metric}")
                     best_wmp = deepcopy(wmp)
                     best_metric = metric
+
+        # for n_w in np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int)):
+        #     for n_cf in range(10, 1, -1):
+        #         if log:
+        #             print("Testing N_win={} N_cf={}".format(n_w, n_cf))
+
+        #         # update arguments dictionary
+        #         kwargs.update(n_win=n_w, n_cf=n_cf)
+
+        #         # windowing
+        #         try:
+        #             wmp = _windowing(mp_data, log=log, **kwargs)
+        #         except Exception as e:
+        #             if log:
+        #                 print('Failed: ' + str(e))
+        #             break
+
+        #         # select wmp library with metric:
+        #         # - performance: average # used poles per window and CF order
+        #         # - memory: # windows
+        #         metric = -(wmp.poles_per_window * 10. + wmp.fit_order * 1. +
+        #                    wmp.n_windows * 0.01)
+        #         if best_wmp is None or metric > best_metric:
+        #             if log:
+        #                 print("Best library so far.")
+        #             best_wmp = deepcopy(wmp)
+        #             best_metric = metric
+
+        # return the best wmp library
+        if best_wmp is None:
+            raise RuntimeError("All window configurations failed!")
 
         # return the best wmp library
         if log:
@@ -1150,13 +1308,13 @@ class WindowedMultipole(EqualityMixin):
         Returns
         -------
         3-tuple of Real
-            Scattering, absorption, and fission microscopic cross sections
-            at the given energy and temperature.
+            Total, absorption, and fission microscopic cross sections at the
+            given energy and temperature.
 
         """
 
-        if E < self.E_min: return (0, 0, 0)
-        if E > self.E_max: return (0, 0, 0)
+        if E < self.E_min: return (0, 0, 0, 0, 0, 0)
+        if E > self.E_max: return (0, 0, 0, 0, 0, 0)
 
         # ======================================================================
         # Bookkeeping
@@ -1166,11 +1324,10 @@ class WindowedMultipole(EqualityMixin):
         sqrtE = sqrt(E)
         invE = 1.0 / E
 
-        # Locate us.  The i_window calc omits a + 1 present from the legacy
-        # Fortran version of OpenMC because of the 1-based vs. 0-based
-        # indexing.  Similarly startw needs to be decreased by 1.  endw does
-        # not need to be decreased because range(startw, endw) does not include
-        # endw.
+        # Locate us.  The i_window calc omits a + 1 present in F90 because of
+        # the 1-based vs. 0-based indexing.  Similarly startw needs to be
+        # decreased by 1.  endw does not need to be decreased because
+        # range(startw, endw) does not include endw.
         i_window = min(self.n_windows - 1,
                        int(np.floor((sqrtE - sqrt(self.E_min)) / self.spacing)))
         startw = self.windows[i_window, 0] - 1
@@ -1179,6 +1336,9 @@ class WindowedMultipole(EqualityMixin):
         # Initialize the ouptut cross sections.
         sig_s = 0.0
         sig_a = 0.0
+        sig_c = 0.0
+        sig_p = 0.0
+        sig_l = 0.0
         sig_f = 0.0
 
         # ======================================================================
@@ -1194,16 +1354,46 @@ class WindowedMultipole(EqualityMixin):
                           * broadened_polynomials[i_poly])
                 sig_a += (self.curvefit[i_window, i_poly, _FIT_A]
                           * broadened_polynomials[i_poly])
+                # wmp_viii0
+                if self.version_minor == 2:
+                    sig_c += (self.curvefit[i_window, i_poly, _FIT_C]
+                          * broadened_polynomials[i_poly])
+                if self.version_minor == 3:
+                    sig_c += (self.curvefit[i_window, i_poly, _FIT_C]
+                          * broadened_polynomials[i_poly])
+                    sig_p += (self.curvefit[i_window, i_poly, _FIT_P]
+                          * broadened_polynomials[i_poly])
+                    sig_l += (self.curvefit[i_window, i_poly, _FIT_L]
+                          * broadened_polynomials[i_poly])
                 if self.fissionable:
-                    sig_f += (self.curvefit[i_window, i_poly, _FIT_F]
+                    if self.version_minor == 3:
+                        sig_f += (self.curvefit[i_window, i_poly, _FIT_F]
+                              * broadened_polynomials[i_poly])
+                    elif self.version_minor == 2:
+                        sig_f += (self.curvefit[i_window, i_poly, _FIT_F - 2]
+                              * broadened_polynomials[i_poly])
+                    else:
+                        sig_f += (self.curvefit[i_window, i_poly, _FIT_F - 3]
                               * broadened_polynomials[i_poly])
         else:
             temp = invE
             for i_poly in range(self.fit_order + 1):
                 sig_s += self.curvefit[i_window, i_poly, _FIT_S] * temp
                 sig_a += self.curvefit[i_window, i_poly, _FIT_A] * temp
+                # wmp_viii0
+                if self.version_minor == 2:
+                    sig_c += self.curvefit[i_window, i_poly, _FIT_C] * temp
+                if self.version_minor == 3:
+                    sig_c += self.curvefit[i_window, i_poly, _FIT_C] * temp
+                    sig_p += self.curvefit[i_window, i_poly, _FIT_P] * temp
+                    sig_l += self.curvefit[i_window, i_poly, _FIT_L] * temp
                 if self.fissionable:
-                    sig_f += self.curvefit[i_window, i_poly, _FIT_F] * temp
+                    if self.version_minor == 3:
+                        sig_f += self.curvefit[i_window, i_poly, _FIT_F] * temp
+                    elif self.version_minor == 2:
+                        sig_f += self.curvefit[i_window, i_poly, _FIT_F - 2] * temp
+                    else:
+                        sig_f += self.curvefit[i_window, i_poly, _FIT_F - 3] * temp
                 temp *= sqrtE
 
         # ======================================================================
@@ -1216,8 +1406,20 @@ class WindowedMultipole(EqualityMixin):
                 c_temp = psi_chi / E
                 sig_s += (self.data[i_pole, _MP_RS] * c_temp).real
                 sig_a += (self.data[i_pole, _MP_RA] * c_temp).real
+                # wmp_viii0
+                if self.version_minor == 2:
+                    sig_c += (self.data[i_pole, _MP_RC] * c_temp).real
+                if self.version_minor == 3:
+                    sig_c += (self.data[i_pole, _MP_RC] * c_temp).real
+                    sig_p += (self.data[i_pole, _MP_RP] * c_temp).real
+                    sig_l += (self.data[i_pole, _MP_RL] * c_temp).real
                 if self.fissionable:
-                    sig_f += (self.data[i_pole, _MP_RF] * c_temp).real
+                    if self.version_minor == 3:
+                        sig_f += (self.data[i_pole, _MP_RF] * c_temp).real
+                    elif self.version_minor == 2:
+                        sig_f += (self.data[i_pole, _MP_RF - 2] * c_temp).real
+                    else:
+                        sig_f += (self.data[i_pole, _MP_RF - 3] * c_temp).real
 
         else:
             # At temperature, use Faddeeva function-based form.
@@ -1227,10 +1429,23 @@ class WindowedMultipole(EqualityMixin):
                 w_val = _faddeeva(Z) * dopp * invE * sqrt(pi)
                 sig_s += (self.data[i_pole, _MP_RS] * w_val).real
                 sig_a += (self.data[i_pole, _MP_RA] * w_val).real
+                # wmp_viii0
+                if self.version_minor == 2:
+                    sig_c += (self.data[i_pole, _MP_RC] * w_val).real
+                if self.version_minor == 3:
+                    sig_c += (self.data[i_pole, _MP_RC] * w_val).real
+                    sig_p += (self.data[i_pole, _MP_RP] * w_val).real
+                    sig_l += (self.data[i_pole, _MP_RL] * w_val).real
                 if self.fissionable:
-                    sig_f += (self.data[i_pole, _MP_RF] * w_val).real
-
-        return sig_s, sig_a, sig_f
+                    if self.version_minor == 2:
+                        sig_f += (self.data[i_pole, _MP_RF] * w_val).real
+                    elif self.version_minor == 3:
+                        sig_f += (self.data[i_pole, _MP_RF - 2] * w_val).real
+                    else:
+                        sig_f += (self.data[i_pole, _MP_RF - 3] * w_val).real
+        if self.version_minor == 1 or self.version_minor is None:
+            sig_c = sig_a - sig_f
+        return sig_s, sig_a, sig_c, sig_p, sig_l, sig_f
 
     def __call__(self, E, T):
         """Compute scattering, absorption, and fission cross sections.
@@ -1245,15 +1460,15 @@ class WindowedMultipole(EqualityMixin):
         Returns
         -------
         3-tuple of Real or 3-tuple of numpy.ndarray
-            Scattering, absorption, and fission microscopic cross sections
-            at the given energy and temperature.
+            Total, absorption, and fission microscopic cross sections at the
+            given energy and temperature.
 
         """
 
         fun = np.vectorize(lambda x: self._evaluate(x, T))
         return fun(E)
 
-    def export_to_hdf5(self, path, mode='a', libver='earliest'):
+    def export_to_hdf5(self, path, mode='w', libver='earliest'):
         """Export windowed multipole data to an HDF5 file.
 
         Parameters
@@ -1277,6 +1492,8 @@ class WindowedMultipole(EqualityMixin):
             g = f.create_group(self.name)
 
             # Write scalars.
+            g.create_dataset('version', data=np.array(WMP_VERSION))
+            #
             g.create_dataset('spacing', data=np.array(self.spacing))
             g.create_dataset('sqrtAWR', data=np.array(self.sqrtAWR))
             g.create_dataset('E_min', data=np.array(self.E_min))

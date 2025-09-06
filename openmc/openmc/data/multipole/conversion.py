@@ -10,7 +10,7 @@ from .fitting import miaaa_xs
 
 def proper_rational(z, wnum, wden, fz, bcf, Z,
                     pole_extraction=None,
-                    max_poly_degree=0, n_pseudo_poles=2):
+                    max_poly_degree=0, output_space="E"):
     """
     Convert barycentric rational approximation to proper rational form.
 
@@ -51,14 +51,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         Polynomial coefficients for each function (if maxpolydegree > 0).
     """
     # Handle input dimensions
-    if fz.ndim == 1:
-        fz = fz.reshape(1, -1)
-        bcf = bcf.reshape(1, -1)
-        single_function = True
-        k = 1
-    else:
-        single_function = False
-        k = fz.shape[0]
+    k = fz.shape[0]
 
     # Handle wnum dimensions
     if wnum.ndim == 1:
@@ -70,6 +63,10 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
 
     # Extract poles using the przd eigenvalue method
     physical_poles = przd_for_poles(z, wden, deflation_tol=1e-10)
+
+    if output_space=="sqrt_E":
+        physical_poles = np.sqrt(physical_poles)
+        Z = np.sqrt(Z)
 
     # Compute residues via Cauchy matrices
     # Cnum: (n_poles, m) matrix with entries 1/(pole_i - z_j)
@@ -120,7 +117,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
 
-    elif pole_extraction == "pseudo_pole" and n_pseudo_poles > 0:
+    elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
         info = fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6)
         # Append pseudo-poles to physical poles
@@ -133,21 +130,18 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         info["poly_coeffs"] = [None] * k
 
     # Create function handles for evaluation
-    pr_handles = []
-    for i in range(k):
-        if pole_extraction == "polynomial":
-            pr_handles.append(create_pr_function(
-                poles, res[:, i], 
-                info.get("poly_coeffs", [None]*k)[i]
-            ))
-        else:
-            pr_handles.append(create_pr_function(poles, res[:, i], None))
+    # pr_handles = []
+    # for i in range(k):
+    #     if pole_extraction == "polynomial":
+    #         pr_handles.append(create_pr_function(
+    #             poles, res[:, i], 
+    #             info.get("poly_coeffs", [None]*k)[i]
+    #         ))
+    #     else:
+    #         pr_handles.append(create_pr_function(poles, res[:, i], None))
 
     # Return in appropriate format
-    if single_function:
-        return poles, res[:, 0], bestpra[0, :], pr_handles[0], info
-    else:
-        return poles, res, bestpra, pr_handles, info
+    return poles, res, info
 
 
 def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
@@ -388,26 +382,26 @@ def przd_for_poles(z, w, deflation_tol=1e-10):
     count = 0
 
     # Deflation loop - remove pole-zero pairs when sum of residues is small
-    while np.abs(np.sum(rv)) < deflation_tol and len(rv) > 0:
-        count += 1
+    # while np.abs(np.sum(rv)) < deflation_tol and len(rv) > 0:
+    #     count += 1
 
-        # Remove first residue and pole
-        rv = rv[1:]
-        first_pv = pv[0]
-        pv = pv[1:]
+    #     # Remove first residue and pole
+    #     rv = rv[1:]
+    #     first_pv = pv[0]
+    #     pv = pv[1:]
 
-        if len(pv) == 0:
-            break
+    #     if len(pv) == 0:
+    #         break
 
-        # Recalculate residues over new set of poles
-        fr_pv = first_pv - pv
-        rv = rv * fr_pv
+    #     # Recalculate residues over new set of poles
+    #     fr_pv = first_pv - pv
+    #     rv = rv * fr_pv
 
-        # Normalize
-        norm_rv = np.linalg.norm(rv)
-        if norm_rv > 0:
-            rv = rv / norm_rv
-    print(f"Deflated {count} poles at tolerance {deflation_tol}")
+    #     # Normalize
+    #     norm_rv = np.linalg.norm(rv)
+    #     if norm_rv > 0:
+    #         rv = rv / norm_rv
+    # print(f"Deflated {count} poles at tolerance {deflation_tol}")
 
     if len(pv) == 0:
         return np.array([])
@@ -418,9 +412,9 @@ def przd_for_poles(z, w, deflation_tol=1e-10):
     B[0, 0] = 0
 
     E = np.zeros((m + 1, m + 1), dtype=np.complex128)
-    E[0, 1:] = rv
     E[1:, 0] = 1
     E[1:, 1:] = np.diag(pv)
+    E[0, 1:] = rv
 
     # Solve for poles
     poles = la.eigvals(E, B)

@@ -1,5 +1,6 @@
 import h5py
 from openmc.data.multipole_old import WindowedMultipole
+# from multipole_deplete_v3 import WindowedMultipole
 import numpy as np
 import pickle
 from pathlib import Path
@@ -242,24 +243,42 @@ def count_wmp_poles_in_range(wmp_data, bounds):
 
     return n_poles
 
+# # Debug the file structure
+# with h5py.File(wmp_file, 'r') as f:
+#     print(f"File: {wmp_file}")
+#     print(f"Keys at root: {list(f.keys())}")
+#     print(f"Attributes at root: {dict(f.attrs)}")
 
-# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / "officialWMP-U238.h5"
-# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / "officialWMP-Zr91.h5"
-# name = "U238"
+#     # If there are groups, explore them
+#     for key in f.keys():
+#         print(f"\nGroup/Dataset '{key}':")
+#         item = f[key]
+#         if isinstance(item, h5py.Group):
+#             print(f"  Subkeys: {list(item.keys())}")
+#             print(f"  Attributes: {dict(item.attrs)}")
+#         else:
+#             print(f"  Shape: {item.shape}, Dtype: {item.dtype}")
+
+name = "U238"
 # name = "Zr91"
-name = "O16"
-wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
+# name = "Fe56"
+# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
+wmp_file = Path(__file__).parent / "WMP_Lib_viii.0" / "U238_VF-CF.h5"
 njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
+
 
 wmp = WindowedMultipole(name)
 wmp_data = wmp.from_hdf5(wmp_file)
 print(f"Total number of poles: {len(wmp_data.data)}")
+# print(wmp_data.data[1])
+print(f"Number of windows {len(wmp_data.windows)}")
 
 # bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
 # bounds = {"E_min": 785, "E_max": 861}
 # bounds = {"E_min": 17400, "E_max": 17475}
-# bounds={"E_min": 0, "E_max": 20000}
-# bounds={"E_min": 0, "E_max":2.36e6}
+bounds={"E_min": 0, "E_max": 19999}
+# bounds={"E_min": 0, "E_max": 30}
+# bounds = None
 reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
 E_grid = reference_data["energy"]
 

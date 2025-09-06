@@ -48,6 +48,7 @@ def fit_nuclide(
     fit_mask_guard=0,
     cleanup=False,
     cleanup_tol=1e-6,
+    output_space="sqrt_E",
     **kwargs,
 ):
     r"""Generate multipole data for a nuclide from ENDF.
@@ -262,7 +263,7 @@ def fit_nuclide(
             if cleanup:
                 pol, res, pra, pr_handles, _ = proper_rational(
                     z, w, w, fz, R, E_piece,
-                    pole_extraction=None, max_poly_degree=0,
+                    # pole_extraction=None, max_poly_degree=0,
                 )
                 z, fz, w = spurious_cleanup(pol, res, z, fz, w, E_piece, R.T, cleanup_tol=cleanup_tol)
             if len(w) == 2 * len(z):  # YES LAWSON
@@ -272,18 +273,18 @@ def fit_nuclide(
                 poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
                     z, w_num, w_den, fz, R, E_piece,
                     # pole_extraction="polynomial", max_poly_degree=2,
-                    pole_extraction="pseudo_pole", n_pseudo_poles=2,
+                    # pole_extraction="pseudo_pole", n_pseudo_poles=2,
                 )
             else:  # NO LAWSON
-                poles_s, residues_list, pra, pr_handles, polycoeffs = proper_rational(
-                    z, w, w, fz, R, E_piece,
-                    pole_extraction="polynomial", max_poly_degree=2,
-                    # pole_extraction="pseudo_pole", n_pseudo_poles=4,
+                poles_s, residues_list, polycoeffs = proper_rational(
+                    z, w, w, fz, R, E_piece, output_space="sqrt_E"
+                    # pole_extraction="polynomial", max_poly_degree=2,
+                    # pole_extraction="pseudo_pole",
                 )
             # print(polycoeffs)
 
         poles.append(poles_s)
-        residues.append(residues_list)
+        residues.append(residues_list)  # because of errors in WMP
 
         if plot_each_slice:
             if len(w) == 2 * len(z):  # YES LAWSON
@@ -318,6 +319,8 @@ def fit_nuclide(
         # Main reconstruction plot with remainder in subplot
         poles = poles[0]
         residues = residues[0]
+        if output_space=="sqrt_E" and space=="E":
+            E_piece = np.sqrt(E_piece)
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
                             plot_type="loglog", show_error=True, error_type="relative",
                             poly_info=polycoeffs)

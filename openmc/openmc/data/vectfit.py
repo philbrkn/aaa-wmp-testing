@@ -84,7 +84,7 @@ def evaluate(
 
     num_coeffs = poly_coefficients.shape[1]
     result = np.zeros((num_vectors, num_samples))
-
+    # print(residue_matrix.shape, residue_matrix[0].shape, eval_points.shape, pole_values.shape)
     for vec_idx in range(num_vectors):
         term = np.sum(
             residue_matrix[vec_idx][:, None] / (eval_points - pole_values[:, None]),

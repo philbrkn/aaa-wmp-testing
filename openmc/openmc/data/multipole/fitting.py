@@ -147,14 +147,19 @@ def miaaa_xs(
 
         Jz.append(j_star)  # for lawson
 
-        # Add to support
-        z_list.append(grid[j_star])
-        fz = np.hstack([fz, F[:, [j_star]]])
-
         # Remove from candidate sets
         J_fit = J_fit[J_fit != j_star]
         J_core = J_core[J_core != j_star]
 
+        # Check if we still have points to fit
+        if len(J_fit) == 0:
+            print("Exiting MIAAA. Can't build Loewner matrix with no points.")
+            # Don't add this support point since we can't compute weights
+            break
+
+        # Add to support
+        z_list.append(grid[j_star])
+        fz = np.hstack([fz, F[:, [j_star]]])
         # Convert to arrays
         z = np.array(z_list)
 
