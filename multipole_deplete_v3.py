@@ -678,34 +678,10 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
 
     # sort poles (and residues) by the real component of the pole
     for ip in range(n_pieces):
-        # indices = mp_poles[ip].argsort()
-        # mp_poles[ip] = mp_poles[ip][indices]
-        # mp_residues[ip] = mp_residues[ip][:, indices]
+        indices = mp_poles[ip].argsort()
+        mp_poles[ip] = mp_poles[ip][indices]
+        mp_residues[ip] = mp_residues[ip][:, indices]
 
-        poles = np.asarray(mp_poles[ip])
-        residues = np.asarray(mp_residues[ip])
-        indices = poles.argsort()
-        poles = poles[indices]
-
-        residues = residues[indices, :]
-
-        mp_poles[ip] = poles
-        mp_residues[ip] = residues.T
-        # print(f"\n--- Piece {ip} ---")
-        # print(f"poles.shape: {poles.shape}")
-        # print(f"residues.shape: {residues.shape}")
-
-        # # sanity checks
-        # n_poles = poles.size
-        # if residues.shape[0] == n_poles:
-        #     print("Residues axis 0 matches n_poles")
-        # elif residues.shape[1] == n_poles:
-        #     print("Residues axis 1 matches n_poles")
-        # else:
-        #     print("WARNING: Neither axis matches n_poles")
-        # When loading or preparing multipole data
-    for i_piece in range(len(mp_poles)):
-        mp_poles[i_piece] = np.sqrt(mp_poles[i_piece])
     # initialize an array to record whether each pole is used or not
     poles_unused = [np.ones_like(p, dtype=int) for p in mp_poles]
 

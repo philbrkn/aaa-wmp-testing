@@ -5,12 +5,10 @@ Enhanced proper_rational function with built-in remainder analysis.
 
 import numpy as np
 import scipy.linalg as la
-from .fitting import miaaa_xs
 
 
 def proper_rational(z, wnum, wden, fz, bcf, Z,
-                    pole_extraction=None,
-                    max_poly_degree=0, output_space="E"):
+                    pole_extraction=None, max_poly_degree=0):
     """
     Convert barycentric rational approximation to proper rational form.
 
@@ -64,10 +62,6 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     # Extract poles using the przd eigenvalue method
     physical_poles = przd_for_poles(z, wden, deflation_tol=1e-10)
 
-    if output_space=="sqrt_E":
-        physical_poles = np.sqrt(physical_poles)
-        Z = np.sqrt(Z)
-
     # Compute residues via Cauchy matrices
     # Cnum: (n_poles, m) matrix with entries 1/(pole_i - z_j)
     Cnum = 1.0 / (physical_poles[:, np.newaxis] - z[np.newaxis, :])
@@ -82,7 +76,6 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         # Residue = numerator(pole) / denominator'(pole)
         num_at_poles = Cnum @ (wnum[i, :] * fz[i, :])
         denom_deriv = Cden @ wden
-
         # Avoid division by zero
         mask_div = np.abs(denom_deriv) > 1e-14
         physical_res[mask_div, i] = num_at_poles[mask_div] / denom_deriv[mask_div]
@@ -94,12 +87,25 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     # pra: (k, len(Z)) partial fraction approximation
     pra = physical_res.T @ CC.T
 
+    # res_transposed = physical_res.T
+    # # 2. Separate real and complex poles
+    # real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
+    # complex_idx = np.where(np.abs(physical_poles.imag) >= 1e-10)[0]
+    # # 3. For complex poles, keep only those with positive imaginary part
+    # # (the conjugates are implied)
+    # conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
+    # # 4. Build WMP-compatible poles and residues
+    # physical_poles = np.concatenate([physical_poles[real_idx], physical_poles[conj_idx]])
+    # physical_res = np.concatenate([
+    #     res_transposed[:, real_idx],  # Real pole residues as-is
+    #     res_transposed[:, conj_idx] * 2  # Complex residues doubled (for conjugate pair)
+    # ], axis=1) / 1j  # Divide by 1j as per WMP convention
+
     # Calculate remainder
     remainder = bcf - pra
     # Initialize output
     poles = physical_poles.copy()
     res = physical_res.copy()
-    bestpra = pra.copy()
 
     if pole_extraction == "polynomial" and max_poly_degree > 0:
         info = {"method": pole_extraction}
@@ -110,8 +116,6 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
                 # Fit polynomial
                 p = np.polyfit(Z.real if np.allclose(Z.imag, 0) else Z, 
                               remainder[i, :], max_poly_degree)
-                poly_part = np.polyval(p, Z)
-                bestpra[i, :] += poly_part
                 poly_coeffs.append(p)
             else:
                 poly_coeffs.append(None)
@@ -119,7 +123,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
 
     elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
-        info = fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6)
+        info = fit_pseudopoles_adaptive(Z, remainder, bcf, pra, max_poles=6, rtol=1e-6)
         # Append pseudo-poles to physical poles
         if len(poles) > 0:
             poles = np.concatenate([poles, info["pseudo_poles"]])
@@ -128,17 +132,6 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     else:
         info = {"method": None}
         info["poly_coeffs"] = [None] * k
-
-    # Create function handles for evaluation
-    # pr_handles = []
-    # for i in range(k):
-    #     if pole_extraction == "polynomial":
-    #         pr_handles.append(create_pr_function(
-    #             poles, res[:, i], 
-    #             info.get("poly_coeffs", [None]*k)[i]
-    #         ))
-    #     else:
-    #         pr_handles.append(create_pr_function(poles, res[:, i], None))
 
     # Return in appropriate format
     return poles, res, info

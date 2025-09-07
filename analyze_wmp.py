@@ -22,17 +22,19 @@ if __name__ == "__main__":
         log=2,
         fitter="miaaa",
         njoy_input=njoy_input,
-        njoy_error=1e-3,
+        njoy_error=5e-4,
         bounds={'E_min': 0, 'E_max': 30},
         # bounds={"E_min": 17400, "E_max": 17475},
         # bounds={"E_min": 17200, "E_max": 17275},
-         # method='qr+svd',
+        # method='qr+svd',
         # cleanup=True,
         # cleanup_tol=1e-12,  # Only remove if residue < tol
         plot_each_slice=False,
+        # pole_extraction="pseudo_pole",
+        pole_extraction=None,
+        max_poly_degree=2,
         fit_mask_guard=0.0,
-        space="E",
-        output_space="sqrt_E",
+        space="sqrt_E",
     )
 
     # poles = mp_data["poles"]

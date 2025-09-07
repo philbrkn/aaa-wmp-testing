@@ -259,6 +259,8 @@ def fit_nuclide(
                 normalize=True,
                 lawson_iter=0,
             )
+            if space == "sqrt_E":
+                E_piece = np.sqrt(E_piece)
 
             if cleanup:
                 pol, res, pra, pr_handles, _ = proper_rational(
@@ -277,9 +279,10 @@ def fit_nuclide(
                 )
             else:  # NO LAWSON
                 poles_s, residues_list, polycoeffs = proper_rational(
-                    z, w, w, fz, R, E_piece, output_space="sqrt_E"
+                    z, w, w, fz, R, E_piece,
                     # pole_extraction="polynomial", max_poly_degree=2,
-                    # pole_extraction="pseudo_pole",
+                    pole_extraction=kwargs.get("pole_extraction", None),
+                    max_poly_degree=kwargs.get("max_poly_degree", 0)
                 )
             # print(polycoeffs)
 
@@ -312,15 +315,14 @@ def fit_nuclide(
         print(f"Total number of poles: {n_poles}")
 
     if vf_pieces == 1:
-        channels_data = {"elastic": sig_s_piece,
-                         "absorption": sig_a_piece,
-                         "fission": sig_f_piece
-                         }
+        channels_data = {
+            "elastic": sig_s_piece,
+            "absorption": sig_a_piece,
+            "fission": sig_f_piece
+            }
         # Main reconstruction plot with remainder in subplot
         poles = poles[0]
         residues = residues[0]
-        if output_space=="sqrt_E" and space=="E":
-            E_piece = np.sqrt(E_piece)
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
                             plot_type="loglog", show_error=True, error_type="relative",
                             poly_info=polycoeffs)
