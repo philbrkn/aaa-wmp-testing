@@ -260,7 +260,9 @@ def fit_nuclide(
                 lawson_iter=0,
             )
             if space == "sqrt_E":
-                E_piece = np.sqrt(E_piece)
+                Z = np.sqrt(E_piece)
+            else:
+                Z = E_piece
 
             if cleanup:
                 pol, res, pra, pr_handles, _ = proper_rational(
@@ -279,24 +281,22 @@ def fit_nuclide(
                 )
             else:  # NO LAWSON
                 poles_s, residues_list, polycoeffs = proper_rational(
-                    z, w, w, fz, R, E_piece,
-                    # pole_extraction="polynomial", max_poly_degree=2,
+                    z, w, w, fz, R, Z,
                     pole_extraction=kwargs.get("pole_extraction", None),
                     max_poly_degree=kwargs.get("max_poly_degree", 0)
                 )
-            # print(polycoeffs)
 
         poles.append(poles_s)
         residues.append(residues_list)  # because of errors in WMP
 
         if plot_each_slice:
             if len(w) == 2 * len(z):  # YES LAWSON
-                R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space, w_num=w_num, w_den=w_den)
+                R_pieces = evaluate_miaaa(Z, w, z, fz, space=space, w_num=w_num, w_den=w_den)
             else:  # NO LAWSON
-                R_pieces = evaluate_miaaa(E_piece, w, z, fz, space=space)
+                R_pieces = evaluate_miaaa(Z, w, z, fz, space=space)
             R_fission = R_pieces[2] if fissionable else None
             plot_aaa_results(
-                E_piece,
+                Z,
                 sig_s_piece,
                 sig_a_piece,
                 R_pieces[0],
@@ -323,12 +323,13 @@ def fit_nuclide(
         # Main reconstruction plot with remainder in subplot
         poles = poles[0]
         residues = residues[0]
+
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
                             plot_type="loglog", show_error=True, error_type="relative",
-                            poly_info=polycoeffs)
+                            poly_info=polycoeffs, fit_space=space)
         plot_reconstruction(E_piece, channels_data, poles, residues, name="U238", path_out="./plots",
-                            plot_type="loglog", show_error=True, error_type="absolute",
-                            poly_info=polycoeffs)
+                            plot_type="linear", show_error=True, error_type="absolute",
+                            poly_info=polycoeffs, fit_space=space)
         plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
 
     # collect multipole data into a dictionary

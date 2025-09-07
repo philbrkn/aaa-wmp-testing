@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from pathlib import Path
+import openmc.data.vectfit as vf
 
 
 def plot_single_channel(
@@ -189,6 +190,7 @@ def plot_reconstruction(
     show_error=False,
     error_type="relative",
     poly_info=None,
+    fit_space="sqrt_E"
 ):
     """
     Plot original ACE data vs reconstructed from poles/residues.
@@ -227,7 +229,12 @@ def plot_reconstruction(
 
     # Convert to OpenMC format and evaluate
     mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
-    elastic_recon, absorption_recon, fission_recon = evaluate_multipole_xs(E, mc_data)
+    elastic_recon, absorption_recon, fission_recon = evaluate_multipole_xs(E, mc_data, fit_space=fit_space)
+
+    if fit_space == "sqrt_E":
+        Z = np.sqrt(E)
+    else:
+        Z = E
 
     # Add polynomial contribution if provided
     if poly_info is not None:
@@ -247,13 +254,13 @@ def plot_reconstruction(
             # Add polynomial contribution to each channel
             # Take real part since cross sections should be real
             if len(poly_coeffs) >= 1 and poly_coeffs[0] is not None:
-                poly_val = np.polyval(poly_coeffs[0], E)
+                poly_val = np.polyval(poly_coeffs[0], Z)
                 elastic_recon = elastic_recon + np.real(poly_val)
             if len(poly_coeffs) >= 2 and poly_coeffs[1] is not None:
-                poly_val = np.polyval(poly_coeffs[1], E)
+                poly_val = np.polyval(poly_coeffs[1], Z)
                 absorption_recon = absorption_recon + np.real(poly_val)
             if len(poly_coeffs) >= 3 and poly_coeffs[2] is not None:
-                poly_val = np.polyval(poly_coeffs[2], E)
+                poly_val = np.polyval(poly_coeffs[2], Z)
                 fission_recon = fission_recon + np.real(poly_val)
 
     # Define channels to plot
@@ -288,7 +295,7 @@ def plot_reconstruction(
             continue
 
         plot_single_channel(
-            E,
+            Z,
             channel["original"],
             channel["reconstructed"],
             channel["name"],
@@ -310,7 +317,7 @@ def plot_reconstruction(
     }
 
 
-def evaluate_multipole_xs(E, data_dict, background_constants=None):
+def evaluate_multipole_xs(E, data_dict, fit_space="sqrt_E"):
     """
     Evaluate cross sections using the pole/residue representation.
 
@@ -331,7 +338,12 @@ def evaluate_multipole_xs(E, data_dict, background_constants=None):
         if not fissionable
     """
 
-    E = np.atleast_1d(E)
+    E_array = np.atleast_1d(E)
+    if fit_space == "sqrt_E":
+        s = np.sqrt(E_array)  # Poles are in sqrt_E space
+    else:
+        s = E_array  # Poles are in E space
+
     data = data_dict["data"]
     fissionable = data_dict["fissionable"]
 
@@ -341,32 +353,118 @@ def evaluate_multipole_xs(E, data_dict, background_constants=None):
     fission_xs = np.zeros_like(E, dtype=float) if fissionable else None
 
     # Add pole contributions
-    for i, energy in enumerate(E):
-        for pole_idx in range(data.shape[0]):
-            pole = data[pole_idx, 0]
+    for i, s_val in enumerate(s):
+        # Using a vectorized operation is much faster than a second for-loop
+        poles = data[:, 0]
+        denominators = s_val - poles
 
-            # Simple pole evaluation: residue / (E - pole)
-            denominator = energy - pole
+        # The core formula for WMP format is Re(i * R / (E - p))
+        contributions = 1/ denominators
 
-            # if abs(denominator) > 1e-12:  # Avoid division by zero
-            contribution = 1.0 / (denominator)  # Include 1/E factor
+        # Elastic (column 1)
+        elastic_xs[i] = np.sum((data[:, 1] * contributions).real)
 
-            # Elastic (column 1)
-            elastic_xs[i] += (data[pole_idx, 1] * contribution).real
+        # Absorption (column 2)
+        absorption_xs[i] = np.sum((data[:, 2] * contributions).real)
 
-            # Absorption (column 2)
-            absorption_xs[i] += (data[pole_idx, 2] * contribution).real
+        # Fission (column 3, if present)
+        if fissionable:
+            fission_xs[i] = np.sum((data[:, 3] * contributions).real)
 
-            # Fission (column 3, if present)
-            if fissionable:
-                fission_xs[i] += (data[pole_idx, 3] * contribution).real
+    # if np.any(elastic_xs < 0):
+    #     neg_indices = np.where(elastic_xs < 0)[0]
+    #     print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
+    #     print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
+    #     print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
+    #     # elastic_xs[elastic_xs < 0] = 1e-10
 
-    # Ensure non-negative cross sections
-    # elastic_xs = np.maximum(elastic_xs, 0.0)
-    # absorption_xs = np.maximum(absorption_xs, 0.0)
-    # if fissionable:
-    #     fission_xs = np.maximum(fission_xs, 0.0)
+    # if absorption_xs is not None and np.any(absorption_xs < 0):
+    #     print(f"WARNING: Negative absorption XS detected!")
+    #     # absorption_xs[absorption_xs < 0] = 1e-10
 
+    # if fission_xs is not None and np.any(fission_xs < 0):
+    #     print(f"WARNING: Negative fission XS detected!")
+    #     # fission_xs[fission_xs < 0] = 1e-10
+
+    return elastic_xs, absorption_xs, fission_xs
+
+
+def evaluate_multipole_xs_vf(E, data_dict, fit_space="sqrt_E"):
+    """
+    Evaluate cross sections using the pole/residue representation.
+    Uses vf.evaluate for consistency with the windowing code.
+
+    Parameters
+    ----------
+    E : float or array-like
+        Energy in eV
+    data_dict : dict
+        Output from poles_residues_to_openmc_data
+
+    Returns
+    -------
+    tuple
+        (elastic_xs, absorption_xs, fission_xs) where fission_xs is None
+        if not fissionable
+    """
+    E = np.atleast_1d(E)
+    if fit_space == "sqrt_E":
+        s = np.sqrt(E)
+    else:
+        s = E
+
+    data = data_dict["data"]
+    fissionable = data_dict["fissionable"]
+
+    # Extract poles and residues from data
+    poles = data[:, 0]
+
+    # Prepare residues - shape should be (n_reactions, n_poles)
+    if fissionable:
+        residues = np.array([
+            data[:, 1],  # elastic
+            data[:, 2],  # absorption
+            data[:, 3]   # fission
+        ])
+    else:
+        residues = np.array([
+            data[:, 1],  # elastic
+            data[:, 2]   # absorption
+        ])
+
+    # Evaluate using vf.evaluate
+    # Note: vf.evaluate expects residues in VF convention, so multiply by 1j
+    # It returns f(s) = σ(E) * E, so we divide by E to get σ(E)
+    xs_values = vf.evaluate(s, poles, residues * 1j) / E
+    elastic_xs = np.real(xs_values[0])  # Take real part to avoid numerical noise
+    absorption_xs = np.real(xs_values[1])
+    fission_xs = np.real(xs_values[2]) if fissionable else None
+    
+    # xs_values = vf.evaluate(sqrt_E, poles, residues * 1j) / E
+
+    # Extract individual cross sections
+    # elastic_xs = xs_values[0]
+    # absorption_xs = xs_values[1]
+    # fission_xs = xs_values[2] if fissionable else None
+
+    # Debug: Check for negative cross sections
+    if np.any(elastic_xs < 0):
+        neg_indices = np.where(elastic_xs < 0)[0]
+        print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
+        print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
+        print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
+        
+        # Optional: Set negative values to small positive value
+        # elastic_xs[elastic_xs < 0] = 1e-10
+    
+    if absorption_xs is not None and np.any(absorption_xs < 0):
+        print(f"WARNING: Negative absorption XS detected!")
+        # absorption_xs[absorption_xs < 0] = 1e-10
+        
+    if fission_xs is not None and np.any(fission_xs < 0):
+        print(f"WARNING: Negative fission XS detected!")
+        # fission_xs[fission_xs < 0] = 1e-10
+    
     return elastic_xs, absorption_xs, fission_xs
 
 
@@ -411,7 +509,7 @@ def poles_residues_to_openmc_data(poles, residues, name="test_nuclide", AWR=235.
     else:
         # Assume it's a 2D array with shape (n_reactions, n_poles)
         # residue_arrays = [residues[i] for i in range(residues.shape[0])]
-        residue_arrays = residues.T
+        residue_arrays = residues
         n_reactions = len(residue_arrays)
 
     fissionable = n_reactions > 2

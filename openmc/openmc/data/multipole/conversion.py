@@ -87,19 +87,20 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     # pra: (k, len(Z)) partial fraction approximation
     pra = physical_res.T @ CC.T
 
-    # res_transposed = physical_res.T
-    # # 2. Separate real and complex poles
-    # real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
-    # complex_idx = np.where(np.abs(physical_poles.imag) >= 1e-10)[0]
-    # # 3. For complex poles, keep only those with positive imaginary part
-    # # (the conjugates are implied)
-    # conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
-    # # 4. Build WMP-compatible poles and residues
-    # physical_poles = np.concatenate([physical_poles[real_idx], physical_poles[conj_idx]])
-    # physical_res = np.concatenate([
-    #     res_transposed[:, real_idx],  # Real pole residues as-is
-    #     res_transposed[:, conj_idx] * 2  # Complex residues doubled (for conjugate pair)
-    # ], axis=1) / 1j  # Divide by 1j as per WMP convention
+    # physical_res = physical_res.T
+    res_transposed = physical_res.T
+    # Separate real and complex poles
+    real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
+    complex_idx = np.where(np.abs(physical_poles.imag) >= 1e-10)[0]
+    # For complex poles, keep only those with positive imaginary part
+    # (the conjugates are implied)
+    conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
+    # Build WMP-compatible poles and residues
+    physical_poles = np.concatenate([physical_poles[real_idx], physical_poles[conj_idx]])
+    physical_res = np.concatenate([
+        res_transposed[:, real_idx],  # Real pole residues as-is
+        res_transposed[:, conj_idx] * 2  # Complex residues doubled (for conjugate pair)
+    ], axis=1)  # Divide by 1j as per WMP convention
 
     # Calculate remainder
     remainder = bcf - pra
@@ -115,12 +116,12 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
             if np.max(np.abs(remainder[i, :])) > 1e-12:
                 # Fit polynomial
                 p = np.polyfit(Z.real if np.allclose(Z.imag, 0) else Z, 
-                              remainder[i, :], max_poly_degree)
+                               remainder[i, :], max_poly_degree)
                 poly_coeffs.append(p)
             else:
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
-
+        print(poly_coeffs) #DEBUG
     elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
         info = fit_pseudopoles_adaptive(Z, remainder, bcf, pra, max_poles=6, rtol=1e-6)
@@ -499,41 +500,3 @@ def extract_poles_residues(w, z, fz):
         return poles, all_residues[0]
     else:
         return poles, all_residues
-
-
-# TODO: i dont believe this is necessary
-def create_pr_function(poles, residues, polycoeffs=None):
-    """
-    Create a callable function for proper rational evaluation.
-
-    Parameters
-    ----------
-    poles : ndarray
-        Poles of the rational function.
-    residues : ndarray
-        Residues corresponding to poles.
-    polycoeffs : ndarray or None
-        Polynomial coefficients (highest degree first).
-
-    Returns
-    -------
-    callable
-        Function that evaluates the proper rational at given points.
-    """
-
-    def pr_eval(w):
-        """Evaluate proper rational function at points w."""
-        w = np.asarray(w)
-        result = np.zeros_like(w, dtype=np.complex128)
-
-        # Partial fraction part
-        for pole, res in zip(poles, residues):
-            result += res / (w - pole)
-
-        # Polynomial part
-        if polycoeffs is not None:
-            result += np.polyval(polycoeffs, w)
-
-        return result
-
-    return pr_eval
