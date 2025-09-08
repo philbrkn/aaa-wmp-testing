@@ -3,6 +3,7 @@ import numpy as np
 import os
 from pathlib import Path
 import openmc.data.vectfit as vf
+from .conversion import evaluate_simple
 
 
 def plot_single_channel(
@@ -228,40 +229,15 @@ def plot_reconstruction(
     """
 
     # Convert to OpenMC format and evaluate
-    mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
-    elastic_recon, absorption_recon, fission_recon = evaluate_multipole_xs(E, mc_data, fit_space=fit_space)
+    # mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
+    # xs_recon = evaluate_multipole_xs(E, mc_data, poly_info, fit_space=fit_space)
+    poly_coeffs = poly_info["poly_coeffs"]
+    xs_recon = evaluate_simple(E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space)
 
     if fit_space == "sqrt_E":
         Z = np.sqrt(E)
     else:
         Z = E
-
-    # Add polynomial contribution if provided
-    if poly_info is not None:
-        # Handle different input formats
-        if isinstance(poly_info, dict):
-            poly_coeffs = poly_info.get(
-                "poly_coeffs", poly_info.get("polycoeffs", None)
-            )
-        else:
-            poly_coeffs = poly_info
-
-        if poly_coeffs is not None:
-            # Ensure it's a list
-            if not isinstance(poly_coeffs, list):
-                poly_coeffs = [poly_coeffs]
-
-            # Add polynomial contribution to each channel
-            # Take real part since cross sections should be real
-            if len(poly_coeffs) >= 1 and poly_coeffs[0] is not None:
-                poly_val = np.polyval(poly_coeffs[0], Z)
-                elastic_recon = elastic_recon + np.real(poly_val)
-            if len(poly_coeffs) >= 2 and poly_coeffs[1] is not None:
-                poly_val = np.polyval(poly_coeffs[1], Z)
-                absorption_recon = absorption_recon + np.real(poly_val)
-            if len(poly_coeffs) >= 3 and poly_coeffs[2] is not None:
-                poly_val = np.polyval(poly_coeffs[2], Z)
-                fission_recon = fission_recon + np.real(poly_val)
 
     # Define channels to plot
     channels = [
@@ -269,19 +245,19 @@ def plot_reconstruction(
             "name": "elastic",
             "symbol": "σ_s",
             "original": original_data.get("sigma_s", original_data.get("elastic")),
-            "reconstructed": elastic_recon,
+            "reconstructed": xs_recon[0],
         },
         {
             "name": "absorption",
             "symbol": "σ_a",
             "original": original_data.get("sigma_a", original_data.get("absorption")),
-            "reconstructed": absorption_recon,
+            "reconstructed": xs_recon[1],
         },
         {
             "name": "fission",
             "symbol": "σ_f",
             "original": original_data.get("sigma_f", original_data.get("fission")),
-            "reconstructed": fission_recon,
+            "reconstructed": xs_recon[2],
         },
     ]
 
@@ -310,14 +286,8 @@ def plot_reconstruction(
     if path_out:
         print(f"Saved reconstruction plots to {path_out}")
 
-    return {
-        "elastic": elastic_recon,
-        "absorption": absorption_recon,
-        "fission": fission_recon,
-    }
 
-
-def evaluate_multipole_xs(E, data_dict, fit_space="sqrt_E"):
+def evaluate_multipole_xs(E, data_dict, poly_info=None, fit_space="sqrt_E"):
     """
     Evaluate cross sections using the pole/residue representation.
 
@@ -371,101 +341,49 @@ def evaluate_multipole_xs(E, data_dict, fit_space="sqrt_E"):
         if fissionable:
             fission_xs[i] = np.sum((data[:, 3] * contributions).real)
 
-    # if np.any(elastic_xs < 0):
-    #     neg_indices = np.where(elastic_xs < 0)[0]
-    #     print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
-    #     print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
-    #     print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
-    #     # elastic_xs[elastic_xs < 0] = 1e-10
+    # Add polynomial contribution if provided
+    if poly_info is not None:
+        # Handle different input formats
+        if isinstance(poly_info, dict):
+            poly_coeffs = poly_info.get(
+                "poly_coeffs", poly_info.get("polycoeffs", None)
+            )
+        else:
+            poly_coeffs = poly_info
 
-    # if absorption_xs is not None and np.any(absorption_xs < 0):
-    #     print(f"WARNING: Negative absorption XS detected!")
-    #     # absorption_xs[absorption_xs < 0] = 1e-10
+        if poly_coeffs is not None:
+            # Ensure it's a list
+            if not isinstance(poly_coeffs, list):
+                poly_coeffs = [poly_coeffs]
 
-    # if fission_xs is not None and np.any(fission_xs < 0):
-    #     print(f"WARNING: Negative fission XS detected!")
-    #     # fission_xs[fission_xs < 0] = 1e-10
+            # Add polynomial contribution to each channel
+            # Take real part since cross sections should be real
+            if len(poly_coeffs) >= 1 and poly_coeffs[0] is not None:
+                poly_val = np.polyval(poly_coeffs[0], s)
+                elastic_xs = elastic_xs + np.real(poly_val)
+            if len(poly_coeffs) >= 2 and poly_coeffs[1] is not None:
+                poly_val = np.polyval(poly_coeffs[1], s)
+                absorption_xs = absorption_xs + np.real(poly_val)
+            if len(poly_coeffs) >= 3 and poly_coeffs[2] is not None:
+                poly_val = np.polyval(poly_coeffs[2], s)
+                fission_xs = fission_xs + np.real(poly_val)
 
-    return elastic_xs, absorption_xs, fission_xs
+        if np.any(elastic_xs < 0):
+            neg_indices = np.where(elastic_xs < 0)[0]
+            print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
+            print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
+            print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
+            # elastic_xs[elastic_xs < 0] = 1e-10
 
+        if absorption_xs is not None and np.any(absorption_xs < 0):
+            print(f"WARNING: Negative absorption XS detected!")
+            # absorption_xs[absorption_xs < 0] = 1e-10
 
-def evaluate_multipole_xs_vf(E, data_dict, fit_space="sqrt_E"):
-    """
-    Evaluate cross sections using the pole/residue representation.
-    Uses vf.evaluate for consistency with the windowing code.
+        if fission_xs is not None and np.any(fission_xs < 0):
+            print(f"WARNING: Negative fission XS detected!")
+            # fission_xs[fission_xs < 0] = 1e-10
 
-    Parameters
-    ----------
-    E : float or array-like
-        Energy in eV
-    data_dict : dict
-        Output from poles_residues_to_openmc_data
-
-    Returns
-    -------
-    tuple
-        (elastic_xs, absorption_xs, fission_xs) where fission_xs is None
-        if not fissionable
-    """
-    E = np.atleast_1d(E)
-    if fit_space == "sqrt_E":
-        s = np.sqrt(E)
-    else:
-        s = E
-
-    data = data_dict["data"]
-    fissionable = data_dict["fissionable"]
-
-    # Extract poles and residues from data
-    poles = data[:, 0]
-
-    # Prepare residues - shape should be (n_reactions, n_poles)
-    if fissionable:
-        residues = np.array([
-            data[:, 1],  # elastic
-            data[:, 2],  # absorption
-            data[:, 3]   # fission
-        ])
-    else:
-        residues = np.array([
-            data[:, 1],  # elastic
-            data[:, 2]   # absorption
-        ])
-
-    # Evaluate using vf.evaluate
-    # Note: vf.evaluate expects residues in VF convention, so multiply by 1j
-    # It returns f(s) = σ(E) * E, so we divide by E to get σ(E)
-    xs_values = vf.evaluate(s, poles, residues * 1j) / E
-    elastic_xs = np.real(xs_values[0])  # Take real part to avoid numerical noise
-    absorption_xs = np.real(xs_values[1])
-    fission_xs = np.real(xs_values[2]) if fissionable else None
-    
-    # xs_values = vf.evaluate(sqrt_E, poles, residues * 1j) / E
-
-    # Extract individual cross sections
-    # elastic_xs = xs_values[0]
-    # absorption_xs = xs_values[1]
-    # fission_xs = xs_values[2] if fissionable else None
-
-    # Debug: Check for negative cross sections
-    if np.any(elastic_xs < 0):
-        neg_indices = np.where(elastic_xs < 0)[0]
-        print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
-        print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
-        print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
-        
-        # Optional: Set negative values to small positive value
-        # elastic_xs[elastic_xs < 0] = 1e-10
-    
-    if absorption_xs is not None and np.any(absorption_xs < 0):
-        print(f"WARNING: Negative absorption XS detected!")
-        # absorption_xs[absorption_xs < 0] = 1e-10
-        
-    if fission_xs is not None and np.any(fission_xs < 0):
-        print(f"WARNING: Negative fission XS detected!")
-        # fission_xs[fission_xs < 0] = 1e-10
-    
-    return elastic_xs, absorption_xs, fission_xs
+    return [elastic_xs, absorption_xs, fission_xs]
 
 
 def poles_residues_to_openmc_data(poles, residues, name="test_nuclide", AWR=235.0):

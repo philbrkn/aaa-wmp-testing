@@ -5,6 +5,7 @@ import time
 from multiprocessing import Pool
 from contextlib import redirect_stdout
 import traceback
+from pathlib import Path
 
 from multipole_deplete_v3 import *
 
@@ -34,13 +35,15 @@ def process(endf_file):
         return
     try:
         if not os.path.isfile(wmp_file):
-            mp_file = os.path.join(path_out, nuc_name+"_mp.pickle")
-            # mp_file = "mp-data-VF-output/U238_mp_data_VIII_20250815_175017.pickle"
+            # mp_file = os.path.join(path_out, nuc_name+"_mp-VF.pickle")
+            mp_file = "WMP_Lib_viii.0/U238/U238_mp-AAA-sqrtE-1e-3.pickle"
+            njoy_input = Path(__file__).parent / "NJOY_pickles" / f"{nuc_name}_NJOY.pickle"
             if os.path.isfile(mp_file):
                 with open(os.path.join(path_out, nuc_name+"_windowing.log"),'w') as f:
                     with redirect_stdout(f):
                         try:
-                            nuc = WindowedMultipole.from_multipole(mp_file, search=True, log=2)
+                            nuc = WindowedMultipole.from_multipole(mp_file, search=True, log=2, n_threads=20,
+                                                                   njoy_input=njoy_input, method="AAA")
                         except Exception as e:
                             print(f"Failed with rtol 1e-3: {str(e)}")
                             print(f"Traceback: {traceback.format_exc()}")

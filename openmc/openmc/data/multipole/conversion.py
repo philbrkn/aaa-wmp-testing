@@ -7,6 +7,75 @@ import numpy as np
 import scipy.linalg as la
 
 
+def evaluate_simple(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
+    """
+    Evaluate cross sections using the pole/residue representation.
+
+    This implements the basic multipole evaluation without windowing,
+    useful for prototyping and validation.
+
+    Parameters
+    ----------
+    E : float or array-like
+        Energy in eV
+    data_dict : dict
+        Output from poles_residues_to_openmc_data
+
+    Returns
+    -------
+    tuple
+        (elastic_xs, absorption_xs, fission_xs) where fission_xs is None
+        if not fissionable
+    """
+
+    Z_array = np.atleast_1d(Z)
+    if fit_space == "sqrt_E":
+        s = np.sqrt(Z_array)  # Poles are in sqrt_E space
+    else:
+        s = Z_array  # Poles are in E space
+
+    fissionable = residues.shape[0] == 3
+
+    # Initialize cross sections
+    elastic_xs = np.zeros_like(Z, dtype=float)
+    absorption_xs = np.zeros_like(Z, dtype=float)
+    fission_xs = np.zeros_like(Z, dtype=float) if fissionable else None
+
+    # Add pole contributions
+    for i, s_val in enumerate(s):
+        # Using a vectorized operation is much faster than a second for-loop
+        denominators = s_val - poles
+
+        # Elastic (column 1)
+        elastic_xs[i] = np.sum((residues[0] / denominators).real)
+
+        # Absorption (column 2)
+        absorption_xs[i] = np.sum((residues[1] / denominators).real)
+
+        # Fission (column 3, if present)
+        if fissionable:
+            fission_xs[i] = np.sum((residues[2] / denominators).real)
+
+    if poly_coeffs is not None:
+        # Ensure it's a list
+        if not isinstance(poly_coeffs, list):
+            poly_coeffs = [poly_coeffs]
+
+        # Add polynomial contribution to each channel
+        # Take real part since cross sections should be real
+        if len(poly_coeffs) >= 1 and poly_coeffs[0] is not None:
+            poly_val = np.polyval(poly_coeffs[0], s)
+            elastic_xs = elastic_xs + np.real(poly_val)
+        if len(poly_coeffs) >= 2 and poly_coeffs[1] is not None:
+            poly_val = np.polyval(poly_coeffs[1], s)
+            absorption_xs = absorption_xs + np.real(poly_val)
+        if len(poly_coeffs) >= 3 and poly_coeffs[2] is not None:
+            poly_val = np.polyval(poly_coeffs[2], s)
+            fission_xs = fission_xs + np.real(poly_val)
+
+    return np.asarray([elastic_xs, absorption_xs, fission_xs])
+
+
 def proper_rational(z, wnum, wden, fz, bcf, Z,
                     pole_extraction=None, max_poly_degree=0):
     """
@@ -81,11 +150,11 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         physical_res[mask_div, i] = num_at_poles[mask_div] / denom_deriv[mask_div]
 
     # Evaluate partial fraction part on full grid Z
-    # CC: (len(Z), n_poles) matrix with entries 1/(Z_i - pole_j)
-    CC = 1.0 / (Z[:, np.newaxis] - physical_poles[np.newaxis, :])
+    # # CC: (len(Z), n_poles) matrix with entries 1/(Z_i - pole_j)
+    # CC = 1.0 / (Z[:, np.newaxis] - physical_poles[np.newaxis, :])
 
-    # pra: (k, len(Z)) partial fraction approximation
-    pra = physical_res.T @ CC.T
+    # # pra: (k, len(Z)) partial fraction approximation
+    # pra = physical_res.T @ CC.T
 
     # physical_res = physical_res.T
     res_transposed = physical_res.T
@@ -103,7 +172,10 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     ], axis=1)  # Divide by 1j as per WMP convention
 
     # Calculate remainder
+    CC = 1.0 / (Z[:, np.newaxis] - physical_poles[np.newaxis, :])
+    pra = physical_res @ CC.T
     remainder = bcf - pra
+    remainder = remainder.real
     # Initialize output
     poles = physical_poles.copy()
     res = physical_res.copy()
@@ -121,7 +193,6 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
             else:
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
-        print(poly_coeffs) #DEBUG
     elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
         info = fit_pseudopoles_adaptive(Z, remainder, bcf, pra, max_poles=6, rtol=1e-6)
@@ -135,7 +206,7 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         info["poly_coeffs"] = [None] * k
 
     # Return in appropriate format
-    return poles, res, info
+    return poles, res, remainder, info
 
 
 def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):

@@ -20,6 +20,8 @@ from openmc.mixin import EqualityMixin
 from openmc.data.neutron import IncidentNeutron
 from openmc.data.resonance import ResonanceRange
 import openmc.data.vectfit as vf
+from openmc.data.multipole.conversion import evaluate_simple
+
 
 WMP_VERSION_MAJOR = 1 
 WMP_VERSION_MINOR = 3 # 1 for old, 2 for new 
@@ -613,7 +615,7 @@ def vectfit_nuclide(endf_file, njoy_error=5e-4, vf_pieces=None,
 
 
 def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
-               log=False):
+               method="VF", fit_space="sqrt_E", log=False):
     """Generate windowed multipole library from multipole data with specific
         settings of window size, curve fit order, etc.
 
@@ -651,10 +653,20 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
     E_max = mp_data["E_max"]
     mp_poles = mp_data["poles"]
     mp_residues = mp_data["residues"]
-
     n_pieces = len(mp_poles)
     piece_width = (sqrt(E_max) - sqrt(E_min)) / n_pieces
     alpha = awr / (K_BOLTZMANN*TEMPERATURE_LIMIT)
+
+    # Extract NJOY data if using AAA method
+    if method == "AAA" and "njoy_xs" in mp_data:
+        njoy_data = mp_data["njoy_xs"]
+        njoy_energy = njoy_data[0, :]  # First row is energy
+        njoy_elastic = njoy_data[1, :]  # Second row is elastic
+        njoy_absorption = njoy_data[2, :]  # Third row is absorption
+        njoy_fission = njoy_data[3, :] if njoy_data.shape[0] > 3 else None
+        print(f"Loaded NJOY data: {len(njoy_energy)} points from {njoy_energy[0]:.3e} to {njoy_energy[-1]:.3e} eV")
+    else:
+        njoy_energy = njoy_elastic = njoy_absorption = njoy_fission = None
 
     # determine window size
     if n_win is None:
@@ -715,7 +727,32 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
 
         # reference xs from multipole form, note the residue terms in the
         # multipole and vector fitting representations differ by a 1j
-        xs_ref = vf.evaluate(energy_sqrt, poles, residues*1j) / energy
+        if method == "VF":
+            # why are we comparing it to itself???
+            xs_ref = vf.evaluate(energy_sqrt, poles, residues*1j) / energy
+        elif method == "AAA":
+            if njoy_energy is not None:
+                # Interpolate NJOY data to the window energy grid
+                # Build xs_ref with same shape as what evaluate_simple returns
+                xs_list = []
+                
+                # Interpolate elastic
+                xs_elastic_interp = np.interp(energy, njoy_energy, njoy_elastic)
+                xs_list.append(xs_elastic_interp)
+                
+                # Interpolate absorption
+                xs_absorption_interp = np.interp(energy, njoy_energy, njoy_absorption)
+                xs_list.append(xs_absorption_interp)
+                
+                # Interpolate fission if present
+                if njoy_fission is not None:
+                    xs_fission_interp = np.interp(energy, njoy_energy, njoy_fission)
+                    xs_list.append(xs_fission_interp)
+                
+                xs_ref = np.array(xs_list)
+            # xs_ref = evaluate_simple(energy, poles, residues, fit_space=fit_space)
+        else:
+            raise ValueError("Invalid method specified.")
 
         # curve fit matrix
         matrix = np.vstack([energy**(0.5*i - 1) for i in range(n_cf + 1)]).T
@@ -724,13 +761,20 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
         center_pole_ind = np.argmin((np.fabs(poles.real - incenter)))
         lp = rp = center_pole_ind
         while True:
-            if log >= DETAILED_LOGGING:
-                print("Trying poles {} to {}".format(lp, rp))
+            # if log >= DETAILED_LOGGING:
+            #     print("Trying poles {} to {}".format(lp, rp))
 
             # calculate the cross sections contributed by the windowed poles
             if rp > lp:
-                xs_wp = vf.evaluate(energy_sqrt, poles[lp:rp],
-                                    residues[:, lp:rp]*1j) / energy
+                if method == "VF":
+                    xs_wp = vf.evaluate(energy_sqrt, poles[lp:rp],
+                                        residues[:, lp:rp]*1j) / energy
+                elif method == "AAA":
+                    # aaa logic needs to be different, we must compare to the original ACE data
+                    # and find out what the background is... 
+                    xs_wp = evaluate_simple(energy, poles[lp:rp], residues[:, lp:rp], fit_space=fit_space)
+                else:
+                    raise ValueError("Invalid method specified.")
             else:
                 xs_wp = np.zeros_like(xs_ref)
 
@@ -742,20 +786,90 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
             abserr = np.abs(xs_fit + xs_wp - xs_ref)
             with np.errstate(invalid='ignore', divide='ignore'):
                 relerr = abserr / xs_ref
+
+            # if not np.any(np.isnan(abserr)):
+            #     re = relerr[abserr > atol]
+            #     # print(f"re size {re.size}  min re {np.max(re)} mean {relerr.mean(axis=1)} rtol {rtol}")
+            #     if re.size == 0 or np.all(re <= rtol) or \
+            #        (re.max() <= 2*rtol and (re > rtol).sum() <= 0.01*relerr.size) or \
+            #        (iw == 0 and np.all(relerr.mean(axis=1) <= rtol)):
+            #         # meet tolerances
+            #         if log >= DETAILED_LOGGING:
+            #             print("Accuracy satisfied.")
+            #         break
+
+            #DEBUG
+            # Debug detailed error for first few windows
+            # max_abs_err = np.max(abserr)
+            # valid_rel = relerr[~np.isnan(relerr) & ~np.isinf(relerr)]
+            # max_rel_err = np.max(valid_rel) if len(valid_rel) > 0 else float('inf')
+            # print(f"    Max abs error: {max_abs_err:.3e}")
+            # print(f"    Max rel error: {max_rel_err:.3e}")
+            # print(f"    Points > rtol: {np.sum(valid_rel > rtol)}/{len(valid_rel)}")
+
             if not np.any(np.isnan(abserr)):
                 re = relerr[abserr > atol]
-                if re.size == 0 or np.all(re <= rtol) or \
-                   (re.max() <= 2*rtol and (re > rtol).sum() <= 0.01*relerr.size) or \
-                   (iw == 0 and np.all(relerr.mean(axis=1) <= rtol)):
-                    # meet tolerances
-                    if log >= DETAILED_LOGGING:
-                        print("Accuracy satisfied.")
+                
+                # Check convergence criteria
+                converged = False
+                reason = ""
+                
+                if re.size == 0:
+                    converged = True
+                    reason = "all errors below atol"
+                elif np.all(re <= rtol):
+                    converged = True
+                    reason = f"all relative errors <= rtol"
+                elif re.max() <= 2*rtol and (re > rtol).sum() <= 0.01*relerr.size:
+                    converged = True
+                    reason = f"relaxed criteria met"
+                elif iw == 0 and rp == lp and np.all(relerr.mean(axis=1) <= rtol):
+                    converged = True
+                    reason = "first window mean criteria"
+                
+                if converged:
+                    if log >= 2 or iw < 5:
+                        print(f"  Converged: {reason}")
+                        print(f"  Using {rp - lp} poles")
                     break
+
+            # DEBUG:
+            # print(f"WMP poles shape: {len(mp_poles), len(mp_poles[0])}")
+            # print(f"WMP residues shape: {len(mp_residues), len(mp_residues[0])}")
+            # print(f"Sample residue values (first 3): {mp_residues[:][:3] if len(mp_residues[0]) >= 3 else mp_residues}")
+            # # In _windowing, at the start of the first window:
+            # print("\n=== FIRST WINDOW DEBUG ===")
+            # print(f"Window {iw+1}: energy range [{e_start:.3e}, {e_end:.3e}] eV")
+            # print(f"Window sqrt(E) range: [{inbegin:.3e}, {inend:.3e}]")
+            # print(f"Piece {i_piece}: contains {n_poles} poles")
+            # print(f"Poles in piece: {poles[:5] if len(poles) > 5 else poles}")  # First 5 poles
+            # print(f"Residues shape: {residues.shape}")
+            # print(f"Residues sample (elastic): {residues[0, :3] if residues.shape[1] >= 3 else residues[0]}")
+            # # After evaluating reference cross-sections:
+            # print(f"\n=== XS EVALUATION ===")
+            # print(f"Energy points: {n_points} from {energy[0]:.3e} to {energy[-1]:.3e} eV")
+            # print(f"XS_ref shape: {xs_ref.shape}")
+            # print(f"XS_ref elastic range: [{xs_ref[0].min():.3e}, {xs_ref[0].max():.3e}]")
+            # print(f"XS_ref absorption range: [{xs_ref[1].min():.3e}, {xs_ref[1].max():.3e}]")
+            # if xs_ref.shape[0] > 2:
+            #     print(f"XS_ref fission range: [{xs_ref[2].min():.3e}, {xs_ref[2].max():.3e}]")
+            # # Check for NaN/Inf:
+            # print(f"XS_ref has NaN: {np.any(np.isnan(xs_ref))}")
+            # print(f"XS_ref has Inf: {np.any(np.isinf(xs_ref))}")
+            # # After curve fitting attempt (inside the while loop):
+            # print(f"\n=== CURVE FIT ATTEMPT (poles {lp} to {rp}) ===")
+            # print(f"XS_wp contribution range: [{xs_wp.min():.3e}, {xs_wp.max():.3e}]")
+            # print(f"Curve fit coefficients: {coefs.flatten()[:3]}...")  # First 3 coeffs
+            # print(f"XS_fit range: [{xs_fit.min():.3e}, {xs_fit.max():.3e}]")
+            # print(f"Max absolute error: {abserr.max():.3e}")
+            # print(f"Max relative error: {relerr[~np.isnan(relerr)].max():.3e}")
+            # print(f"Points exceeding rtol: {np.sum(relerr > rtol)} / {relerr.size}")
 
             # we expect pure curvefit will succeed for the first window
             # TODO: find the energy boundary below which no poles are allowed
             if iw == 0:
                 raise RuntimeError('Pure curvefit failed for the first window!')
+
 
             # try to include one more pole (next center nearest)
             if rp >= n_poles:
@@ -764,6 +878,14 @@ def _windowing(mp_data, n_cf, rtol=1e-3, atol=1e-5, n_win=None, spacing=None,
                 rp += 1
             else:
                 lp -= 1
+
+            # Check bounds
+            if lp < 0 or rp > n_poles:
+                if log >= 2:
+                    print(f"    Warning: Reached bounds (lp={lp}, rp={rp}, n_poles={n_poles})")
+                lp = max(0, lp)
+                rp = min(n_poles, rp)
+                break
 
         # save data for this window
         win_data.append((i_piece, lp, rp, coefs))
@@ -1156,7 +1278,7 @@ class WindowedMultipole(EqualityMixin):
         return cls.from_multipole(mp_data, **wmp_options)
 
     @classmethod
-    def from_multipole(cls, mp_data, search=None, log=False, **kwargs):
+    def from_multipole(cls, mp_data, search=None, log=False, n_threads=25, njoy_input=None, **kwargs):
         """Generate windowed multipole neutron data from multipole data.
 
         Parameters
@@ -1185,6 +1307,33 @@ class WindowedMultipole(EqualityMixin):
                 mp_data = pickle.load(f)
         mp_data = mp_data["mp_data"] if isinstance(mp_data, dict) and set(mp_data.keys()) == {"mp_data"} else mp_data
 
+        if njoy_input:
+            nuc_ce = pickle.load(open(njoy_input, "rb"))
+            E_max = mp_data["E_max"]
+            E_min = mp_data["E_min"]
+            E_max_idx = np.searchsorted(nuc_ce.energy["0K"], E_max, side="right") - 1
+            energy = nuc_ce.energy["0K"][: E_max_idx + 1]
+            total_xs = nuc_ce[1].xs["0K"](energy)
+            elastic_xs = nuc_ce[2].xs["0K"](energy)
+            try:
+                absorption_xs = nuc_ce[27].xs["0K"](energy)
+            except KeyError:
+                absorption_xs = np.zeros_like(total_xs)
+
+            fissionable = False
+            try:
+                fission_xs = nuc_ce[18].xs["0K"](energy)
+                fissionable = True
+            except KeyError:
+                pass
+            # make vectors
+            if fissionable:
+                ce_xs = np.vstack((energy, elastic_xs, absorption_xs, fission_xs))
+            else:
+                ce_xs = np.vstack((energy, elastic_xs, absorption_xs))
+
+            mp_data["njoy_xs"] = ce_xs
+
         if search is None:
             if 'n_cf' in kwargs and ('n_win' in kwargs or 'spacing' in kwargs):
                 search = False
@@ -1207,16 +1356,16 @@ class WindowedMultipole(EqualityMixin):
         best_wmp = best_metric = None
 
         window_sizes = np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int))
-        cf_orders = range(10, 1, -1)
+        cf_orders = [2, 1]
+        # cf_orders = range(10, 1, -1)
         # Create list of all combinations to test
         test_configs = []
         for n_w in window_sizes:
             for n_cf in cf_orders:
                 test_configs.append((mp_data, n_w, n_cf, kwargs.copy(), log))
         print(f"There are {len(window_sizes)} windows and {len(cf_orders)} to test for a combo of {len(test_configs)}.")
-
+        print(f"Window sizes are {window_sizes}")
         # Run tests in parallel using 20 processes
-        n_threads = 25
         with Pool(processes=n_threads) as pool:
             results = pool.map(test_window_config, test_configs)
 
@@ -1231,33 +1380,6 @@ class WindowedMultipole(EqualityMixin):
                         print(f"Best library so far: N_win={n_w}, N_cf={n_cf}, metric={metric}")
                     best_wmp = deepcopy(wmp)
                     best_metric = metric
-
-        # for n_w in np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int)):
-        #     for n_cf in range(10, 1, -1):
-        #         if log:
-        #             print("Testing N_win={} N_cf={}".format(n_w, n_cf))
-
-        #         # update arguments dictionary
-        #         kwargs.update(n_win=n_w, n_cf=n_cf)
-
-        #         # windowing
-        #         try:
-        #             wmp = _windowing(mp_data, log=log, **kwargs)
-        #         except Exception as e:
-        #             if log:
-        #                 print('Failed: ' + str(e))
-        #             break
-
-        #         # select wmp library with metric:
-        #         # - performance: average # used poles per window and CF order
-        #         # - memory: # windows
-        #         metric = -(wmp.poles_per_window * 10. + wmp.fit_order * 1. +
-        #                    wmp.n_windows * 0.01)
-        #         if best_wmp is None or metric > best_metric:
-        #             if log:
-        #                 print("Best library so far.")
-        #             best_wmp = deepcopy(wmp)
-        #             best_metric = metric
 
         # return the best wmp library
         if best_wmp is None:

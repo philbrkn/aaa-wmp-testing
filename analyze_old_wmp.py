@@ -65,8 +65,8 @@ def plot_wmp_comparison(
         )
 
         # Main plot
-        ax1.loglog(E_grid, ref_xs, "b-", label=f"Reference {symbol}", linewidth=2)
-        ax1.loglog(E_grid, wmp_xs, "r--", label=f"WMP {symbol}", linewidth=2)
+        ax1.semilogy(E_grid, ref_xs, "b-", label=f"Reference {symbol}", linewidth=2)
+        ax1.semilogy(E_grid, wmp_xs, "r--", label=f"WMP {symbol}", linewidth=2)
         ax1.set_ylabel("Cross section (b)")
         ax1.set_title(f"{name} - {channel_name.capitalize()} Channel")
         ax1.legend()
@@ -80,7 +80,7 @@ def plot_wmp_comparison(
         rel_error[mask] = np.abs(wmp_xs[mask] - ref_xs[mask]) / ref_xs[mask] * 100
 
         # ax2.semilogx(E_grid, rel_error, "k-", linewidth=1.5)
-        ax2.loglog(E_grid, rel_error, "k-", linewidth=1.5)
+        ax2.semilogy(E_grid, rel_error, "k-", linewidth=1.5)
         ax2.set_xlabel("Energy (eV)")
         ax2.set_ylabel("Relative Error (%)")
 
@@ -263,7 +263,8 @@ name = "U238"
 # name = "Zr91"
 # name = "Fe56"
 # wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
-wmp_file = Path(__file__).parent / "WMP_Lib_viii.0" / "U238_VF-CF.h5"
+# wmp_file = Path(__file__).parent / "WMP_Lib_viii.0" / "U238_VF-CF.h5"
+wmp_file = "WMP_Lib_viii.0/U238_VF-CF.h5"
 njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
 
 

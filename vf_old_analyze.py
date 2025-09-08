@@ -11,7 +11,8 @@ from openmc.data.multipole_old import _windowing
 # vectfit_file = Path("/home/philip/Research/wmp_testing/"
 #                     "vf_figures/Fe56_mp_pseudo.pickle")
 # vectfit_file = Path("mp-data-VF-output/U238_mp_data_VIII_20250815_175017.pickle")
-vectfit_file = Path("aaa_analyze_constant/U238_mp.pickle")
+# vectfit_file = Path("aaa_analyze_constant/U238_mp.pickle")
+vectfit_file = Path("WMP_Lib_viii.0/U238/U238_mp.pickle")
 
 with open(vectfit_file, "rb") as f:
     obj = pickle.load(f)
@@ -24,7 +25,7 @@ print("Keys in mp_data:", mp_data.keys())
 print(f"E min {mp_data["E_min"]}  E max {mp_data["E_max"]}")
 print(f" num residues {len(mp_data["residues"])}")
 print(f"number of vf pieces {len(mp_data["poles"])} ")
-total_poles = sum(len(pole_list) for pole_list in mp_data["poles"][:16])
+total_poles = sum(len(pole_list) for pole_list in mp_data["poles"])
 print(f"total number of poles: {total_poles}")
 start_time = time.time()
 # wmp = data.WindowedMultipole.from_multipole(
