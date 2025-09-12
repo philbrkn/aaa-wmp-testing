@@ -191,7 +191,7 @@ def fit_nuclide(
     # print(f"Piece width {piece_width}")
     alpha = nuc_ce.atomic_weight_ratio / (K_BOLTZMANN * TEMPERATURE_LIMIT)
 
-    poles, residues, remainder_list, energy_indices_list = [], [], [], []
+    poles, residues, remainder_list, energy_indices_list, bcf_list = [], [], [], [], []
     # VF piece by piece
     for i_piece in range(vf_pieces):
         if log:
@@ -349,6 +349,7 @@ def fit_nuclide(
         # Store the polynomial info for THIS piece
         remainder_list.append(remainder)
         energy_indices_list.append([e_start_idx, e_end_idx])  # Store indices
+        bcf_list.append(R)
 
         if plot_each_slice:
             if len(w) == 2 * len(z):  # YES LAWSON
@@ -553,6 +554,9 @@ def fit_nuclide(
             g.create_dataset("energy_indices", data=np.array(energy_indices_list))
             # Also store the full energy grid so you can reconstruct
             g.create_dataset("energy_grid", data=energy)
+            bcf_group = g.create_group("bcf_data")
+            for i, R_piece in enumerate(bcf_list):
+                bcf_group.create_dataset(f"window_{i}", data=R_piece)
 
             # Add metadata about the fit space so you know how to evaluate later
             g.attrs["fit_space"] = np.bytes_(space)

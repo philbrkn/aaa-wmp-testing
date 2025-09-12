@@ -296,7 +296,7 @@ def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
     return info
 
 
-def fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6, verbose=True):
+def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=True):
     """
     Simple loop to find best pseudo-pole configuration.
     
@@ -404,21 +404,22 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, bestpra, max_poles=6, rtol=1e-6,
 
     # Apply best configuration
     if best_config:
-        C_best = 1.0 / (Z[:, np.newaxis] - best_config['poles'][np.newaxis, :])
-        bestpra += best_config['residues'].T @ C_best.T
+        # C_best = 1.0 / (Z[:, np.newaxis] - best_config['poles'][np.newaxis, :])
+        # bestpra += best_config['residues'].T @ C_best.T
 
         if verbose:
             print(f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance")
             print(f"Poles: {best_config['poles']}")
             print(f"Final relative error: {best_config['error']:.3e}")
 
-        return {
-            "method": "pseudo_pole",
-            "pseudo_poles": best_config['poles'],
-            "pseudo_residues": best_config['residues'],
-            "n_pseudo_poles": best_config['n_poles'],
-            "distance_factor": best_config['dist_factor']
-        }
+        # return {
+        #     "method": "pseudo_pole",
+        #     "pseudo_poles": best_config['poles'],
+        #     "pseudo_residues": best_config['residues'],
+        #     "n_pseudo_poles": best_config['n_poles'],
+        #     "distance_factor": best_config['dist_factor']
+        # }
+        return best_config["poles"], best_config["residues"].T
 
     return {"method": "pseudo_pole", "error": "failed"}
 

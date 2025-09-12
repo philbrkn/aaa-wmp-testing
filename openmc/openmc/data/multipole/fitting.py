@@ -138,16 +138,16 @@ def miaaa_xs(
                 print(f"Converged at m={m}")
             break
 
-        # Select next support point from fit region
+        # (Greedily) select next support point from fit region
         candidate_errs = err[J_fit]
-        if len(candidate_errs) == 0:
+        if len(candidate_errs) == 0:  # no more points left in piece
             break
-        jpos = np.argmax(candidate_errs)
-        j_star = J_fit[jpos]
+        jpos = np.argmax(candidate_errs)  # index of maximum error
+        j_star = J_fit[jpos]  # maximum error point
 
         Jz.append(j_star)  # for lawson
 
-        # Remove from candidate sets
+        # Remove from candidate sets via mask
         J_fit = J_fit[J_fit != j_star]
         J_core = J_core[J_core != j_star]
 

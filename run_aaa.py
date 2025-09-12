@@ -15,7 +15,7 @@ if __name__ == "__main__":
     fit_nuclide(
         endf_file,
         name,
-        vf_pieces=1000,
+        vf_pieces=2,
         mmax=600,
         rtol=5e-4,
         path_out=path_out,
@@ -23,20 +23,20 @@ if __name__ == "__main__":
         fitter="miaaa",
         njoy_input=njoy_input,
         njoy_error=5e-4,
-        # bounds={'E_min': 1, 'E_max': 200},
+        bounds={'E_min': 1, 'E_max': 60},
         # bounds={"E_min": 17400, "E_max": 17475},
         # bounds={"E_min": 17400, "E_max": 17600},
         # bounds={"E_min": 17200, "E_max": 17275},
         # method='qr+svd',
         # cleanup=True,
         # cleanup_tol=1e-12,  # Only remove if residue < tol
-        plot_each_slice=False,
+        plot_each_slice=True,
         # pole_extraction="pseudo_pole",
         # pole_extraction="polynomial",
         # pole_extraction=None,
         max_poly_degree=1,
         fit_mask_guard=0.0,
-        space="sqrt_E",
+        space="E",
         output_format="wmp",
     )
 

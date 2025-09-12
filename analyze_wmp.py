@@ -33,7 +33,6 @@ def read_and_evaluate_wmp(filename, E_eval, xs_refs):
         # Read data
         data = g["data"][:]
         windows = g["windows"][:]
-        curvefit = g["curvefit"][:]
         fit_space = g.attrs.get("fit_space", b"sqrt_E").decode()
         spacing = g["spacing"][()]
         E_min = g["E_min"][()]
@@ -50,6 +49,16 @@ def read_and_evaluate_wmp(filename, E_eval, xs_refs):
                     remainder_data.append(remainder_group[f'window_{i}'][:])
                 else:
                     remainder_data.append(None)
+
+        # Read remainder data
+        bcf_data = []
+        if 'bcf_data' in g:
+            bcf_group = g['bcf_data']
+            for i in range(len(windows)):
+                if f'window_{i}' in bcf_group:
+                    bcf_data.append(bcf_group[f'window_{i}'][:])
+                else:
+                    bcf_data.append(None)
 
         # Extract poles and residues from data
         poles = data[:, 0]
@@ -148,7 +157,6 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
         # Read data
         data = g["data"][:]
         windows = g["windows"][:]
-        curvefit = g["curvefit"][:]
         fit_space = g.attrs.get("fit_space", b"sqrt_E").decode()
         spacing = g["spacing"][()]
         E_min = g["E_min"][()]
@@ -173,6 +181,16 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
                     remainder_data.append(remainder_group[f'window_{i}'][:])
                 else:
                     remainder_data.append(None)
+
+        # Read remainder data
+        bcf_data = []
+        if 'bcf_data' in g:
+            bcf_group = g['bcf_data']
+            for i in range(len(windows)):
+                if f'window_{i}' in bcf_group:
+                    bcf_data.append(bcf_group[f'window_{i}'][:])
+                else:
+                    bcf_data.append(None)
 
         # Extract poles and residues
         poles = data[:, 0]
@@ -239,6 +257,9 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
                 E_remainder_nominal = E_remainder_full[remainder_mask]
                 remainder_nominal = remainder_data[iw][:, remainder_mask]
 
+                # remainder_mask = (E_remainder_full >= E_left_nominal) & (E_remainder_full <= E_right_nominal)
+                # E_remainder_nominal = E_remainder_full[remainder_mask]
+                bcf_nominal = bcf_data[iw][:, remainder_mask]
                 if fit_space == "sqrt_E":
                     s_remainder = np.sqrt(E_remainder_nominal)
                 else:
@@ -258,8 +279,8 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
                     # )
                 elif background_method == "pseudo":
                     pass
-                else:
-                    raise ValueError("invalid method")
+                # else:
+                #     raise ValueError("invalid method")
             else:
                 poly_coeffs = [None] * n_channels
 
@@ -267,17 +288,23 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
             if len(window_poles) > 0:
                 denominators = s[:, np.newaxis] - window_poles[np.newaxis, :]
 
-            for ch in range(n_channels):
-                if window_residues.shape[1] > 0:
-                    xs_poles = np.sum((window_residues[ch] / denominators).real, axis=1)
-                else:
-                    xs_poles = np.zeros_like(E_window)
+            if background_method == "poly":
+                for ch in range(n_channels):
+                    if window_residues.shape[1] > 0:
+                        xs_poles = np.sum((window_residues[ch] / denominators).real, axis=1)
+                    else:
+                        xs_poles = np.zeros_like(E_window)
 
-                if background_method == "poly":
-                    xs_poly = np.polyval(poly_coeffs[ch], s).real
-                    xs_poles += xs_poly
-
-                total_xs[ch, mask] = xs_poles
+                        xs_poly = np.polyval(poly_coeffs[ch], s).real
+                        xs_poles += xs_poly
+            elif background_method == "pseudo":
+                p_poles, p_residues = fit_pseudopoles_adaptive(s_remainder, remainder_nominal, bcf_nominal,
+                                        max_poles=6, rtol=1e-6, verbose=False)
+                print(window_poles.shape, p_poles.shape, window_residues.shape, p_residues.shape)
+                fit_poles = np.concatenate([window_poles, p_poles])
+                fit_res = np.hstack([window_residues, p_residues])
+                xs_poles = evaluate_simple(E_window, fit_poles, fit_res, fit_space=fit_space)
+            total_xs[:, mask] = xs_poles
 
             if iw % 100 == 0:
                 print(f"Processed window {iw}/{len(windows)}")
@@ -444,8 +471,8 @@ def plot_wmp_comparison(
         rel_error = np.full_like(ref_xs, np.nan)
         rel_error[mask] = np.abs(wmp_xs[mask] - ref_xs[mask]) / ref_xs[mask] * 100
         abs_err = np.abs(wmp_xs-ref_xs)
-        # ax2.loglog(E_grid, abs_err, "k-", linewidth=1.5)
-        ax2.semilogy(E_grid, rel_error, "k-", linewidth=1.5)
+        ax2.semilogy(E_grid, abs_err, "k-", linewidth=1.5)
+        # ax2.semilogy(E_grid, rel_error, "k-", linewidth=1.5)
         ax2.set_xlabel("Energy (eV)")
         ax2.set_ylabel("Relative Error (%)")
 
@@ -488,7 +515,8 @@ if __name__ == "__main__":
     njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
     # bounds={"E_min": 17400, "E_max": 17600}
     # bounds = {"E_min": 0, "E_max": 2e4}
-    bounds = {"E_min": 0.1, "E_max": 19999}
+    bounds = {"E_min": 1, "E_max": 60}
+    # bounds = {"E_min": 0.1, "E_max": 19999}
     # bounds = {"E_min": 0, "E_max": 9999}
 
     reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
@@ -502,7 +530,8 @@ if __name__ == "__main__":
             reference_data["fission"],
         ]
     )
-    background_method = "poly"
+    background_method = "pseudo"
+    background_method = None
     results = read_and_evaluate_wmp_debug(filepath, E_grid, background_method, deg=3)
     plot_wmp_comparison(
         results, reference_data, E_grid, name="U238", path_out="./plots", T=0.0
