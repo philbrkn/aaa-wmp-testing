@@ -304,17 +304,18 @@ def fit_nuclide(
                 Z = E_piece
 
             if cleanup:
-                pol, res, info = proper_rational(
+                pol, res, _, _ = proper_rational(
                     z,
                     w,
                     w,
                     fz,
                     R,
-                    E_piece,
-                    # pole_extraction=None, max_poly_degree=0,
+                    Z,
+                    # pole_extraction=kwargs.get("pole_extraction", None),
+                    # max_poly_degree=kwargs.get("max_poly_degree", 0),
                 )
                 z, fz, w = spurious_cleanup(
-                    pol, res, z, fz, w, E_piece, R.T, cleanup_tol=cleanup_tol
+                    pol, res.T, z, fz, w, E_piece, R.T, cleanup_tol=cleanup_tol
                 )
             if len(w) == 2 * len(z):  # YES LAWSON
                 m = len(z)
@@ -384,6 +385,9 @@ def fit_nuclide(
         # Main reconstruction plot with remainder in subplot
         poles = poles[0]
         residues = residues[0]
+
+        for p in np.sort(np.sqrt(poles)):
+            print(f"pole real:  {p.real:.2e}  | imag: {p.imag:.2e} ")
 
         plot_reconstruction(
             E_piece,

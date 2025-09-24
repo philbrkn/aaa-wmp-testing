@@ -106,6 +106,18 @@ def miaaa_xs(
     R = np.mean(F, axis=1, keepdims=True) * np.ones((k, n))
     err_hist = []
 
+    # FIND PEAKS:
+    all_peak_energies = []
+    from scipy.signal import find_peaks
+    for i, channel in enumerate(channels):
+        # Find peaks in this channel
+        peaks, _ = find_peaks(np.real(channel))
+        peak_energies = E[peaks]
+        all_peak_energies.extend(peak_energies)
+    resonances = np.unique(np.array(all_peak_energies))
+    resonances_energies = np.sort(resonances)
+    # print(resonances_energies)
+
     # Greedy support selection
     for m in range(mmax):
         # Compute errors based on chosen metric
@@ -139,11 +151,51 @@ def miaaa_xs(
             break
 
         # (Greedily) select next support point from fit region
-        candidate_errs = err[J_fit]
-        if len(candidate_errs) == 0:  # no more points left in piece
-            break
-        jpos = np.argmax(candidate_errs)  # index of maximum error
-        j_star = J_fit[jpos]  # maximum error point
+        force_physical = False
+        if force_physical:
+            candidate_indices = np.argsort(err[J_fit])[::-1]
+            selected = False
+            fallback_strategy = "skip"
+            for idx in candidate_indices:
+                j_star = J_fit[idx]
+                candidate_energy = E[j_star]
+
+                # Check if physical
+                min_distance = np.min(np.abs(resonances_energies - candidate_energy))
+                relative_distance = min_distance / candidate_energy
+                # if log:
+                #     print(f"  min distance: {min_distance:.3f}, relative distance: {relative_distance:.3f}")
+                tolerance = 5e-3
+                # Check if this candidate is near a physical resonance
+                if relative_distance <= tolerance:
+                    # Great! Use this point
+                    selected = True
+                    break
+                elif fallback_strategy == "snap":
+                    # Snap to nearest resonance and use that
+                    current_energy = E[j_star]
+                    nearest_resonance = resonances_energies[np.argmin(np.abs(resonances_energies - current_energy))]
+                    # Find grid point closest to this resonance
+                    j_star = np.argmin(np.abs(E - nearest_resonance))
+                    selected = True
+                    if log:
+                        print(f"  current energy {current_energy:.3f}, nearest resonance {nearest_resonance:.3f}, switched to {j_star}")
+                    break
+                elif fallback_strategy == "skip":
+                    # Try next candidate
+                    continue
+                # Could add other strategies here
+
+            if not selected:
+                if log:
+                    print(f"No physical resonance found at iteration {m}, stopping")
+                break
+        else:
+            candidate_errs = err[J_fit]
+            if len(candidate_errs) == 0:  # no more points left in piece
+                break
+            jpos = np.argmax(candidate_errs)  # index of maximum error
+            j_star = J_fit[jpos]  # maximum error point
 
         Jz.append(j_star)  # for lawson
 

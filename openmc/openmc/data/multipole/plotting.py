@@ -17,6 +17,7 @@ def plot_single_channel(
     plot_type="loglog",
     show_error=False,
     error_type="relative",
+    poles=None,
 ):
     """
     Plot a single reaction channel comparison.
@@ -73,6 +74,31 @@ def plot_single_channel(
     ax1.grid(True, which="both", alpha=0.3)
     ax1.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.7)
     ax1.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.7)
+
+
+    # Add pole vertical lines if provided
+    if poles is not None:
+        poles = np.array(poles)
+        # Extract real parts of poles
+        pole_energies = np.real(poles)
+        
+        # Filter poles to only show those within the energy range
+        E_min, E_max = np.min(E), np.max(E)
+        visible_poles = pole_energies[(pole_energies >= E_min) & (pole_energies <= E_max)]
+        pole_color="black"
+        pole_alpha=0.7
+        pole_linewidth=1.5
+        pole_linestyle="--"
+        for i, pole_energy in enumerate(visible_poles):
+            # Add vertical line on main plot
+            ax1.axvline(
+                pole_energy, 
+                color=pole_color, 
+                alpha=pole_alpha,
+                linewidth=pole_linewidth,
+                linestyle=pole_linestyle,
+                label="Poles" if i == 0 else ""  # Only label first pole for legend
+            )
 
     # Handle error plotting on secondary axis
     if show_error:
@@ -281,6 +307,7 @@ def plot_reconstruction(
             plot_type,
             show_error=show_error,
             error_type=error_type,
+            poles=poles
         )
 
     if path_out:
