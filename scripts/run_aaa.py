@@ -1,11 +1,15 @@
+import sys
 from pathlib import Path
+
+# Add parent directory to path so we can import aaa_wmp
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from aaa_wmp.core.wmp import fit_nuclide
 
 if __name__ == "__main__":
 
     def get_paths(name):
-        base = Path(__file__).parent
+        base = Path(__file__).parent.parent
 
         # Convert U238 -> U_238, O16 -> O_016 for ENDF
         if name[-3:].isdigit():  # 3 digits like U238
