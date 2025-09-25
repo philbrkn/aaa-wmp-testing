@@ -277,13 +277,13 @@ print(f"Number of windows {len(wmp_data.windows)}")
 # bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
 # bounds = {"E_min": 785, "E_max": 861}
 # bounds = {"E_min": 17400, "E_max": 17475}
-bounds={"E_min": 0, "E_max": 19999}
+bounds={"E_min": 30, "E_max": 50}
 # bounds={"E_min": 0, "E_max": 30}
 # bounds = None
 reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
 E_grid = reference_data["energy"]
 
-plot_wmp_comparison(wmp_data, reference_data, E_grid, name="U238", path_out="./plots")
+# plot_wmp_comparison(wmp_data, reference_data, E_grid, name="U238", path_out="./plots")
 count_wmp_poles_in_range(wmp_data, bounds)
 # print(wmp_data.windows[1:20])
 # print(wmp_data.data.shape[0])

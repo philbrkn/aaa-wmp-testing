@@ -1,2 +1,5 @@
 NJOY_pickles/
 aaa_window/
+/data/
+__pycache__/
+*.pyc

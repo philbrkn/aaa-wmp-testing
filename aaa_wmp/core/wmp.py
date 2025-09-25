@@ -1,23 +1,22 @@
-from pathlib import Path
-
 import os
 import pickle
+from pathlib import Path
+
+import h5py
 import numpy as np
+from openmc.data import K_BOLTZMANN
+from openmc.data.neutron import IncidentNeutron
+from openmc.data.resonance import ResonanceRange
 from scipy.signal import find_peaks
 
-from .data import K_BOLTZMANN
-from .neutron import IncidentNeutron
-from .resonance import ResonanceRange
-from .aaa import aaa_xs
-from .multipole.fitting import miaaa_xs, evaluate_miaaa
-from .multipole.conversion import proper_rational
-from .multipole.plotting import (
-    plot_reconstruction,
+from .cleanup import spurious_cleanup
+from .conversion import proper_rational
+from .fitting import evaluate_miaaa, miaaa_xs
+from .plotting import (
     plot_aaa_results,
     plot_miaaa_convergence,
+    plot_reconstruction,
 )
-from .multipole.cleanup import spurious_cleanup
-import h5py
 
 # Constants that determine which value to access
 _MP_EA = 0  # Pole
@@ -82,6 +81,12 @@ def fit_nuclide(
 
     """
 
+    wmp_path_out = os.path.join(path_out, "aaa_in_h5wmp_format")
+    base = Path(__file__).parent
+    njoy_path_out = os.path.join(base, "data/input/NJOY_pickles")
+    aaa_plot_loc = os.path.join(path_out, "plots/aaa_bary_plot")
+    plot_path = os.path.join(path_out, "plots/reconstruction_plots")
+    mp_path_out = os.path.join(path_out, "mp_data_output")
     # ======================================================================
     # PREPARE POINT-WISE XS
     # make 0K ACE data using njoy
@@ -98,9 +103,6 @@ def fit_nuclide(
             purr=False,
         )
         # dump the NJOY input for later use
-        # TODO: this assumes path_out is a subdirectory
-        base_dir = Path(path_out).parent
-        njoy_path_out = base_dir / "NJOY_pickles"
         njoy_path_out.mkdir(parents=True, exist_ok=True)
         with open(njoy_path_out / f"{name}_NJOY.pickle", "wb") as f:
             pickle.dump(nuc_ce, f)
@@ -368,7 +370,7 @@ def fit_nuclide(
                 R_pieces[1],
                 sigma_f=sig_f_piece,
                 R_f=R_fission,
-                path_out=path_out,
+                path_out=aaa_plot_loc,
             )
 
     # print number of poles
@@ -395,7 +397,7 @@ def fit_nuclide(
             poles,
             residues,
             name="U238",
-            path_out="./plots",
+            path_out=plot_path,
             plot_type="loglog",
             show_error=True,
             error_type="relative",
@@ -408,14 +410,14 @@ def fit_nuclide(
             poles,
             residues,
             name="U238",
-            path_out="./plots",
+            path_out=plot_path,
             plot_type="loglog",
             show_error=True,
             error_type="absolute",
             poly_info=poly_info,
             fit_space=space,
         )
-        plot_miaaa_convergence(err_hist, rtol=None, path_out="./plots")
+        plot_miaaa_convergence(err_hist, rtol=None, path_out=aaa_plot_loc)
 
     if output_format == "mp_data":
         # collect multipole data into a dictionary
@@ -430,11 +432,11 @@ def fit_nuclide(
 
         # dump multipole data to file
         if path_out:
-            if not os.path.exists(path_out):
-                os.makedirs(path_out)
+            if not os.path.exists(mp_path_out):
+                os.makedirs(mp_path_out)
             if not mp_filename:
                 mp_filename = f"{nuc_ce.name}_mp.pickle"
-            mp_filename = os.path.join(path_out, mp_filename)
+            mp_filename = os.path.join(mp_path_out, mp_filename)
             with open(mp_filename, "wb") as f:
                 pickle.dump(mp_data, f)
             if log:
@@ -529,7 +531,7 @@ def fit_nuclide(
 
         # Write to HDF5
         wmp_filename = f"{nuc_ce.name}_wmp.h5"
-        filename = os.path.join(path_out, wmp_filename)
+        filename = os.path.join(wmp_path_out, wmp_filename)
 
         with h5py.File(filename, "w", libver="earliest") as f:
             f.attrs["filetype"] = np.bytes_("data_wmp")
@@ -542,7 +544,9 @@ def fit_nuclide(
             g.create_dataset("version", data=np.array(WMP_VERSION))
             #
             g.create_dataset("spacing", data=np.array(spacing))
-            g.create_dataset("sqrtAWR", data=np.array(np.sqrt(nuc_ce.atomic_weight_ratio)))
+            g.create_dataset(
+                "sqrtAWR", data=np.array(np.sqrt(nuc_ce.atomic_weight_ratio))
+            )
             g.create_dataset("E_min", data=np.array(E_min))
             g.create_dataset("E_max", data=np.array(E_max))
 
