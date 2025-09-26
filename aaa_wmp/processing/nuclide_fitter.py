@@ -6,19 +6,14 @@ import numpy as np
 from scipy.signal import find_peaks
 
 from ..constants import K_BOLTZMANN, TEMPERATURE_LIMIT
-from ..core.plotting import (
+from ..io.njoy_interface import NJOYProcessor
+from ..processing.piece_fitting import fit_piece
+from ..visualization.plotting import (
     plot_miaaa_convergence,
     plot_reconstruction,
 )
 
-# from ..core.aaa_fitting import miaaa_xs
-# from ..core.evaluation import evaluate_miaaa
-# from ..core.rational_conversion import proper_rational
-from ..io.njoy_interface import NJOYProcessor
-from ..processing.piece_fitting import fit_piece
-
 # from ..io.wmp_writer import WMPWriter
-# from ..visualization.reconstruction_plots import plot_aaa_results
 # from .pole_cleanup import spurious_cleanup
 
 

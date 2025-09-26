@@ -3,8 +3,8 @@ import os
 
 import numpy as np
 
+from ..core.aaa_fitting import evaluate_miaaa, miaaa_xs
 from ..core.conversion import proper_rational
-from ..core.fitting import evaluate_miaaa, miaaa_xs
 from ..core.plotting import plot_aaa_results
 
 
