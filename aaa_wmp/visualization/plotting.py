@@ -1,9 +1,9 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-from pathlib import Path
-import openmc.data.vectfit as vf
-from .conversion import evaluate_simple
+
+from ..core.conversion import evaluate_simple
 
 
 def plot_single_channel(
@@ -63,7 +63,7 @@ def plot_single_channel(
         plot_func = ax1.plot
 
     # Plot data
-    plot_func(E, original, f"b-", label=f"Original {symbol}", linewidth=2)
+    plot_func(E, original, "b-", label=f"Original {symbol}", linewidth=2)
     plot_func(E, reconstructed, "r--", label="Reconstructed", linewidth=2)
 
     ax1.set_xlabel("Energy (eV)")
@@ -75,34 +75,34 @@ def plot_single_channel(
     ax1.grid(which="major", linestyle="-", linewidth=0.8, alpha=0.7)
     ax1.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.7)
 
-
     # Add pole vertical lines if provided
     if poles is not None:
         poles = np.array(poles)
         # Extract real parts of poles
         pole_energies = np.real(poles)
-        
+
         # Filter poles to only show those within the energy range
         E_min, E_max = np.min(E), np.max(E)
-        visible_poles = pole_energies[(pole_energies >= E_min) & (pole_energies <= E_max)]
-        pole_color="black"
-        pole_alpha=0.7
-        pole_linewidth=1.5
-        pole_linestyle="--"
+        visible_poles = pole_energies[
+            (pole_energies >= E_min) & (pole_energies <= E_max)
+        ]
+        pole_color = "black"
+        pole_alpha = 0.7
+        pole_linewidth = 1.5
+        pole_linestyle = "--"
         for i, pole_energy in enumerate(visible_poles):
             # Add vertical line on main plot
             ax1.axvline(
-                pole_energy, 
-                color=pole_color, 
+                pole_energy,
+                color=pole_color,
                 alpha=pole_alpha,
                 linewidth=pole_linewidth,
                 linestyle=pole_linestyle,
-                label="Poles" if i == 0 else ""  # Only label first pole for legend
+                label="Poles" if i == 0 else "",  # Only label first pole for legend
             )
 
     # Handle error plotting on secondary axis
     if show_error:
-
         # Calculate error based on type
         original = np.array(original)
         reconstructed = np.array(reconstructed)
@@ -122,14 +122,14 @@ def plot_single_channel(
                 print(
                     f"{channel_name:<12} | Max rel error = {max_err:.2e}%  | RMS rel error = {rms_err:.2e}%"
                 )
-            ax2.set_ylim(1e-7, 1e1) 
+            ax2.set_ylim(1e-7, 1e1)
         elif error_type == "absolute":
             error = np.abs(reconstructed - original)
             error_label = "Absolute Error (b)"
             error_color = "black"
 
             max_err = np.max(np.abs(error))
-            rms_err = np.sqrt(np.mean(error ** 2))
+            rms_err = np.sqrt(np.mean(error**2))
             print(
                 f"{channel_name:<12} | Max abs error = {max_err:.2e}  | RMS abs error = {rms_err:.2e}"
             )
@@ -177,10 +177,11 @@ def plot_single_channel(
         ax2.grid(True, which="both", alpha=0.3)
         # horizontal lines
         ax2.grid(which="major", axis="y", linestyle="--", linewidth=1)
-        # vertical lines. 
+        # vertical lines.
         ax2.grid(which="major", axis="x", linestyle="-", linewidth=0.8, alpha=0.7)
         ax2.grid(which="minor", axis="x", linestyle=":", linewidth=0.5, alpha=0.7)
         from matplotlib.ticker import LogLocator
+
         ax2.yaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
         ax2.xaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
 
@@ -217,7 +218,7 @@ def plot_reconstruction(
     show_error=False,
     error_type="relative",
     poly_info=None,
-    fit_space="sqrt_E"
+    fit_space="sqrt_E",
 ):
     """
     Plot original ACE data vs reconstructed from poles/residues.
@@ -258,7 +259,9 @@ def plot_reconstruction(
     # mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
     # xs_recon = evaluate_multipole_xs(E, mc_data, poly_info, fit_space=fit_space)
     poly_coeffs = poly_info["poly_coeffs"]
-    xs_recon = evaluate_simple(E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space)
+    xs_recon = evaluate_simple(
+        E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space
+    )
 
     if fit_space == "sqrt_E":
         Z = np.sqrt(E)
@@ -307,7 +310,7 @@ def plot_reconstruction(
             plot_type,
             show_error=show_error,
             error_type=error_type,
-            poles=poles
+            poles=poles,
         )
 
     if path_out:
@@ -356,7 +359,7 @@ def evaluate_multipole_xs(E, data_dict, poly_info=None, fit_space="sqrt_E"):
         denominators = s_val - poles
 
         # The core formula for WMP format is Re(i * R / (E - p))
-        contributions = 1/ denominators
+        contributions = 1 / denominators
 
         # Elastic (column 1)
         elastic_xs[i] = np.sum((data[:, 1] * contributions).real)
@@ -397,17 +400,19 @@ def evaluate_multipole_xs(E, data_dict, poly_info=None, fit_space="sqrt_E"):
 
         if np.any(elastic_xs < 0):
             neg_indices = np.where(elastic_xs < 0)[0]
-            print(f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!")
+            print(
+                f"WARNING: Negative elastic XS detected at {len(neg_indices)} points!"
+            )
             print(f"  Range: [{elastic_xs.min():.3e}, {elastic_xs.max():.3e}]")
             print(f"  At energies: {E[neg_indices[:5]]}")  # Show first 5
             # elastic_xs[elastic_xs < 0] = 1e-10
 
         if absorption_xs is not None and np.any(absorption_xs < 0):
-            print(f"WARNING: Negative absorption XS detected!")
+            print("WARNING: Negative absorption XS detected!")
             # absorption_xs[absorption_xs < 0] = 1e-10
 
         if fission_xs is not None and np.any(fission_xs < 0):
-            print(f"WARNING: Negative fission XS detected!")
+            print("WARNING: Negative fission XS detected!")
             # fission_xs[fission_xs < 0] = 1e-10
 
     return [elastic_xs, absorption_xs, fission_xs]

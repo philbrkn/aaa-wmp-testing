@@ -5,7 +5,7 @@ import numpy as np
 
 from ..core.aaa_fitting import evaluate_miaaa, miaaa_xs
 from ..core.conversion import proper_rational
-from ..core.plotting import plot_aaa_results
+from ..visualization.plotting import plot_aaa_results
 
 
 def calculate_piece_boundaries(i_piece, piece_width, data, alpha, space):
