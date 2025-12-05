@@ -40,7 +40,7 @@ class NuclideFitter:
 
         # Get NJOY data
         nuc_ce = self.njoy_processor.get_point_wise_xs(
-            endf_file, name, njoy_error, njoy_input
+            endf_file, name, njoy_error, njoy_input=njoy_input
         )
 
         if log:

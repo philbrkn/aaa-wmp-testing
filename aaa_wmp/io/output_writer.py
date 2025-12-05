@@ -46,6 +46,8 @@ class OutputWriter:
             "E_max": data["E_max"],
             "poles": results["poles"],
             "residues": results["residues"],
+            "poly_info_list": results["poly_info_list"],  # ADD THIS
+            "space": results.get("space", "sqrt_E"),  # ADD THIS
         }
 
         mp_path_out = os.path.join(path_out, "mp_data")
