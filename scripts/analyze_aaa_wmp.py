@@ -1,10 +1,13 @@
-from openmc.data.multipole.conversion import evaluate_simple, fit_pseudopoles_adaptive
-import h5py
-import numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
 import os
 import pickle
+import sys
+from pathlib import Path
+
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def apply_polyfit_background(poles, res, Z, remainder, max_poly_degree=0):
@@ -25,172 +28,37 @@ def apply_polyfit_background(poles, res, Z, remainder, max_poly_degree=0):
     return poly_coeffs
 
 
-def read_and_evaluate_wmp(filename, E_eval, xs_refs):
-    """Read WMP file and evaluate using evaluate_simple"""
-    with h5py.File(filename, "r") as f:
-        g = f[list(f.keys())[0]]  # Get first group (nuclide name)
-
-        # Read data
-        data = g["data"][:]
-        windows = g["windows"][:]
-        fit_space = g.attrs.get("fit_space", b"sqrt_E").decode()
-        spacing = g["spacing"][()]
-        E_min = g["E_min"][()]
-        E_max = g["E_max"][()]
-        # for remainder:
-        energy_indices = g['energy_indices'][:]
-
-        # Read remainder data
-        remainder_data = []
-        if 'remainder_data' in g:
-            remainder_group = g['remainder_data']
-            for i in range(len(windows)):
-                if f'window_{i}' in remainder_group:
-                    remainder_data.append(remainder_group[f'window_{i}'][:])
-                else:
-                    remainder_data.append(None)
-
-        # Read remainder data
-        bcf_data = []
-        if 'bcf_data' in g:
-            bcf_group = g['bcf_data']
-            for i in range(len(windows)):
-                if f'window_{i}' in bcf_group:
-                    bcf_data.append(bcf_group[f'window_{i}'][:])
-                else:
-                    bcf_data.append(None)
-
-        # Extract poles and residues from data
-        poles = data[:, 0]
-        fissionable = data.shape[1] == 4
-        if fissionable:
-            residues = data[:, 1:4].T  # Shape (3, n_poles)
-        else:
-            residues = data[:, 1:3].T  # Shape (2, n_poles)
-
-        # Initialize total result
-        n_channels = 3 if fissionable else 2
-        # Vectorized window assignment
-        if fit_space == "sqrt_E":
-            sqrt_E_eval = np.sqrt(E_eval)
-            window_indices = np.minimum(
-                len(windows) - 1, ((sqrt_E_eval - np.sqrt(E_min)) / spacing).astype(int)
-            )
-        else:
-            piece_width_E = (E_max - E_min) / len(windows)
-            window_indices = np.minimum(
-                len(windows) - 1, ((E_eval - E_min) / piece_width_E).astype(int)
-            )
-
-        # Group energies by window for batch processing
-        total_xs = np.zeros((n_channels, len(E_eval)))
-
-        for iw in range(len(windows)):
-            # Find all energies in this window
-            mask = window_indices == iw
-            if not np.any(mask):
-                continue
-
-            E_window = E_eval[mask]
-
-            # # Confirm window start/end match energy_indices
-            # e_start_idx, e_end_idx = energy_indices[iw]
-            # print(f"Window {iw}: stored indices [{e_start_idx}, {e_end_idx}]")
-            # Get poles and residues for this window
-            start, end = windows[iw]
-            if end >= start:  # Check for valid window
-                window_poles = poles[start - 1 : end]
-                window_residues = residues[:, start - 1 : end]
-            else:
-                window_poles = np.array([])
-                window_residues = np.zeros((n_channels, 0))
-
-            # Get polynomial coefficients
-            # poly_coeffs = []
-            # for ch in range(n_channels):
-            #     if len(curvefit.shape) == 3 and iw < curvefit.shape[0] and ch < curvefit.shape[2]:
-            #         coeffs = curvefit[iw, :, ch]
-            #         coeffs = coeffs[coeffs != 0] if np.any(coeffs != 0) else None
-            #     else:
-            #         coeffs = None
-            #     poly_coeffs.append(coeffs)
-
-            # Vectorized evaluation for all energies in this window
-            if fit_space == "sqrt_E":
-                s = np.sqrt(E_window)
-            else:
-                s = E_window
-
-            if remainder_data[iw] is not None:
-                poly_coeffs = apply_polyfit_background(
-                    window_poles, window_residues, s, remainder_data[iw], max_poly_degree=2
-                )
-            # Vectorized pole contribution
-            # Shape: (n_energies, n_poles)
-            denominators = s[:, np.newaxis] - window_poles[np.newaxis, :]
-
-            # Compute cross sections
-            for ch in range(n_channels):
-                if window_residues.shape[1] > 0:  # Has poles
-                    xs_poles = np.sum((window_residues[ch] / denominators).real, axis=1)
-                else:
-                    xs_poles = np.zeros_like(E_window)
-
-                # # Add polynomial contribution
-                if poly_coeffs[ch] is not None:
-                    xs_poly = np.polyval(poly_coeffs[ch], s).real
-                    xs_poles += xs_poly
-
-                total_xs[ch, mask] = xs_poles
-
-            if iw % 100 == 0:
-                print(f"Processed window {iw}/{len(windows)}")
-
-        return total_xs
-
-
 def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=1):
-
     """Read WMP file and evaluate using evaluate_simple"""
     with h5py.File(filename, "r") as f:
         g = f[list(f.keys())[0]]
+
         # Read data
         data = g["data"][:]
         windows = g["windows"][:]
-        fit_space = g.attrs.get("fit_space", b"sqrt_E").decode()
+        fit_space = g.attrs.get("fit_space", b"sqrt_E")
+        if isinstance(fit_space, bytes):
+            fit_space = fit_space.decode()
         spacing = g["spacing"][()]
         E_min = g["E_min"][()]
         E_max = g["E_max"][()]
         sqrtAWR = g["sqrtAWR"][()]
-        TEMPERATURE_LIMIT = 3000
-        K_BOLTZMANN = 8.617333262e-5
-
-        # Calculate alpha for Doppler broadening
-        alpha = sqrtAWR**2 / (K_BOLTZMANN * TEMPERATURE_LIMIT)
 
         # Read energy indices and remainder data
-        energy_indices = g['energy_indices'][:]
-        energy_grid = g['energy_grid'][:]
+        energy_indices = g["energy_indices"][:]
+        energy_grid = g["energy_grid"][:]
 
         # Read remainder data
         remainder_data = []
-        if 'remainder_data' in g:
-            remainder_group = g['remainder_data']
+        if "remainder_data" in g:
+            remainder_group = g["remainder_data"]
             for i in range(len(windows)):
-                if f'window_{i}' in remainder_group:
-                    remainder_data.append(remainder_group[f'window_{i}'][:])
+                if f"window_{i}" in remainder_group:
+                    remainder_data.append(remainder_group[f"window_{i}"][:])
                 else:
                     remainder_data.append(None)
-
-        # Read remainder data
-        bcf_data = []
-        if 'bcf_data' in g:
-            bcf_group = g['bcf_data']
-            for i in range(len(windows)):
-                if f'window_{i}' in bcf_group:
-                    bcf_data.append(bcf_group[f'window_{i}'][:])
-                else:
-                    bcf_data.append(None)
+        else:
+            remainder_data = [None] * len(windows)
 
         # Extract poles and residues
         poles = data[:, 0]
@@ -212,7 +80,7 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
         total_xs = np.zeros((n_channels, len(E_eval)))
 
         for iw in range(n_windows):
-            # Calculate NOMINAL window boundaries (no Doppler extension)
+            # Calculate NOMINAL window boundaries
             if fit_space == "sqrt_E":
                 sqrt_E_left = np.sqrt(E_min) + iw * piece_width
                 sqrt_E_right = min(np.sqrt(E_max), sqrt_E_left + piece_width)
@@ -222,17 +90,18 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
                 E_left_nominal = E_min + iw * piece_width
                 E_right_nominal = min(E_max, E_left_nominal + piece_width)
 
-            # Find E_eval points in NOMINAL window (no overlap)
-            mask = (E_eval >= E_left_nominal) & (E_eval < E_right_nominal)
-            if iw == n_windows - 1:  # Include right boundary for last window
+            # Find E_eval points in NOMINAL window
+            if iw == n_windows - 1:
                 mask = (E_eval >= E_left_nominal) & (E_eval <= E_right_nominal)
+            else:
+                mask = (E_eval >= E_left_nominal) & (E_eval < E_right_nominal)
 
             if not np.any(mask):
                 continue
 
             E_window = E_eval[mask]
 
-            # Get poles and residues
+            # Get poles and residues for this window
             start, end = windows[iw]
             if end >= start:
                 window_poles = poles[start - 1 : end]
@@ -247,67 +116,48 @@ def read_and_evaluate_wmp_debug(filename, E_eval, background_method="poly", deg=
             else:
                 s = E_window
 
-            # For polynomial fitting, use only the NOMINAL portion of the remainder
-            if remainder_data[iw] is not None:
+            # Initialize output for this window
+            xs_window = np.zeros((n_channels, len(E_window)))
+
+            # Compute pole contributions
+            if len(window_poles) > 0:
+                denominators = s[:, np.newaxis] - window_poles[np.newaxis, :]
+                for ch in range(n_channels):
+                    xs_window[ch] = np.sum(
+                        (window_residues[ch] / denominators).real, axis=1
+                    )
+
+            # Fit and add polynomial background
+            if background_method == "poly" and remainder_data[iw] is not None:
                 e_start_idx_stored, e_end_idx_stored = energy_indices[iw]
                 E_remainder_full = energy_grid[e_start_idx_stored:e_end_idx_stored]
 
-                # Find which remainder points fall in NOMINAL window
-                remainder_mask = (E_remainder_full >= E_left_nominal) & (E_remainder_full <= E_right_nominal)
+                # Find remainder points in NOMINAL window
+                remainder_mask = (E_remainder_full >= E_left_nominal) & (
+                    E_remainder_full <= E_right_nominal
+                )
                 E_remainder_nominal = E_remainder_full[remainder_mask]
                 remainder_nominal = remainder_data[iw][:, remainder_mask]
 
-                # remainder_mask = (E_remainder_full >= E_left_nominal) & (E_remainder_full <= E_right_nominal)
-                # E_remainder_nominal = E_remainder_full[remainder_mask]
-                bcf_nominal = bcf_data[iw][:, remainder_mask]
                 if fit_space == "sqrt_E":
                     s_remainder = np.sqrt(E_remainder_nominal)
                 else:
                     s_remainder = E_remainder_nominal
 
-                if background_method == "poly":
-                    # Fit polynomial only on the nominal portion
-                    poly_coeffs = []
-                    for ch in range(n_channels):
-                        if remainder_nominal.shape[1] > 0 and np.max(np.abs(remainder_nominal[ch, :])) > 1e-12:
-                            p = np.polyfit(s_remainder, remainder_nominal[ch, :], deg=deg)
-                            poly_coeffs.append(p)
-                        else:
-                            poly_coeffs.append(None)
-                    # poly_coeffs = apply_polyfit_background(
-                    #     window_poles, window_residues, s, remainder_nominal, max_poly_degree=2
-                    # )
-                elif background_method == "pseudo":
-                    pass
-                # else:
-                #     raise ValueError("invalid method")
-            else:
-                poly_coeffs = [None] * n_channels
-
-            # Evaluate on E_window
-            if len(window_poles) > 0:
-                denominators = s[:, np.newaxis] - window_poles[np.newaxis, :]
-
-            if background_method == "poly":
+                # Fit polynomial for each channel
                 for ch in range(n_channels):
-                    if window_residues.shape[1] > 0:
-                        xs_poles = np.sum((window_residues[ch] / denominators).real, axis=1)
-                    else:
-                        xs_poles = np.zeros_like(E_window)
+                    if (
+                        remainder_nominal.shape[1] > deg
+                        and np.max(np.abs(remainder_nominal[ch, :])) > 1e-12
+                    ):
+                        p = np.polyfit(s_remainder, remainder_nominal[ch, :], deg=deg)
+                        xs_window[ch] += np.polyval(p, s).real
 
-                        xs_poly = np.polyval(poly_coeffs[ch], s).real
-                        xs_poles += xs_poly
-            elif background_method == "pseudo":
-                p_poles, p_residues = fit_pseudopoles_adaptive(s_remainder, remainder_nominal, bcf_nominal,
-                                        max_poles=6, rtol=1e-6, verbose=False)
-                print(window_poles.shape, p_poles.shape, window_residues.shape, p_residues.shape)
-                fit_poles = np.concatenate([window_poles, p_poles])
-                fit_res = np.hstack([window_residues, p_residues])
-                xs_poles = evaluate_simple(E_window, fit_poles, fit_res, fit_space=fit_space)
-            total_xs[:, mask] = xs_poles
+            # Store results
+            total_xs[:, mask] = xs_window
 
             if iw % 100 == 0:
-                print(f"Processed window {iw}/{len(windows)}")
+                print(f"Processed window {iw}/{n_windows}")
 
         return total_xs
 
@@ -470,7 +320,7 @@ def plot_wmp_comparison(
         mask = ref_xs != 0
         rel_error = np.full_like(ref_xs, np.nan)
         rel_error[mask] = np.abs(wmp_xs[mask] - ref_xs[mask]) / ref_xs[mask] * 100
-        abs_err = np.abs(wmp_xs-ref_xs)
+        abs_err = np.abs(wmp_xs - ref_xs)
         ax2.semilogy(E_grid, abs_err, "k-", linewidth=1.5)
         # ax2.semilogy(E_grid, rel_error, "k-", linewidth=1.5)
         ax2.set_xlabel("Energy (eV)")
@@ -509,14 +359,15 @@ def plot_wmp_comparison(
 
 
 if __name__ == "__main__":
-    filepath = "aaa_analyze_constant/U238_wmp.h5"
+    # filepath = "aaa_analyze_constant/U238_wmp.h5"
     # filepath = "aaa_test/U238_wmp_5e-4_328p.h5"
+    # filepath = "data/output/aaa_in_h5wmp_format/U238_wmp_5e-4_2000p_sqrtE.h5"
     name = "U238"
-    njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
+    njoy_pickle_path = f"data/input/NJOY_pickles/{name}_NJOY.pickle"
     # bounds={"E_min": 17400, "E_max": 17600}
     # bounds = {"E_min": 0, "E_max": 2e4}
-    bounds = {"E_min": 1, "E_max": 60}
-    # bounds = {"E_min": 0.1, "E_max": 19999}
+    # bounds = {"E_min": 1, "E_max": 60}
+    bounds = {"E_min": 0.1, "E_max": 19999}
     # bounds = {"E_min": 0, "E_max": 9999}
 
     reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
@@ -530,9 +381,13 @@ if __name__ == "__main__":
             reference_data["fission"],
         ]
     )
-    background_method = "pseudo"
-    background_method = None
+    background_method = "poly"
     results = read_and_evaluate_wmp_debug(filepath, E_grid, background_method, deg=3)
     plot_wmp_comparison(
-        results, reference_data, E_grid, name="U238", path_out="./plots", T=0.0
+        results,
+        reference_data,
+        E_grid,
+        name="U238",
+        path_out="data/output/plotsdoppler",
+        T=0.0,
     )

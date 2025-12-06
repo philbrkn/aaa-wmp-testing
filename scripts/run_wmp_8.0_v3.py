@@ -1,18 +1,22 @@
+import glob
 import os
 import sys
-import glob
 import time
-from multiprocessing import Pool
-from contextlib import redirect_stdout
 import traceback
+from contextlib import redirect_stdout
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from multipole_deplete_v3 import *
 
-# neutron_dir = './endf-b-viii.0/neutrons/'
-neutron_dir = 'ENDF-VIII-data'
-endf_files = [i for i in glob.glob(os.path.join(neutron_dir, "*.endf")) if os.path.isfile(i)]
-out_dir = "WMP_Lib_viii.0"
+neutron_dir = "data/input/ENDF/ENDF-VIII-data"
+endf_files = [
+    i for i in glob.glob(os.path.join(neutron_dir, "*.endf")) if os.path.isfile(i)
+]
+out_dir = "data/output/WMP_Lib_viii.0"
+mp_file = "data/output/WMP_Lib_viii.0/U238/U238_mp-VF.pickle"
+# mp_file = "data/output/WMP_Lib_viii.0/U238/U238_mp_328p_1e-3.pickle"
 
 print("Start processing {} nuclides - {}".format(len(endf_files), time.ctime()))
 
@@ -28,22 +32,28 @@ def process(endf_file):
 
     # run wmp
     time_start = time.time()
-    wmp_file = os.path.join(out_dir, nuc_name+".h5")
+    wmp_file = os.path.join(path_out, nuc_name + ".h5")
 
     if os.path.exists(wmp_file):
         print("Existed file for {}, processing will be skipped.".format(wmp_file))
         return
     try:
         if not os.path.isfile(wmp_file):
-            # mp_file = os.path.join(path_out, nuc_name+"_mp-VF.pickle")
-            mp_file = "WMP_Lib_viii.0/U238/U238_mp-AAA-sqrtE-1e-3.pickle"
-            njoy_input = Path(__file__).parent / "NJOY_pickles" / f"{nuc_name}_NJOY.pickle"
+            njoy_input = f"data/input/NJOY_pickles/{nuc_name}_NJOY.pickle"
             if os.path.isfile(mp_file):
-                with open(os.path.join(path_out, nuc_name+"_windowing.log"),'w') as f:
+                with open(
+                    os.path.join(path_out, nuc_name + "_windowing.log"), "w"
+                ) as f:
                     with redirect_stdout(f):
                         try:
-                            nuc = WindowedMultipole.from_multipole(mp_file, search=True, log=2, n_threads=20,
-                                                                   njoy_input=njoy_input, method="AAA")
+                            nuc = WindowedMultipole.from_multipole(
+                                mp_file,
+                                search=True,
+                                log=2,
+                                n_threads=20,
+                                njoy_input=njoy_input,
+                                method="VF",
+                            )
                         except Exception as e:
                             print(f"Failed with rtol 1e-3: {str(e)}")
                             print(f"Traceback: {traceback.format_exc()}")
@@ -56,19 +66,19 @@ def process(endf_file):
             #         with redirect_stdout(f):
             #             try:
             #                 nuc = WindowedMultipole.from_endf(endf_file,
-            #                        vf_options={"log":True, "path_out":path_out}, 
+            #                        vf_options={"log":True, "path_out":path_out},
             #                        wmp_options={"search":True, "log":True})
             #             except:
             #                 nuc = WindowedMultipole.from_endf(endf_file,
-            #                        vf_options={"log":True, "rtol":5e-3, "path_out":path_out}, 
+            #                        vf_options={"log":True, "rtol":5e-3, "path_out":path_out},
             #                        wmp_options={"search":True, "rtol":5e-3, "log":True})
             try:
                 nuc.export_to_hdf5(wmp_file)
-            except Exception as e:
+            except Exception:
                 print(f"Traceback: {traceback.format_exc()}")
-        print('Done. {} {:.1f} s'.format(nuc_name, time.time()-time_start))
+        print("Done. {} {:.1f} s".format(nuc_name, time.time() - time_start))
     except:
-        print('Failed. {} {:.1f} s'.format(nuc_name, time.time()-time_start))
+        print("Failed. {} {:.1f} s".format(nuc_name, time.time() - time_start))
 
     sys.stdout.flush()
 
@@ -78,12 +88,12 @@ for endf_file in endf_files:
     nuc_name = (IncidentNeutron.from_endf(endf_file)).name
     if nuc_name != "U238":  # DEBUG #
         continue
-    wmp_file = os.path.join(out_dir, nuc_name+".h5")
+    wmp_file = os.path.join(out_dir, nuc_name + ".h5")
     if os.path.isfile(wmp_file):
         # print message
         time_start = time.time()
         print("Processing {} - {} {} ".format(endf_file, nuc_name, time.ctime()))
-        print('Done. {} {:.1f} s'.format(nuc_name, time.time()-time_start))
+        print("Done. {} {:.1f} s".format(nuc_name, time.time() - time_start))
     else:
         todo_files.append(endf_file)
 
@@ -96,4 +106,3 @@ for endf_file in todo_files:
     process(endf_file)
 
 print("Finish processing all nuclides - {}".format(time.ctime()))
-

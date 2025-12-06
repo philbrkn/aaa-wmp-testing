@@ -1,11 +1,14 @@
-import h5py
-from openmc.data.multipole_old import WindowedMultipole
-# from multipole_deplete_v3 import WindowedMultipole
-import numpy as np
-import pickle
-from pathlib import Path
 import os
+import pickle
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 import matplotlib.pyplot as plt
+import numpy as np
+from multipole_deplete_v3 import WindowedMultipole
+
+# from openmc.data.multipole_old import WindowedMultipole
 
 
 def plot_wmp_comparison(
@@ -36,6 +39,7 @@ def plot_wmp_comparison(
     wmp_absorption = []
     wmp_fission = []
 
+    wmp_data.data[:, 1:] *= -1j
     for E in E_grid:
         sig_s, sig_a, sig_f = wmp_data._evaluate(E, T)
         wmp_elastic.append(sig_s)
@@ -90,10 +94,11 @@ def plot_wmp_comparison(
         ax2.grid(True, which="both", alpha=0.3)
         # horizontal lines
         ax2.grid(which="major", axis="y", linestyle="--", linewidth=1)
-        # vertical lines. 
+        # vertical lines.
         ax2.grid(which="major", axis="x", linestyle="-", linewidth=0.8, alpha=0.7)
         ax2.grid(which="minor", axis="x", linestyle=":", linewidth=0.5, alpha=0.7)
         from matplotlib.ticker import LogLocator
+
         ax2.yaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
         ax2.xaxis.set_major_locator(LogLocator(base=10.0, subs=[1.0], numticks=10))
 
@@ -234,7 +239,7 @@ def count_wmp_poles_in_range(wmp_data, bounds):
     pole_energies = np.real(wmp_data.data[:, 0]) ** 2
 
     # Count poles in the range
-    in_range = (pole_energies >= bounds['E_min']) & (pole_energies <= bounds['E_max'])
+    in_range = (pole_energies >= bounds["E_min"]) & (pole_energies <= bounds["E_max"])
     n_poles = np.sum(in_range)
 
     print(f"Energy range: {bounds['E_min']:.2e} to {bounds['E_max']:.2e} eV")
@@ -242,6 +247,7 @@ def count_wmp_poles_in_range(wmp_data, bounds):
     print(f"Total poles in WMP: {len(pole_energies)}")
 
     return n_poles
+
 
 # # Debug the file structure
 # with h5py.File(wmp_file, 'r') as f:
@@ -263,10 +269,21 @@ name = "U238"
 # name = "Zr91"
 # name = "Fe56"
 # wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
-# wmp_file = Path(__file__).parent / "WMP_Lib_viii.0" / "U238_VF-CF.h5"
-wmp_file = "WMP_Lib_viii.0/U238_VF-CF.h5"
-njoy_pickle_path = Path(__file__).parent / "NJOY_pickles" / f"{name}_NJOY.pickle"
+# wmp_file = "data/output/WMP_Lib_viii.0/U238_VF-CF.h5"
+# wmp_file = "data/output/WMP_Lib_viii.0/U238/U238.h5"
+wmp_file = "data/output/WMP_Lib_viii.0/U238/U238_328p_1e-3.h5"
 
+njoy_pickle_path = f"data/input/NJOY_pickles/{name}_NJOY.pickle"
+
+import h5py
+
+with h5py.File(wmp_file, "r") as f:
+    print("File version:", f.attrs["version"])
+    group = list(f.values())[0]
+    data = group["data"][()]
+    print("Data shape:", data.shape)
+    print("Expected for v3: shape[1] should be 6 or 7")
+    print("Expected for v2: shape[1] should be 4 or 5")
 
 wmp = WindowedMultipole(name)
 wmp_data = wmp.from_hdf5(wmp_file)
@@ -277,13 +294,15 @@ print(f"Number of windows {len(wmp_data.windows)}")
 # bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
 # bounds = {"E_min": 785, "E_max": 861}
 # bounds = {"E_min": 17400, "E_max": 17475}
-bounds={"E_min": 30, "E_max": 50}
-# bounds={"E_min": 0, "E_max": 30}
+# bounds = {"E_min": 30, "E_max": 50}
+bounds = {"E_min": 1, "E_max": 20000}
 # bounds = None
 reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
 E_grid = reference_data["energy"]
 
-# plot_wmp_comparison(wmp_data, reference_data, E_grid, name="U238", path_out="./plots")
+plot_wmp_comparison(
+    wmp_data, reference_data, E_grid, name="U238", path_out="data/output/U238/wmp_plots"
+)
 count_wmp_poles_in_range(wmp_data, bounds)
 # print(wmp_data.windows[1:20])
 # print(wmp_data.data.shape[0])
