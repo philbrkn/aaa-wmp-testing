@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from ..core.aaa_fitting import evaluate_miaaa, miaaa_xs
+from ..core.cleanup import spurious_cleanup
 from ..core.conversion import proper_rational
 from ..visualization.plotting import plot_aaa_results
 
@@ -54,6 +55,7 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
     cleanup_tol = kwargs.get("cleanup_tol", 1e-6)
     plot_each_slice = kwargs.get("plot_each_slice", False)
     path_out = kwargs.get("path_out", "./output")
+    fit_E_sigma = kwargs.get("fit_E_sigma", False)  # NEW: option to fit E·σ
 
     energy = data["energy"]
     ce_xs = data["ce_xs"]
@@ -69,6 +71,13 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
     sig_s_piece = ce_xs[0, e_idx]
     sig_a_piece = ce_xs[1, e_idx]
     sig_f_piece = ce_xs[2, e_idx] if fissionable else None
+
+    # NEW: Multiply by energy if fitting E·σ
+    if fit_E_sigma:
+        sig_s_piece = sig_s_piece * E_piece
+        sig_a_piece = sig_a_piece * E_piece
+        if fissionable:
+            sig_f_piece = sig_f_piece * E_piece
 
     channels = [sig_s_piece, sig_a_piece]
     if fissionable:

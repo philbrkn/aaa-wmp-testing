@@ -8,16 +8,17 @@ from aaa_wmp.processing.nuclide_fitter import NuclideFitter
 
 # Direct configuration dictionary
 config_dict = {
-    # "vf_pieces": 328,
+    # "vf_pieces": 50,
     "vf_pieces": 1,
     "mmax": 700,
-    "rtol": 1e-3,
+    "rtol": 2e-3,
     "njoy_error": 5e-4,
-    "bounds": {"E_min": 1, "E_max": 60},
+    "bounds": {"E_min": 30, "E_max": 60},
     # "bounds": {"E_min": 1, "E_max": 20000},
     "plot_each_slice": True,
-    "pole_extraction": "polynomial",
-    "max_poly_degree": 1,
+    # "pole_extraction": "polynomial",
+    # "max_poly_degree": 2,
+    # "pole_extraction": "pseudo_pole",
     "fit_mask_guard": 0.0,
     "space": "sqrt_E",
     "output_format": "mp_data",
@@ -26,6 +27,8 @@ config_dict = {
     "normalize": True,
     "lawson_iter": 0,
     "cleanup": False,
+    # "cleanup": True,
+    "fit_E_sigma": True,
 }
 
 

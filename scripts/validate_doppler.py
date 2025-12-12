@@ -49,7 +49,6 @@ CONFIG = {
     "rtol_threshold": 1e-2,  # 1% relative error
     "atol_threshold": 1e-5,  # barns
     "space": "sqrt_E",
-    "pole_extraction": "polynomial",
 }
 
 # =============================================================================
@@ -82,7 +81,6 @@ def evaluate_with_temperature(
 
     E = np.atleast_1d(E)
     sqrtE = np.sqrt(E)
-    invE = 1.0 / E
 
     # Z is the variable used for pole evaluation
     if fit_space == "sqrt_E":
@@ -115,10 +113,10 @@ def evaluate_with_temperature(
                     xs[ch, i] += (residues[ch, j] * w_val * (-1j)).real
 
     # Add polynomial (needs broadening too for finite T, but skip for now)
-    if poly_coeffs is not None:
-        for ch, p in enumerate(poly_coeffs):
-            if p is not None:
-                xs[ch] += np.real(np.polyval(p, Z))
+    # if poly_coeffs is not None:
+    #     for ch, p in enumerate(poly_coeffs):
+    #         if p is not None:
+    #             xs[ch] += np.real(np.polyval(p, Z))
 
     return xs
 

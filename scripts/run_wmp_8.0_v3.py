@@ -1,5 +1,6 @@
 import glob
 import os
+import pickle
 import sys
 import time
 import traceback
@@ -15,8 +16,9 @@ endf_files = [
     i for i in glob.glob(os.path.join(neutron_dir, "*.endf")) if os.path.isfile(i)
 ]
 out_dir = "data/output/WMP_Lib_viii.0"
-mp_file = "data/output/WMP_Lib_viii.0/U238/U238_mp-VF.pickle"
-# mp_file = "data/output/WMP_Lib_viii.0/U238/U238_mp_328p_1e-3.pickle"
+# mp_file = "data/output/U238/mp_data/U238_mp-VF.pickle"
+mp_file = "data/output/U238/mp_data/U238_mp_50p_2e-3.pickle"
+METHOD = "AAA"
 
 print("Start processing {} nuclides - {}".format(len(endf_files), time.ctime()))
 
@@ -42,17 +44,20 @@ def process(endf_file):
             njoy_input = f"data/input/NJOY_pickles/{nuc_name}_NJOY.pickle"
             if os.path.isfile(mp_file):
                 with open(
-                    os.path.join(path_out, nuc_name + "_windowing.log"), "w"
+                    os.path.join(path_out, nuc_name + "_windowing.log"),
+                    "w",
+                    buffering=1,
                 ) as f:
                     with redirect_stdout(f):
                         try:
                             nuc = WindowedMultipole.from_multipole(
                                 mp_file,
-                                search=True,
+                                search=False,
                                 log=2,
                                 n_threads=20,
                                 njoy_input=njoy_input,
-                                method="VF",
+                                method=METHOD,
+                                rtol=1e-2,
                             )
                         except Exception as e:
                             print(f"Failed with rtol 1e-3: {str(e)}")
@@ -74,6 +79,16 @@ def process(endf_file):
             #                        wmp_options={"search":True, "rtol":5e-3, "log":True})
             try:
                 nuc.export_to_hdf5(wmp_file)
+                # Save pseudopoles separately (HDF5 doesn't handle ragged arrays well)
+                if nuc.pseudo_poles is not None:
+                    pseudo_file = wmp_file.replace(".h5", "_pseudo.pickle")
+                    pseudo_data = {
+                        "pseudo_poles": nuc.pseudo_poles,
+                        "pseudo_residues": nuc.pseudo_residues,
+                    }
+                    with open(pseudo_file, "wb") as f:
+                        pickle.dump(pseudo_data, f)
+                    print(f"Saved pseudopoles to {pseudo_file}")
             except Exception:
                 print(f"Traceback: {traceback.format_exc()}")
         print("Done. {} {:.1f} s".format(nuc_name, time.time() - time_start))

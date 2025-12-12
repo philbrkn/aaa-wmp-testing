@@ -1,8 +1,6 @@
 import numpy as np
 
-from .conversion import przd_for_poles
-from .fitting import evaluate_miaaa
-from scipy.sparse import diags
+from .aaa_fitting import evaluate_miaaa
 
 
 def spurious_cleanup(
@@ -21,7 +19,9 @@ def spurious_cleanup(
     """Spurious poles / froissart doublet cleanup with error monitoring"""
 
     # find negligible residues
-    ii = np.where(np.max(np.abs(res) / np.max(np.abs(F), axis=0), axis=1) < cleanup_tol)[0]
+    ii = np.where(
+        np.max(np.abs(res) / np.max(np.abs(F), axis=0), axis=1) < cleanup_tol
+    )[0]
     ni = len(ii)
     if ni == 0:
         print("  No small residues found, cleanup over.")
@@ -36,14 +36,14 @@ def spurious_cleanup(
         jj = np.argmin(azp)  # index of closest support point
         indices_to_remove.append(jj)
     indices_to_remove = sorted(set(indices_to_remove), reverse=True)
-        # # Remove the deleted support point from Z and F
-        # deleted_point = z[jj]  # Save the deleted point value
-        # z = np.delete(z, jj)
-        # fz = np.delete(fz, jj, axis=1)  # Note: axis=1 for removing column
-        # # Remove corresponding points from Z and F
-        # mask = (Z != deleted_point)
-        # Z = Z[mask]
-        # F = F[mask, :]  # Assuming F is 2D
+    # # Remove the deleted support point from Z and F
+    # deleted_point = z[jj]  # Save the deleted point value
+    # z = np.delete(z, jj)
+    # fz = np.delete(fz, jj, axis=1)  # Note: axis=1 for removing column
+    # # Remove corresponding points from Z and F
+    # mask = (Z != deleted_point)
+    # Z = Z[mask]
+    # F = F[mask, :]  # Assuming F is 2D
     # Now remove from z and fz
     for jj in indices_to_remove:
         z = np.delete(z, jj)
@@ -58,7 +58,7 @@ def spurious_cleanup(
 
     m = len(z)
     k = fz.shape[0]  # Infer k from F dimensions
-    delta = Z[:, None] - z[None, :]   # M x m
+    delta = Z[:, None] - z[None, :]  # M x m
     L_blocks = []
     for i in range(k):
         Li = (F[:, i][:, None] - fz[i, :][None, :]) / delta
@@ -67,7 +67,7 @@ def spurious_cleanup(
     L = np.vstack(L_blocks)
     _, _, Vh = np.linalg.svd(L, full_matrices=False)
     V = Vh.T
-    w = V[:, -1]   # column m, zero-based
+    w = V[:, -1]  # column m, zero-based
 
     # pol = przd_for_poles(z, w, deflation_tol=1e-14)
     # return pol
@@ -83,7 +83,6 @@ def spurious_cleanup(
     initial_error = evaluate_approximation_error(z, fz, w, Z, target_channels, space)
     if log:
         print(f"Initial approximation error: {initial_error:.3e}")
-
 
     # Find candidates for removal
     pole_candidates = find_close_pole_zero_pairs(pol, z, cleanup_tol)
@@ -118,7 +117,9 @@ def spurious_cleanup(
         else:
             test_fz = np.array([test_fs, test_fa])
 
-        test_error = evaluate_approximation_error(test_z, test_fz, test_w, Z, target_channels)
+        test_error = evaluate_approximation_error(
+            test_z, test_fz, test_w, Z, target_channels
+        )
 
         error_ratio = test_error / initial_error if initial_error > 0 else float("inf")
 
@@ -133,10 +134,14 @@ def spurious_cleanup(
             )
             points_removed += 1
             if log:
-                print(f"Removed support point {candidate}: error ratio {error_ratio:.2f}")
+                print(
+                    f"Removed support point {candidate}: error ratio {error_ratio:.2f}"
+                )
         else:
             if log:
-                print(f"Keeping support point {candidate}: removal would increase error to {error_ratio:.2f}x")
+                print(
+                    f"Keeping support point {candidate}: removal would increase error to {error_ratio:.2f}x"
+                )
 
     if log:
         # Check if error stays acceptable
@@ -145,8 +150,12 @@ def spurious_cleanup(
         else:
             current_fz = np.array([current_fs, current_fa])
 
-        final_error = evaluate_approximation_error(current_z, current_fz, current_w, Z, target_channels, space)
-        print(f"Cleanup complete: removed {points_removed} points, final error: {final_error:.3e}")
+        final_error = evaluate_approximation_error(
+            current_z, current_fz, current_w, Z, target_channels, space
+        )
+        print(
+            f"Cleanup complete: removed {points_removed} points, final error: {final_error:.3e}"
+        )
 
     return current_z, current_fs, current_fa, current_ff, current_w
 
@@ -186,18 +195,19 @@ def find_close_pole_zero_pairs(poles, support_points, cleanup_tol):
     """
     if len(poles) == 0 or len(support_points) == 0:
         return []
-    
+
     candidates = []
-    
+
     for i, pole in enumerate(poles):
         # Find closest support point to this pole
         distances = np.abs(support_points - pole)
         min_dist = np.min(distances)
-        
+
         if min_dist < cleanup_tol:
             candidates.append(i)
-    
+
     return candidates
+
 
 def evaluate_approximation_error(
     z, fz, w, Z, target_channels, space="E", error_type="relative"

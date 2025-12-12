@@ -1,10 +1,10 @@
-# conversion.py
 """
 Enhanced proper_rational function with built-in remainder analysis.
 """
 
 import numpy as np
 import scipy.linalg as la
+from openmc.data.multipole_old import WindowedMultipole
 
 
 def evaluate_simple(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
@@ -76,8 +76,87 @@ def evaluate_simple(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
     return np.asarray([elastic_xs, absorption_xs, fission_xs])
 
 
-def proper_rational(z, wnum, wden, fz, bcf, Z,
-                    pole_extraction=None, max_poly_degree=0):
+def evaluate_openmc(E, poles, residues, poly_coeffs=None):
+    E = np.asarray(E)
+    poles = np.asarray(poles)
+    residues = np.asarray(residues)
+
+    sig_s = np.zeros_like(E, dtype=float)
+    sig_a = np.zeros_like(E, dtype=float)
+    sig_f = np.zeros_like(E, dtype=float)
+
+    for i, e_pt in enumerate(E):
+        sqrtE = np.sqrt(e_pt)
+        invE = 1.0 / e_pt
+
+        # polynomial contribution to sigma: poly(s)/E
+        if poly_coeffs is not None and poly_coeffs.size > 0:
+            temp = invE
+            for q in range(poly_coeffs.shape[1]):
+                sig_s[i] += poly_coeffs[0, q] * temp
+                sig_a[i] += poly_coeffs[1, q] * temp
+                if residues.shape[0] == 3:
+                    sig_f[i] += poly_coeffs[2, q] * temp
+                temp *= sqrtE
+
+        # pole contribution
+        for j in range(len(poles)):
+            psi_chi = -1j / (poles[j] - sqrtE)
+            c_temp = psi_chi * invE
+            sig_s[i] += (residues[0, j] * c_temp).real
+            sig_a[i] += (residues[1, j] * c_temp).real
+            if residues.shape[0] == 3:
+                sig_f[i] += (residues[2, j] * c_temp).real
+
+    return sig_s, sig_a, sig_f
+
+
+# def evaluate_openmc(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
+#     """
+#     use _evaluate from multipole.py in openmc.data
+#     """
+#     # ======================================================================
+#     # Bookkeeping
+#
+#     def faddeeva(z):
+#         """
+#         copy from openmc
+#         """
+#         from scipy.special import wofz
+#
+#         if np.angle(z) > 0:
+#             return wofz(z)
+#         else:
+#             return -np.conj(wofz(z.conjugate()))
+#
+#     sig_s_list = []
+#     sig_a_list = []
+#     sig_f_list = []
+#     for i, e_pt in enumerate(Z):
+#         # Initialize the ouptut cross sections.
+#         sig_s = 0.0
+#         sig_a = 0.0
+#         sig_f = 0.0
+#         # Define some frequently used variables.
+#         sqrtE = np.sqrt(e_pt)
+#         # sqrtE = 0
+#         # ======================================================================
+#         # Add the contribution from the poles in this window.
+#         # If at 0K, use asymptotic form.
+#         for j in range(len(poles)):
+#             psi_chi = -1j / (poles[j] - sqrtE)
+#             c_temp = psi_chi / e_pt
+#             sig_s += (residues[0, j] * c_temp).real
+#             sig_a += (residues[1, j] * c_temp).real
+#             if len(residues) == 3:
+#                 sig_f += (residues[2, j] * c_temp).real
+#         sig_s_list.append(sig_s)
+#         sig_a_list.append(sig_a)
+#         sig_f_list.append(sig_f)
+#     return sig_s_list, sig_a_list, sig_f_list
+
+
+def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_degree=0):
     """
     Convert barycentric rational approximation to proper rational form.
 
@@ -157,6 +236,8 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     # pra = physical_res.T @ CC.T
 
     # physical_res = physical_res.T
+
+    # Separate real and complex poles
     res_transposed = physical_res.T
     # Separate real and complex poles
     real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
@@ -165,17 +246,24 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
     # (the conjugates are implied)
     conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
     # Build WMP-compatible poles and residues
-    physical_poles = np.concatenate([physical_poles[real_idx], physical_poles[conj_idx]])
-    physical_res = np.concatenate([
-        res_transposed[:, real_idx],  # Real pole residues as-is
-        res_transposed[:, conj_idx] * 2  # Complex residues doubled (for conjugate pair)
-    ], axis=1)  # Divide by 1j as per WMP convention
+    physical_poles = np.concatenate(
+        [physical_poles[real_idx], physical_poles[conj_idx]]
+    )
+    physical_res = np.concatenate(
+        [
+            res_transposed[:, real_idx],  # Real pole residues as-is
+            res_transposed[:, conj_idx]
+            * 2,  # Complex residues doubled (for conjugate pair)
+        ],
+        axis=1,
+    )
 
     # Calculate remainder
     CC = 1.0 / (Z[:, np.newaxis] - physical_poles[np.newaxis, :])
     pra = physical_res @ CC.T
     remainder = bcf - pra
     remainder = remainder.real
+
     # Initialize output
     poles = physical_poles.copy()
     res = physical_res.copy()
@@ -187,26 +275,210 @@ def proper_rational(z, wnum, wden, fz, bcf, Z,
         for i in range(k):
             if np.max(np.abs(remainder[i, :])) > 1e-12:
                 # Fit polynomial
-                p = np.polyfit(Z.real if np.allclose(Z.imag, 0) else Z, 
-                               remainder[i, :], max_poly_degree)
+                p = np.polyfit(
+                    Z.real if np.allclose(Z.imag, 0) else Z,
+                    remainder[i, :],
+                    max_poly_degree,
+                )
                 poly_coeffs.append(p)
             else:
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
     elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
-        info = fit_pseudopoles_adaptive(Z, remainder, bcf, pra, max_poles=6, rtol=1e-6)
+        info = {"method": "pseudo_pole", "poly_coeffs": None}
+        p_poles, p_residues = fit_pseudopoles_adaptive(
+            Z,
+            remainder,
+            bcf,
+            max_poles=6,
+            rtol=1e-6,
+            verbose=False,
+        )
+        print(poles.shape, p_poles.shape, res.shape, p_residues.shape)
         # Append pseudo-poles to physical poles
-        if len(poles) > 0:
-            poles = np.concatenate([poles, info["pseudo_poles"]])
-            res = np.vstack([res, info["pseudo_residues"]])
+        if len(p_poles) > 0:
+            poles = np.concatenate([poles, p_poles])
+            res = np.hstack([res, p_residues])
 
     else:
         info = {"method": None}
         info["poly_coeffs"] = [None] * k
 
     # Return in appropriate format
+    # res = res / 1j
     return poles, res, remainder, info
+
+
+def build_wmp_poles(poles_full, tol=1e-10, eps_rel=1e-2):
+    poles_full = np.asarray(poles_full)
+    mp = []
+    for p in poles_full:
+        if p.imag > tol:
+            mp.append(p)
+        elif abs(p.imag) <= tol:
+            eps = eps_rel * max(1.0, abs(p))
+            mp.append(p + 1j * eps)  # keep only the upper representative
+        # drop imag < -tol
+    # optional: deduplicate near-equal poles
+    return np.array(mp)
+
+
+def refit_openmc_residues_with_poly(E, F, poles, poly_deg=0, eps=1e-30):
+    """
+    Fit OpenMC multipole residues (shape k×m) and polynomial in s for F(s)=Eσ(E).
+    poly_deg=0 fits only a constant term; poly_deg=1 fits constant+linear in s.
+    Uses inverse weighting on |F| to target relative error in F.
+    """
+    E = np.asarray(E)
+    s = np.sqrt(E)
+    F = np.asarray(F)
+    if F.ndim == 1:
+        F = F.reshape(1, -1)
+
+    poles = np.asarray(poles)
+    n = s.size
+    m = poles.size
+    k = F.shape[0]
+
+    # OpenMC 0K kernel for F(s): Re( R * 1j/(s - p) )
+    B = 1j / (s[:, None] - poles[None, :])  # (n,m) complex
+    U = B.real
+    V = B.imag
+    M_pf = np.hstack([U, -V])  # (n,2m)
+
+    # polynomial basis in s for F(s)
+    if poly_deg >= 0:
+        P = np.vstack([s**q for q in range(poly_deg + 1)]).T  # (n, d+1)
+        M = np.hstack([M_pf, P])  # (n, 2m+d+1)
+    else:
+        P = None
+        M = M_pf
+
+    R = np.zeros((k, m), dtype=np.complex128)
+    a = np.zeros((k, 0 if poly_deg < 0 else poly_deg + 1), dtype=float)
+
+    for c in range(k):
+        b = F[c]
+        w = 1.0 / np.maximum(np.abs(b), eps)  # VF-like relative weighting in F
+        Mw = M * w[:, None]
+        bw = b * w
+
+        sol, *_ = np.linalg.lstsq(Mw, bw, rcond=None)
+
+        x = sol[:m]
+        y = sol[m : 2 * m]
+        R[c] = x + 1j * y
+
+        if poly_deg >= 0:
+            a[c] = sol[2 * m :]
+
+    return R, a
+
+
+def refit_residues_realpart(s, f, poles, weights=None):
+    """
+    Fit r (complex) so that Re(A r) ≈ f, where A_ij = 1/(s_i - p_j).
+    s: (n,)
+    f: (k,n) real (this should be E*sigma(E), in sqrt(E) space)
+    poles: (m,)
+    returns r_vf: (k,m) complex
+    """
+    s = np.asarray(s)
+    poles = np.asarray(poles)
+    f = np.asarray(f)
+    if f.ndim == 1:
+        f = f.reshape(1, -1)
+
+    A = 1.0 / (s[:, None] - poles[None, :])  # (n,m) complex
+    Ar = A.real
+    Ai = A.imag
+    M = np.hstack([Ar, -Ai])  # (n,2m)
+
+    # if weights is not None:
+    #     w = np.asarray(weights).reshape(-1, 1)  # (n,1)
+    #     M_w = M * w
+    # else:
+    #     M_w = M
+
+    r = np.zeros((f.shape[0], poles.size), dtype=np.complex128)
+    for c in range(f.shape[0]):
+        b = f[c]
+        # if weights is not None:
+        #     b = b * weights
+        # VF-like inverse weighting to target relative error in f
+        eps = 1e-30
+        w = 1.0 / np.maximum(np.abs(b), eps)
+        Mw = M * w[:, None]
+        bw = b * w
+        xy, *_ = np.linalg.lstsq(Mw, bw, rcond=None)  # (2m,)
+        x = xy[: poles.size]
+        y = xy[poles.size :]
+        r[c] = x + 1j * y
+    return r
+
+
+def create_single_window_wmp(poles, residues, E_min, E_max, sqrtAWR, name="test"):
+    """
+    Create a WindowedMultipole object with a single window from AAA poles/residues.
+
+    Parameters
+    ----------
+    poles : ndarray
+        Complex poles from AAA (in sqrt_E space)
+    residues : ndarray
+        Residues from AAA, shape (n_channels, n_poles)
+    E_min, E_max : float
+        Energy bounds in eV
+    sqrtAWR : float
+        sqrt(atomic weight ratio)
+    name : str
+        Nuclide name
+
+    Returns
+    -------
+    WindowedMultipole
+        WMP object ready for _evaluate_aaa
+    """
+    n_poles = len(poles)
+    n_channels = residues.shape[0]
+    fissionable = n_channels == 3
+
+    # Sort poles by real part
+    sort_idx = np.argsort(poles.real)
+    poles = poles[sort_idx]
+    residues = residues[:, sort_idx]
+
+    # Build data array: [pole, res_s, res_a, (res_f)]
+    if fissionable:
+        data = np.zeros((n_poles, 4), dtype=complex)
+    else:
+        data = np.zeros((n_poles, 3), dtype=complex)
+
+    data[:, 0] = poles
+    data[:, 1] = residues[0]
+    data[:, 2] = residues[1]
+    if fissionable:
+        data[:, 3] = residues[2]
+
+    # Create WMP object
+    wmp = WindowedMultipole(name)
+    wmp.data = data
+    wmp.E_min = E_min
+    wmp.E_max = E_max
+    wmp.sqrtAWR = sqrtAWR
+    wmp.spacing = np.sqrt(E_max) - np.sqrt(E_min)  # single window spans entire range
+    wmp.windows = np.array([[1, n_poles]])  # 1-indexed, all poles in one window
+
+    # No pseudopoles for simple case
+    wmp.pseudo_poles = [np.array([])]
+    wmp.pseudo_residues = [np.zeros((n_channels, 0))]
+
+    # Dummy curvefit for compatibility
+    wmp.curvefit = np.zeros((1, 1, n_channels))
+    wmp.broaden_poly = np.array([False])
+
+    return wmp
 
 
 def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
@@ -233,8 +505,8 @@ def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
         pseudo_poles = np.concatenate([pseudo_poles_left, pseudo_poles_right])
     else:
         # For grids including zero, use linear spacing
-        left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles//2)
-        right_poles = Z_max + Z_range * np.linspace(0.5, 2.0, (n_pseudo_poles+1)//2)
+        left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles // 2)
+        right_poles = Z_max + Z_range * np.linspace(0.5, 2.0, (n_pseudo_poles + 1) // 2)
         pseudo_poles = np.concatenate([left_poles, right_poles])
 
     # Ensure pseudo-poles are real for real problems
@@ -299,7 +571,7 @@ def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
 def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=True):
     """
     Simple loop to find best pseudo-pole configuration.
-    
+
     Try different numbers of poles and different distances.
     Pick the best one.
     """
@@ -311,7 +583,8 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=
     # Define distance multipliers to try
     if Z_min > 0:
         # For positive domains, use multiplicative factors
-        distance_factors = [2, 5, 10, 100, 1000, 1e4, 1e5, 1e6, 1e7, 1e8]
+        # distance_factors = [2, 5, 10, 100, 1000, 1e4, 1e5, 1e6, 1e7, 1e8]
+        distance_factors = [1e4, 1e5, 1e6, 1e7, 1e8]
     else:
         # For domains with negative values, use range multiples
         distance_factors = [0.5, 1, 2, 5, 10, 50, 100]
@@ -322,7 +595,6 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=
     # Simple loop: try different pole counts and distances
     for n_poles in range(1, max_poles + 1):
         for dist_factor in distance_factors:
-
             # Place poles symmetrically
             poles = []
             if Z_min > 0:
@@ -364,7 +636,9 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=
 
             for i in range(k):
                 if np.max(np.abs(remainder[i, :])) > 1e-12:
-                    residues[:, i], _, _, _ = np.linalg.lstsq(C, remainder[i, :], rcond=1e-12)
+                    residues[:, i], _, _, _ = np.linalg.lstsq(
+                        C, remainder[i, :], rcond=1e-12
+                    )
 
             # Calculate approximation
             approx = residues.T @ C.T
@@ -382,21 +656,25 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=
             if max_rel_error < best_error:
                 best_error = max_rel_error
                 best_config = {
-                    'n_poles': n_poles,
-                    'poles': poles,
-                    'residues': residues,
-                    'dist_factor': dist_factor,
-                    'error': max_rel_error
+                    "n_poles": n_poles,
+                    "poles": poles,
+                    "residues": residues,
+                    "dist_factor": dist_factor,
+                    "error": max_rel_error,
                 }
 
                 if verbose:
-                    print(f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best")
+                    print(
+                        f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best"
+                    )
 
                 # Stop if good enough
                 if max_rel_error < rtol:
                     break
             elif verbose:  # Only print first few
-                print(f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}")
+                print(
+                    f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}"
+                )
 
         # Stop if we found good solution
         if best_error < rtol:
@@ -408,7 +686,9 @@ def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=
         # bestpra += best_config['residues'].T @ C_best.T
 
         if verbose:
-            print(f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance")
+            print(
+                f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance"
+            )
             print(f"Poles: {best_config['poles']}")
             print(f"Final relative error: {best_config['error']:.3e}")
 

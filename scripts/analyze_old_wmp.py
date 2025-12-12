@@ -271,7 +271,7 @@ name = "U238"
 # wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
 # wmp_file = "data/output/WMP_Lib_viii.0/U238_VF-CF.h5"
 # wmp_file = "data/output/WMP_Lib_viii.0/U238/U238.h5"
-wmp_file = "data/output/WMP_Lib_viii.0/U238/U238_328p_1e-3.h5"
+wmp_file = "data/output/WMP_Lib_viii.0/U238/U238_4kphys_6kpp.h5"
 
 njoy_pickle_path = f"data/input/NJOY_pickles/{name}_NJOY.pickle"
 

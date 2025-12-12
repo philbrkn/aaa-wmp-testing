@@ -5,6 +5,7 @@ from copy import deepcopy
 from math import erf, exp, pi, sqrt
 from multiprocessing import Pool
 from numbers import Real
+from types import SimpleNamespace
 
 import h5py
 import matplotlib.pyplot as plt
@@ -20,7 +21,7 @@ from openmc.exceptions import DataError
 from openmc.mixin import EqualityMixin
 from scipy.signal import find_peaks
 
-from aaa_wmp.core.conversion import evaluate_simple
+from aaa_wmp.core.conversion import evaluate_simple, fit_pseudopoles_adaptive
 
 WMP_VERSION_MAJOR = 1
 WMP_VERSION_MINOR = 2  # 1 for old, 2 for new
@@ -64,35 +65,76 @@ TEMPERATURE_LIMIT = 3000
 DETAILED_LOGGING = 2
 
 
-# Helper function for parallel processing
 def test_window_config(args):
-    """Test a single window configuration (n_w, n_cf) combination."""
-    mp_data, n_w, n_cf, kwargs, log = args
-
-    if log:
-        print("Testing N_win={} N_cf={}".format(n_w, n_cf))
-
-    # Update arguments dictionary
-    kwargs = kwargs.copy()  # Make a copy to avoid shared state issues
-    kwargs.update(n_win=n_w, n_cf=n_cf)
+    """Test a single window configuration."""
+    mp_data, n_w, config_param, kwargs, log, method = args
+    kwargs = kwargs.copy()
 
     try:
-        wmp = _windowing(mp_data, log=log, **kwargs)
+        if method == "VF":
+            if log:
+                print(f"Testing N_win={n_w} N_cf={config_param}")
+            kwargs.update(n_win=n_w, n_cf=config_param)
+            wmp = _windowing(mp_data, log=False, **kwargs)
+            metric = -(
+                wmp.poles_per_window * 10.0 + wmp.fit_order * 1.0 + wmp.n_windows * 0.01
+            )
 
-        # Calculate metric
-        metric = -(
-            wmp.poles_per_window * 10.0 + wmp.fit_order * 1.0 + wmp.n_windows * 0.01
-        )
+        elif method == "AAA":
+            if log:
+                print(f"Testing N_win={n_w} max_pseudo={config_param}")
+
+            result = window_aaa_data(
+                mp_data,
+                n_win=n_w,
+                max_pseudo_poles=config_param,
+                rtol=kwargs.get("rtol", 1e-3),
+                atol=kwargs.get("atol", 1e-5),
+                log=log,
+            )
+
+            # Calculate metrics
+            n_phys_poles = len(result["data"])
+            n_pseudo_total = sum(len(pp) for pp in result["pseudo_poles"])
+            n_windows = len(result["windows"])
+
+            phys_per_window = n_phys_poles / n_windows if n_windows > 0 else 0
+            pseudo_per_window = n_pseudo_total / n_windows if n_windows > 0 else 0
+
+            # Metric: prefer fewer poles overall
+            metric = -(
+                phys_per_window * 10.0
+                + pseudo_per_window * 5.0  # pseudopoles cheaper than physical
+                + n_windows * 0.01
+            )
+
+            # Wrap in SimpleNamespace
+            wmp = SimpleNamespace(
+                data=result["data"],
+                windows=result["windows"],
+                pseudo_poles=result["pseudo_poles"],
+                pseudo_residues=result["pseudo_residues"],
+                spacing=result["spacing"],
+                E_min=result["E_min"],
+                E_max=result["E_max"],
+                sqrtAWR=result["sqrtAWR"],
+                fissionable=result["fissionable"],
+                n_windows=n_windows,
+                n_poles=n_phys_poles,
+                n_pseudo_total=n_pseudo_total,
+                poles_per_window=phys_per_window,
+                pseudo_per_window=pseudo_per_window,
+            )
 
         if log:
-            print("Completed N_win={} N_cf={}, metric={}".format(n_w, n_cf, metric))
+            print(f"Completed N_win={n_w}, metric={metric:.3f}")
+        return (metric, wmp, n_w, config_param)
 
-        return (metric, wmp, n_w, n_cf)
     except Exception as e:
         if log:
-            print("Failed N_win={} N_cf={}: {}".format(n_w, n_cf, str(e)))
+            print(f"Failed N_win={n_w}: {e}")
             print(f"Traceback: {traceback.format_exc()}")
-        return (None, None, n_w, n_cf)
+        return (None, None, n_w, config_param)
 
 
 def _faddeeva(z):
@@ -904,38 +946,6 @@ def _windowing(
                         print(f"  Using {rp - lp} poles")
                     break
 
-            # DEBUG:
-            # print(f"WMP poles shape: {len(mp_poles), len(mp_poles[0])}")
-            # print(f"WMP residues shape: {len(mp_residues), len(mp_residues[0])}")
-            # print(f"Sample residue values (first 3): {mp_residues[:][:3] if len(mp_residues[0]) >= 3 else mp_residues}")
-            # # In _windowing, at the start of the first window:
-            # print("\n=== FIRST WINDOW DEBUG ===")
-            # print(f"Window {iw+1}: energy range [{e_start:.3e}, {e_end:.3e}] eV")
-            # print(f"Window sqrt(E) range: [{inbegin:.3e}, {inend:.3e}]")
-            # print(f"Piece {i_piece}: contains {n_poles} poles")
-            # print(f"Poles in piece: {poles[:5] if len(poles) > 5 else poles}")  # First 5 poles
-            # print(f"Residues shape: {residues.shape}")
-            # print(f"Residues sample (elastic): {residues[0, :3] if residues.shape[1] >= 3 else residues[0]}")
-            # # After evaluating reference cross-sections:
-            # print(f"\n=== XS EVALUATION ===")
-            # print(f"Energy points: {n_points} from {energy[0]:.3e} to {energy[-1]:.3e} eV")
-            # print(f"XS_ref shape: {xs_ref.shape}")
-            # print(f"XS_ref elastic range: [{xs_ref[0].min():.3e}, {xs_ref[0].max():.3e}]")
-            # print(f"XS_ref absorption range: [{xs_ref[1].min():.3e}, {xs_ref[1].max():.3e}]")
-            # if xs_ref.shape[0] > 2:
-            #     print(f"XS_ref fission range: [{xs_ref[2].min():.3e}, {xs_ref[2].max():.3e}]")
-            # # Check for NaN/Inf:
-            # print(f"XS_ref has NaN: {np.any(np.isnan(xs_ref))}")
-            # print(f"XS_ref has Inf: {np.any(np.isinf(xs_ref))}")
-            # # After curve fitting attempt (inside the while loop):
-            # print(f"\n=== CURVE FIT ATTEMPT (poles {lp} to {rp}) ===")
-            # print(f"XS_wp contribution range: [{xs_wp.min():.3e}, {xs_wp.max():.3e}]")
-            # print(f"Curve fit coefficients: {coefs.flatten()[:3]}...")  # First 3 coeffs
-            # print(f"XS_fit range: [{xs_fit.min():.3e}, {xs_fit.max():.3e}]")
-            # print(f"Max absolute error: {abserr.max():.3e}")
-            # print(f"Max relative error: {relerr[~np.isnan(relerr)].max():.3e}")
-            # print(f"Points exceeding rtol: {np.sum(relerr > rtol)} / {relerr.size}")
-
             # we expect pure curvefit will succeed for the first window
             # TODO: find the energy boundary below which no poles are allowed
             if iw == 0:
@@ -1004,6 +1014,339 @@ def _windowing(
     return wmp
 
 
+def window_aaa_data(
+    mp_data,
+    n_win=None,
+    spacing=None,
+    rtol=1e-3,
+    atol=1e-5,
+    max_pseudo_poles=6,
+    log=False,
+):
+    """
+    Window AAA poles/residues using WMP-style optimization.
+
+    Mirrors _windowing but uses pseudopoles instead of polynomial curvefit.
+    """
+    log = True
+    # Unpack multipole data
+    name = mp_data["name"]
+    awr = mp_data["AWR"]
+    E_min = mp_data["E_min"]
+    E_max = mp_data["E_max"]
+    mp_poles = mp_data["poles"]
+    mp_residues = mp_data["residues"]
+
+    # Flatten if not already a list of pieces
+    if not isinstance(mp_poles, list):
+        mp_poles = [mp_poles]
+        mp_residues = [mp_residues]
+
+    n_pieces = len(mp_poles)
+    piece_width = (sqrt(E_max) - sqrt(E_min)) / n_pieces
+    alpha = awr / (K_BOLTZMANN * TEMPERATURE_LIMIT)
+
+    n_channels = mp_residues[0].shape[0]
+    fissionable = n_channels == 3
+
+    if log:
+        print(f"Channels: {n_channels}, Fissionable: {fissionable}")
+        print(f"Pieces: {n_pieces}")
+
+    # Determine window size
+    if n_win is None:
+        if spacing is not None:
+            n_win = int((sqrt(E_max) - sqrt(E_min)) / spacing)
+            E_max = (sqrt(E_min) + n_win * spacing) ** 2
+        else:
+            n_win = 1000
+
+    spacing = (sqrt(E_max) - sqrt(E_min)) / n_win
+
+    if spacing > piece_width:
+        raise ValueError("Window spacing cannot be larger than piece spacing.")
+
+    if log:
+        print(f"Windowing: {n_win} windows, spacing={spacing:.6f}")
+        print(f"Energy range: {E_min:.3e} to {E_max:.3e} eV")
+        print(f"rtol={rtol}, atol={atol}, max_pseudo={max_pseudo_poles}")
+
+    # Sort poles by real part within each piece
+    for ip in range(n_pieces):
+        indices = np.argsort(mp_poles[ip].real)
+        mp_poles[ip] = mp_poles[ip][indices]
+        mp_residues[ip] = mp_residues[ip][:, indices]
+
+    # Track which poles are used
+    poles_unused = [np.ones(len(p), dtype=int) for p in mp_poles]
+
+    # Storage for window data
+    win_data = []  # (i_piece, lp, rp, pseudo_poles, pseudo_residues)
+
+    for iw in range(n_win):
+        if log and iw % 100 == 0:
+            print(f"Processing window {iw + 1}/{n_win}...")
+
+        # Inner window boundaries
+        inbegin = sqrt(E_min) + spacing * iw
+        inend = inbegin + spacing
+        incenter = (inbegin + inend) / 2.0
+
+        # Extend for Doppler broadening
+        if iw == 0 or sqrt(alpha) * inbegin < 4.0:
+            e_start = inbegin**2
+        else:
+            e_start = max(E_min, (sqrt(alpha) * inbegin - 4.0) ** 2 / alpha)
+        e_end = min(E_max, (sqrt(alpha) * inend + 4.0) ** 2 / alpha)
+
+        # Locate piece and poles
+        i_piece = min(n_pieces - 1, int((inbegin - sqrt(E_min)) / piece_width + 0.5))
+        poles = mp_poles[i_piece]
+        residues = mp_residues[i_piece]
+        n_poles = len(poles)
+
+        # Generate energy grid for this window
+        n_points = min(max(100, int((e_end - e_start) * 4)), 10000)
+        sqrt_E = np.linspace(sqrt(e_start), sqrt(e_end), n_points)
+        energy = sqrt_E**2
+
+        # Reference: full pole expansion (like WMP does)
+        xs_ref = evaluate_simple(energy, poles, residues, fit_space="sqrt_E")
+
+        # Start from center, expand outward
+        center_pole_ind = np.argmin(np.abs(poles.real - incenter))
+        lp = rp = center_pole_ind
+
+        best_lp, best_rp = lp, rp
+        best_pseudo_poles = np.array([])
+        best_pseudo_residues = np.zeros((n_channels, 0))
+
+        best_error = np.inf
+        worse_count = 0
+
+        while True:
+            # Evaluate windowed poles contribution
+            if rp > lp:
+                xs_wp = evaluate_simple(
+                    energy, poles[lp:rp], residues[:, lp:rp], fit_space="sqrt_E"
+                )
+            else:
+                xs_wp = np.zeros_like(xs_ref)
+
+            # Remainder
+            remainder = xs_ref - xs_wp
+
+            # Try to fit pseudopoles to remainder
+            max_remainder = np.max(np.abs(remainder))
+
+            if max_remainder < atol:
+                # No pseudopoles needed
+                pseudo_poles = np.array([])
+                pseudo_residues = np.zeros((n_channels, 0))
+                xs_pseudo = np.zeros_like(xs_ref)
+            else:
+                # Fit pseudopoles
+                result = fit_pseudopoles_adaptive(
+                    sqrt_E,
+                    remainder,
+                    xs_ref,
+                    max_poles=max_pseudo_poles,
+                    rtol=rtol,
+                    verbose=False,
+                )
+
+                if isinstance(result, tuple):
+                    pseudo_poles, pseudo_residues = result
+                    # Evaluate pseudopole contribution
+                    xs_pseudo = np.zeros_like(xs_ref)
+                    for i, sE in enumerate(sqrt_E):
+                        denom = sE - pseudo_poles
+                        for ch in range(n_channels):
+                            xs_pseudo[ch, i] = np.sum(
+                                (pseudo_residues[ch] / denom).real
+                            )
+                else:
+                    pseudo_poles = np.array([])
+                    pseudo_residues = np.zeros((n_channels, 0))
+                    xs_pseudo = np.zeros_like(xs_ref)
+
+            # Assess total fit
+            xs_total = xs_wp + xs_pseudo
+            abserr = np.abs(xs_total - xs_ref)
+
+            with np.errstate(invalid="ignore", divide="ignore"):
+                relerr = abserr / np.abs(xs_ref)
+
+            # Check convergence (same criteria as WMP)
+            # converged = False
+            # if not np.any(np.isnan(abserr)):
+            #     re = relerr[abserr > atol]
+            #     if re.size == 0:
+            #         converged = True
+            #     elif np.all(re <= rtol):
+            #         converged = True
+            #     elif re.max() <= 2 * rtol and (re > rtol).sum() <= 0.01 * relerr.size:
+            #         converged = True
+            #     elif iw == 0 and rp == lp and np.all(relerr.mean(axis=1) <= rtol):
+            #         converged = True
+            #
+            # if converged:
+            #     best_lp, best_rp = lp, rp
+            #     best_pseudo_poles = pseudo_poles
+            #     best_pseudo_residues = pseudo_residues
+            #     if log and iw < 10:
+            #         print(
+            #             f"  Window {iw}: {rp - lp} physical poles, {len(pseudo_poles)} pseudo"
+            #         )
+            #     break
+
+            # Calculate current error metric
+            valid_re = relerr[~np.isnan(relerr) & ~np.isinf(relerr) & (abserr > atol)]
+            if len(valid_re) > 0:
+                current_error = np.max(valid_re)
+            else:
+                current_error = 0.0
+
+            ### DEBUG ###
+            if log and iw < 5:
+                print(f"    lp={lp}, rp={rp}, n_poles_used={rp - lp}")
+                print(f"    max_abserr={np.max(abserr):.3e}")
+                valid_re = relerr[~np.isnan(relerr) & ~np.isinf(relerr)]
+                if len(valid_re) > 0:
+                    print(f"    max_relerr={np.max(valid_re):.3e}")
+                    print(
+                        f"    points > rtol: {np.sum(valid_re > rtol)}/{len(valid_re)}"
+                    )
+            # Track best result
+            if current_error < best_error:
+                best_error = current_error
+                best_lp, best_rp = lp, rp
+                best_pseudo_poles = (
+                    pseudo_poles.copy() if len(pseudo_poles) > 0 else np.array([])
+                )
+                best_pseudo_residues = (
+                    pseudo_residues.copy()
+                    if pseudo_residues.size > 0
+                    else np.zeros((n_channels, 0))
+                )
+                worse_count = 0
+            else:
+                worse_count += 1
+
+            # Check convergence
+            converged = False
+            if current_error <= rtol:
+                converged = True
+            elif worse_count >= 3:
+                # Getting worse, use best result
+                if log and iw < 10:
+                    print(
+                        f"  Window {iw}: stopping, error increasing. Best: {best_rp - best_lp} poles, error={best_error:.3e}"
+                    )
+                break
+
+            if converged:
+                best_lp, best_rp = lp, rp
+                best_pseudo_poles = pseudo_poles
+                best_pseudo_residues = pseudo_residues
+                if log and iw < 10:
+                    print(
+                        f"  Window {iw}: {rp - lp} physical poles, {len(pseudo_poles)} pseudo"
+                    )
+                break
+
+            # Expand pole range
+            if rp >= n_poles:
+                lp -= 1
+            elif lp <= 0 or poles[rp].real - incenter <= incenter - poles[lp - 1].real:
+                rp += 1
+            else:
+                lp -= 1
+
+            # Bounds check
+            if lp < 0:
+                lp = 0
+            if rp > n_poles:
+                rp = n_poles
+
+            # Safety: if we've used all poles, break
+            if lp == 0 and rp == n_poles:
+                best_lp, best_rp = lp, rp
+                best_pseudo_poles = pseudo_poles
+                best_pseudo_residues = pseudo_residues
+                if log:
+                    print(
+                        f"  Window {iw}: used all {n_poles} poles, {len(pseudo_poles)} pseudo"
+                    )
+                break
+
+        # Save window data
+        win_data.append(
+            (i_piece, best_lp, best_rp, best_pseudo_poles, best_pseudo_residues)
+        )
+        poles_unused[i_piece][best_lp:best_rp] = 0
+
+    # Flatten and compact physical poles (remove unused)
+    data = []
+    for ip in range(n_pieces):
+        used = poles_unused[ip] == 0
+        if np.any(used):
+            data.append(np.vstack([mp_poles[ip][used], mp_residues[ip][:, used]]).T)
+
+    if data:
+        data = np.vstack(data)
+    else:
+        data = np.zeros((0, 4 if fissionable else 3), dtype=complex)
+
+    # Build windows array and pseudopole storage
+    windows = []
+    pseudo_poles_list = []
+    pseudo_residues_list = []
+
+    for iw in range(n_win):
+        ip, lp, rp, pp, pr = win_data[iw]
+
+        # Adjust indices for compacted pole array
+        n_prev_poles = sum([len(mp_poles[i]) for i in range(ip)])
+        n_unused_before = (
+            sum([(poles_unused[i] == 1).sum() for i in range(ip)])
+            + (poles_unused[ip][:lp] == 1).sum()
+        )
+
+        if rp > lp:
+            new_lp = n_prev_poles - n_unused_before + 1  # 1-indexed
+            new_rp = new_lp + (rp - lp) - 1
+        else:
+            new_lp = 1
+            new_rp = 0  # empty range
+
+        windows.append([new_lp, new_rp])
+        pseudo_poles_list.append(pp)
+        pseudo_residues_list.append(pr)
+
+    if log:
+        n_phys = len(data)
+        n_pseudo = sum(len(pp) for pp in pseudo_poles_list)
+        print(f"Final: {n_phys} physical poles, {n_pseudo} total pseudopoles")
+        print(
+            f"Average per window: {n_phys / n_win:.1f} physical, {n_pseudo / n_win:.1f} pseudo"
+        )
+
+    return {
+        "name": name,
+        "data": data,
+        "windows": np.array(windows),
+        "pseudo_poles": pseudo_poles_list,
+        "pseudo_residues": pseudo_residues_list,
+        "spacing": spacing,
+        "E_min": E_min,
+        "E_max": E_max,
+        "sqrtAWR": sqrt(awr),
+        "n_channels": n_channels,
+        "fissionable": fissionable,
+    }
+
+
 class WindowedMultipole(EqualityMixin):
     """Resonant cross sections represented in the windowed multipole format.
 
@@ -1059,6 +1402,9 @@ class WindowedMultipole(EqualityMixin):
         self.broaden_poly = None
         self.curvefit = None
         self.version_minor = None
+        # new
+        self.pseudo_poles = None
+        self.pseudo_residues = None
 
     @property
     def name(self):
@@ -1313,12 +1659,12 @@ class WindowedMultipole(EqualityMixin):
             raise ValueError(err.format("curvefit", "windows"))
 
         # _broaden_wmp_polynomials assumes the curve fit has at least 3 terms.
-        if out.fit_order < 2:
-            raise ValueError(
-                "Windowed multipole is only supported for "
-                "curvefits with 3 or more terms."
-            )
-
+        # if out.fit_order < 2:
+        #     raise ValueError(
+        #         "Windowed multipole is only supported for "
+        #         "curvefits with 3 or more terms."
+        #     )
+        #
         # If HDF5 file was opened here, make sure it gets closed
         if need_to_close:
             h5file.close()
@@ -1369,7 +1715,14 @@ class WindowedMultipole(EqualityMixin):
 
     @classmethod
     def from_multipole(
-        cls, mp_data, search=None, log=False, n_threads=25, njoy_input=None, **kwargs
+        cls,
+        mp_data,
+        search=None,
+        log=False,
+        n_threads=25,
+        njoy_input=None,
+        method="VF",
+        **kwargs,
     ):
         """Generate windowed multipole neutron data from multipole data.
 
@@ -1436,32 +1789,55 @@ class WindowedMultipole(EqualityMixin):
             else:
                 search = True
 
-        # windowing with specific options
+        # Direct windowing without search
         if not search:
-            # set default value for curvefit order if not specified
-            if "n_cf" not in kwargs:
-                kwargs.update(n_cf=5)
-            return _windowing(mp_data, log=log, **kwargs)
+            if method == "VF":
+                if "n_cf" not in kwargs:
+                    kwargs.update(n_cf=5)
+                return _windowing(mp_data, log=log, **kwargs)
+            elif method == "AAA":
+                n_w = 2000
+                max_pp = 8
+                result = window_aaa_data(
+                    mp_data,
+                    n_win=n_w,
+                    max_pseudo_poles=max_pp,
+                    rtol=kwargs.get("rtol", 1e-3),
+                    atol=kwargs.get("atol", 1e-5),
+                    log=log,
+                )
+
+                # Convert to WindowedMultipole object
+                return cls._from_aaa_result(result, mp_data["name"])
 
         # search optimal WMP from a range of window sizes and CF orders
         if log:
             print("Start searching ...")
+
+        if method == "VF":
+            config_params = [2, 1]  # curvefit orders
+            # cf_orders = range(10, 1, -1)
+        elif method == "AAA":
+            config_params = [2, 8]  # max pseudopoles to try
         n_poles = sum([p.size for p in mp_data["poles"]])
+
         n_win_min = max(5, n_poles // 20)
         n_win_max = 2000 if n_poles < 2000 else 8000
-        best_wmp = best_metric = None
+        # window_sizes = np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int))
+        window_sizes = [2000]
 
-        window_sizes = np.unique(np.linspace(n_win_min, n_win_max, 20, dtype=int))
-        cf_orders = [2, 1]
-        # cf_orders = range(10, 1, -1)
         # Create list of all combinations to test
         test_configs = []
         for n_w in window_sizes:
-            for n_cf in cf_orders:
-                test_configs.append((mp_data, n_w, n_cf, kwargs.copy(), log))
-        print(
-            f"There are {len(window_sizes)} windows and {len(cf_orders)} to test for a combo of {len(test_configs)}."
-        )
+            for param in config_params:
+                test_configs.append((mp_data, n_w, param, kwargs.copy(), log, method))
+                # test_configs.append((mp_data, n_w, n_cf, kwargs.copy(), log))
+
+        if log:
+            print(
+                f"Testing {len(window_sizes)} window sizes x {len(config_params)} configs = {len(test_configs)} combinations"
+            )
+
         print(f"Window sizes are {window_sizes}")
         # Run tests in parallel using 20 processes
         with Pool(processes=n_threads) as pool:
@@ -1487,17 +1863,112 @@ class WindowedMultipole(EqualityMixin):
 
         # return the best wmp library
         if log:
-            print(
-                "Final library: {} poles, {} windows, {:.2g} poles per window, "
-                "{} CF order".format(
-                    best_wmp.n_poles,
-                    best_wmp.n_windows,
-                    best_wmp.poles_per_window,
-                    best_wmp.fit_order,
+            if method == "AAA":
+                print(
+                    f"Final: {best_wmp.n_poles} physical poles, "
+                    f"{best_wmp.n_pseudo_total} pseudopoles, "
+                    f"{best_wmp.n_windows} windows, "
+                    f"{best_wmp.poles_per_window:.2f} phys/window, "
+                    f"{best_wmp.pseudo_per_window:.2f} pseudo/window"
                 )
-            )
+            else:
+                print(
+                    f"Final: {best_wmp.n_poles} poles, {best_wmp.n_windows} windows, "
+                    f"{best_wmp.poles_per_window:.2f} poles/window"
+                )
+        # Convert SimpleNamespace to proper class if AAA
+        if method == "AAA" and isinstance(best_wmp, SimpleNamespace):
+            return cls._from_aaa_result(vars(best_wmp), mp_data["name"])
 
         return best_wmp
+
+    @classmethod
+    def _from_aaa_result(cls, result, name=None):
+        """Convert window_aaa_data result to WindowedMultipole object."""
+        wmp = cls(result.get("name", name))
+        wmp.data = result["data"]
+        wmp.windows = result["windows"]
+        wmp.spacing = result["spacing"]
+        wmp.E_min = result["E_min"]
+        wmp.E_max = result["E_max"]
+        wmp.sqrtAWR = result["sqrtAWR"]
+
+        # AAA-specific
+        wmp.pseudo_poles = result["pseudo_poles"]
+        wmp.pseudo_residues = result["pseudo_residues"]
+
+        # Dummy curvefit for compatibility
+        n_windows = len(result["windows"])
+        n_channels = result["n_channels"]
+        wmp.curvefit = np.zeros((n_windows, 1, n_channels))
+        wmp.broaden_poly = np.zeros(n_windows, dtype=bool)
+
+        return wmp
+
+    def _evaluate_aaa(self, E, T):
+        """Evaluate cross sections using AAA format (physical poles + pseudopoles)."""
+        from math import pi, sqrt
+
+        if E < self.E_min or E > self.E_max:
+            return (0.0, 0.0, 0.0)
+
+        sqrtE = sqrt(E)
+        sqrtkT = sqrt(K_BOLTZMANN * T) if T > 0 else 0.0
+
+        i_window = min(
+            self.n_windows - 1, int(np.floor((sqrtE - sqrt(self.E_min)) / self.spacing))
+        )
+        startw = self.windows[i_window, 0] - 1
+        endw = self.windows[i_window, 1]
+
+        sig_s = 0.0
+        sig_a = 0.0
+        sig_f = 0.0
+
+        if T == 0.0:
+            # Physical poles at 0K
+            for i_pole in range(startw, endw):
+                denom = sqrtE - self.data[i_pole, 0]
+                sig_s += (self.data[i_pole, 1] / denom).real
+                sig_a += (self.data[i_pole, 2] / denom).real
+                if self.fissionable:
+                    sig_f += (self.data[i_pole, 3] / denom).real
+
+            # Pseudopoles at 0K
+            if self.pseudo_poles is not None and len(self.pseudo_poles[i_window]) > 0:
+                pp = self.pseudo_poles[i_window]
+                pr = self.pseudo_residues[i_window]
+                for j, pole in enumerate(pp):
+                    denom = sqrtE - pole
+                    sig_s += (pr[0, j] / denom).real
+                    sig_a += (pr[1, j] / denom).real
+                    if self.fissionable:
+                        sig_f += (pr[2, j] / denom).real
+        else:
+            # Physical poles with Doppler broadening
+            dopp = self.sqrtAWR / sqrtkT
+
+            for i_pole in range(startw, endw):
+                Z = (sqrtE - self.data[i_pole, 0]) * dopp
+                w_val = _faddeeva(Z) * dopp * sqrt(pi)
+                sig_s += (self.data[i_pole, 1] * w_val).real
+                sig_a += (self.data[i_pole, 2] * w_val).real
+                if self.fissionable:
+                    sig_f += (self.data[i_pole, 3] * w_val).real
+
+            # Pseudopoles with Doppler broadening
+            if self.pseudo_poles is not None and len(self.pseudo_poles[i_window]) > 0:
+                pp = self.pseudo_poles[i_window]
+                pr = self.pseudo_residues[i_window]
+                for j, pole in enumerate(pp):
+                    Z = (sqrtE - pole) * dopp
+                    w_val = _faddeeva(Z) * dopp * sqrt(pi)
+                    sig_s += (pr[0, j] * w_val).real
+                    sig_a += (pr[1, j] * w_val).real
+                    if self.fissionable:
+                        sig_f += (pr[2, j] * w_val).real
+
+        return sig_s, sig_a, sig_f
 
     def _evaluate(self, E, T):
         """Compute scattering, absorption, and fission cross sections.

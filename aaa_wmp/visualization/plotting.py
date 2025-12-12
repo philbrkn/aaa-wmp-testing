@@ -5,6 +5,8 @@ import numpy as np
 
 from ..core.conversion import evaluate_simple
 
+# from ..core.conversion import evaluate_simple
+
 
 def plot_single_channel(
     E,
@@ -262,6 +264,37 @@ def plot_reconstruction(
     xs_recon = evaluate_simple(
         E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space
     )
+
+    # USe vf.evaluate instaed?
+    from openmc.data.vectfit import evaluate
+
+    xs_recon = evaluate(np.sqrt(E), poles, residues)
+
+    # if the space sqrtE and fitted in E sigma(E)  then we can use evaluate AAA?
+    # THIS SHOULDN'T WORK CUZ NEED BROADENED?
+    from ..core.conversion import (
+        build_wmp_poles,
+        evaluate_openmc,
+        refit_residues_realpart,
+    )
+
+    mp_poles = build_wmp_poles(poles, tol=1e-10, eps_rel=1e-2)
+    s = np.sqrt(E)
+    F = np.vstack(
+        [
+            original_data["elastic"] * E,
+            original_data["absorption"] * E,
+            original_data["fission"] * E,
+        ]
+    )  # shape (k,n)
+    r_vf = refit_residues_realpart(s, F, mp_poles, weights=None)
+    mp_residues = r_vf / 1j
+    xs_recon = evaluate_openmc(E, mp_poles, mp_residues)
+
+    # mp_residues, poly = refit_openmc_residues_with_poly(E, F, mp_poles, poly_deg=1)
+    # xs_recon = evaluate_openmc(E, mp_poles, mp_residues, poly_coeffs=poly)
+
+    print(f" Now we have {len(mp_poles)} poles")
 
     if fit_space == "sqrt_E":
         Z = np.sqrt(E)
