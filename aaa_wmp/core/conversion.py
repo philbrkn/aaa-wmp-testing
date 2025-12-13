@@ -2,9 +2,14 @@
 Enhanced proper_rational function with built-in remainder analysis.
 """
 
+from math import pi, sqrt
+
 import numpy as np
 import scipy.linalg as la
 from openmc.data.multipole_old import WindowedMultipole
+from scipy.special import wofz
+
+K_BOLTZMANN = 8.617333262145e-5  # eV/K
 
 
 def evaluate_simple(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
@@ -76,84 +81,138 @@ def evaluate_simple(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
     return np.asarray([elastic_xs, absorption_xs, fission_xs])
 
 
-def evaluate_openmc(E, poles, residues, poly_coeffs=None):
+def evaluate_openmc_T(
+    E, T, poles, residues, poly_coeffs=None, sqrtAWR=1.0, broaden_poly=False
+):
+    """
+    OpenMC-compatible multipole evaluation with temperature dependence.
+
+    Parameters
+    ----------
+    E : ndarray
+        Energies (eV)
+    T : float
+        Temperature (K)
+    poles : ndarray (M,)
+        Poles in sqrt(E) space (WMP format, upper half-plane only)
+    residues : ndarray (k, M)
+        Residues divided by 1j (OpenMC storage convention)
+    poly_coeffs : ndarray (k, n_poly), optional
+        Polynomial coefficients for F(s)=E*sigma(E)
+    sqrtAWR : float
+        sqrt(AWR)
+    broaden_poly : bool
+        Whether to Doppler-broaden the polynomial (OpenMC-style)
+
+    Returns
+    -------
+    sig_s, sig_a, sig_f : ndarray
+    """
+
     E = np.asarray(E)
     poles = np.asarray(poles)
     residues = np.asarray(residues)
 
-    sig_s = np.zeros_like(E, dtype=float)
-    sig_a = np.zeros_like(E, dtype=float)
-    sig_f = np.zeros_like(E, dtype=float)
+    sqrtE = np.sqrt(E)
+    invE = 1.0 / E
 
-    for i, e_pt in enumerate(E):
-        sqrtE = np.sqrt(e_pt)
-        invE = 1.0 / e_pt
+    k = residues.shape[0]
+    sig = np.zeros((k, len(E)))
 
-        # polynomial contribution to sigma: poly(s)/E
-        if poly_coeffs is not None and poly_coeffs.size > 0:
-            temp = invE
+    sqrtkT = sqrt(K_BOLTZMANN * T)
+
+    # ------------------------------------------------------------------
+    # Polynomial contribution (background)
+    # ------------------------------------------------------------------
+    if poly_coeffs is not None:
+        if sqrtkT != 0.0 and broaden_poly:
+            raise NotImplementedError(
+                "Polynomial Doppler broadening requires "
+                "_broaden_wmp_polynomials (OpenMC internal)."
+            )
+        else:
+            temp = invE.copy()
             for q in range(poly_coeffs.shape[1]):
-                sig_s[i] += poly_coeffs[0, q] * temp
-                sig_a[i] += poly_coeffs[1, q] * temp
-                if residues.shape[0] == 3:
-                    sig_f[i] += poly_coeffs[2, q] * temp
+                sig += poly_coeffs[:, q, None] * temp
                 temp *= sqrtE
 
-        # pole contribution
-        for j in range(len(poles)):
-            psi_chi = -1j / (poles[j] - sqrtE)
-            c_temp = psi_chi * invE
-            sig_s[i] += (residues[0, j] * c_temp).real
-            sig_a[i] += (residues[1, j] * c_temp).real
-            if residues.shape[0] == 3:
-                sig_f[i] += (residues[2, j] * c_temp).real
+    # ------------------------------------------------------------------
+    # Pole contribution
+    # ------------------------------------------------------------------
+    if sqrtkT == 0.0:
+        # -------- 0 K (asymptotic form) --------
+        for j, p in enumerate(poles):
+            psi = -1j / (p - sqrtE)
+            contrib = psi * invE
+            sig += (residues[:, j, None] * contrib).real
 
-    return sig_s, sig_a, sig_f
+    else:
+        # -------- Finite temperature (Faddeeva) --------
+        dopp = sqrtAWR / sqrtkT
+        for j, p in enumerate(poles):
+            Z = (sqrtE - p) * dopp
+            wval = _faddeeva(Z) * dopp * invE * sqrt(pi)
+            sig += (residues[:, j, None] * wval).real
+
+    # unpack
+    if k == 3:
+        return sig[0], sig[1], sig[2]
+    elif k == 2:
+        return sig[0], sig[1], None
+    else:
+        return tuple(sig)
 
 
-# def evaluate_openmc(Z, poles, residues, poly_coeffs=None, fit_space="sqrt_E"):
-#     """
-#     use _evaluate from multipole.py in openmc.data
-#     """
-#     # ======================================================================
-#     # Bookkeeping
+def _faddeeva(z):
+    z = np.asarray(z, dtype=np.complex128)
+
+    out = np.empty_like(z, dtype=np.complex128)
+
+    mask = np.angle(z) > 0
+    out[mask] = wofz(z[mask])
+    out[~mask] = -np.conj(wofz(np.conj(z[~mask])))
+
+    return out
+    # # OpenMC branch convention
+    # if np.angle(z) > 0:
+    #     return wofz(z)
+    # else:
+    #     return -np.conj(wofz(z.conjugate()))
+
+
+# def evaluate_openmc(E, poles, residues, poly_coeffs=None):
+#     E = np.asarray(E)
+#     poles = np.asarray(poles)
+#     residues = np.asarray(residues)
 #
-#     def faddeeva(z):
-#         """
-#         copy from openmc
-#         """
-#         from scipy.special import wofz
+#     sig_s = np.zeros_like(E, dtype=float)
+#     sig_a = np.zeros_like(E, dtype=float)
+#     sig_f = np.zeros_like(E, dtype=float)
 #
-#         if np.angle(z) > 0:
-#             return wofz(z)
-#         else:
-#             return -np.conj(wofz(z.conjugate()))
-#
-#     sig_s_list = []
-#     sig_a_list = []
-#     sig_f_list = []
-#     for i, e_pt in enumerate(Z):
-#         # Initialize the ouptut cross sections.
-#         sig_s = 0.0
-#         sig_a = 0.0
-#         sig_f = 0.0
-#         # Define some frequently used variables.
+#     for i, e_pt in enumerate(E):
 #         sqrtE = np.sqrt(e_pt)
-#         # sqrtE = 0
-#         # ======================================================================
-#         # Add the contribution from the poles in this window.
-#         # If at 0K, use asymptotic form.
+#         invE = 1.0 / e_pt
+#
+#         # polynomial contribution to sigma: poly(s)/E
+#         if poly_coeffs is not None and poly_coeffs.size > 0:
+#             temp = invE
+#             for q in range(poly_coeffs.shape[1]):
+#                 sig_s[i] += poly_coeffs[0, q] * temp
+#                 sig_a[i] += poly_coeffs[1, q] * temp
+#                 if residues.shape[0] == 3:
+#                     sig_f[i] += poly_coeffs[2, q] * temp
+#                 temp *= sqrtE
+#
+#         # pole contribution
 #         for j in range(len(poles)):
 #             psi_chi = -1j / (poles[j] - sqrtE)
-#             c_temp = psi_chi / e_pt
-#             sig_s += (residues[0, j] * c_temp).real
-#             sig_a += (residues[1, j] * c_temp).real
-#             if len(residues) == 3:
-#                 sig_f += (residues[2, j] * c_temp).real
-#         sig_s_list.append(sig_s)
-#         sig_a_list.append(sig_a)
-#         sig_f_list.append(sig_f)
-#     return sig_s_list, sig_a_list, sig_f_list
+#             c_temp = psi_chi * invE
+#             sig_s[i] += (residues[0, j] * c_temp).real
+#             sig_a[i] += (residues[1, j] * c_temp).real
+#             if residues.shape[0] == 3:
+#                 sig_f[i] += (residues[2, j] * c_temp).real
+#
+#     return sig_s, sig_a, sig_f
 
 
 def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_degree=0):
@@ -235,29 +294,29 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
     # # pra: (k, len(Z)) partial fraction approximation
     # pra = physical_res.T @ CC.T
 
-    # physical_res = physical_res.T
+    physical_res = physical_res.T
 
     # Separate real and complex poles
-    res_transposed = physical_res.T
-    # Separate real and complex poles
-    real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
-    complex_idx = np.where(np.abs(physical_poles.imag) >= 1e-10)[0]
-    # For complex poles, keep only those with positive imaginary part
-    # (the conjugates are implied)
-    conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
-    # Build WMP-compatible poles and residues
-    physical_poles = np.concatenate(
-        [physical_poles[real_idx], physical_poles[conj_idx]]
-    )
-    physical_res = np.concatenate(
-        [
-            res_transposed[:, real_idx],  # Real pole residues as-is
-            res_transposed[:, conj_idx]
-            * 2,  # Complex residues doubled (for conjugate pair)
-        ],
-        axis=1,
-    )
-
+    # res_transposed = physical_res.T
+    # # Separate real and complex poles
+    # real_idx = np.where(np.abs(physical_poles.imag) < 1e-10)[0]
+    # complex_idx = np.where(np.abs(physical_poles.imag) >= 1e-10)[0]
+    # # For complex poles, keep only those with positive imaginary part
+    # # (the conjugates are implied)
+    # conj_idx = complex_idx[physical_poles[complex_idx].imag > 0]
+    # # Build WMP-compatible poles and residues
+    # physical_poles = np.concatenate(
+    #     [physical_poles[real_idx], physical_poles[conj_idx]]
+    # )
+    # physical_res = np.concatenate(
+    #     [
+    #         res_transposed[:, real_idx],  # Real pole residues as-is
+    #         res_transposed[:, conj_idx]
+    #         * 2,  # Complex residues doubled (for conjugate pair)
+    #     ],
+    #     axis=1,
+    # )
+    #
     # Calculate remainder
     CC = 1.0 / (Z[:, np.newaxis] - physical_poles[np.newaxis, :])
     pra = physical_res @ CC.T
@@ -310,6 +369,43 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
     return poles, res, remainder, info
 
 
+def to_wmp_form(poles, residues, tol=1e-12):
+    poles = np.asarray(poles)
+    residues = np.asarray(residues)  # (k, m)
+
+    keep_poles = []
+    keep_res = []
+
+    used = np.zeros(len(poles), dtype=bool)
+
+    for i, p in enumerate(poles):
+        if used[i]:
+            continue
+
+        if abs(p.imag) < tol:
+            # real pole
+            keep_poles.append(p)
+            keep_res.append(residues[:, i])
+            used[i] = True
+        else:
+            # complex pole: must have a conjugate
+            j = np.where(np.abs(poles - np.conj(p)) < tol)[0]
+            if len(j) == 0:
+                raise RuntimeError("Unpaired complex pole")
+
+            j = j[0]
+            used[i] = used[j] = True
+
+            if p.imag > 0:
+                keep_poles.append(p)
+                keep_res.append(2 * residues[:, i])
+            else:
+                keep_poles.append(poles[j])
+                keep_res.append(2 * residues[:, j])
+
+    return np.array(keep_poles), np.column_stack(keep_res)
+
+
 def build_wmp_poles(poles_full, tol=1e-10, eps_rel=1e-2):
     poles_full = np.asarray(poles_full)
     mp = []
@@ -324,56 +420,52 @@ def build_wmp_poles(poles_full, tol=1e-10, eps_rel=1e-2):
     return np.array(mp)
 
 
-def refit_openmc_residues_with_poly(E, F, poles, poly_deg=0, eps=1e-30):
+def refit_residues_openmc(s, F, poles, weights=None):
     """
-    Fit OpenMC multipole residues (shape k×m) and polynomial in s for F(s)=Eσ(E).
-    poly_deg=0 fits only a constant term; poly_deg=1 fits constant+linear in s.
-    Uses inverse weighting on |F| to target relative error in F.
-    """
-    E = np.asarray(E)
-    s = np.sqrt(E)
-    F = np.asarray(F)
-    if F.ndim == 1:
-        F = F.reshape(1, -1)
+    Fit residues r so that:
+        F(u) = E*sigma(E) ≈ Re( sum_j (-1j*r_j)/(u - p_j) )
 
+    s: (n,) sqrt(E)
+    F: (k,n) real, where F = E*sigma(E)
+    poles: (m,)
+    returns r: (k,m) complex, DIRECTLY usable by OpenMC (no /1j later)
+    """
+    s = np.asarray(s)
     poles = np.asarray(poles)
-    n = s.size
-    m = poles.size
-    k = F.shape[0]
+    F = np.asarray(F)
 
-    # OpenMC 0K kernel for F(s): Re( R * 1j/(s - p) )
-    B = 1j / (s[:, None] - poles[None, :])  # (n,m) complex
-    U = B.real
-    V = B.imag
-    M_pf = np.hstack([U, -V])  # (n,2m)
+    if F.ndim == 1:
+        F = F[None, :]
 
-    # polynomial basis in s for F(s)
-    if poly_deg >= 0:
-        P = np.vstack([s**q for q in range(poly_deg + 1)]).T  # (n, d+1)
-        M = np.hstack([M_pf, P])  # (n, 2m+d+1)
-    else:
-        P = None
-        M = M_pf
+    # Cauchy matrix
+    A = 1.0 / (s[:, None] - poles[None, :])  # (n,m) complex
+    Ar = A.real
+    Ai = A.imag
 
-    R = np.zeros((k, m), dtype=np.complex128)
-    a = np.zeros((k, 0 if poly_deg < 0 else poly_deg + 1), dtype=float)
+    # Design matrix:
+    # Re( (-i r)/(u-p) ) = y*Ar + x*Ai
+    M = np.hstack([Ai, Ar])  # (n, 2m)
 
-    for c in range(k):
-        b = F[c]
-        w = 1.0 / np.maximum(np.abs(b), eps)  # VF-like relative weighting in F
+    r_out = np.zeros((F.shape[0], poles.size), dtype=np.complex128)
+
+    for c in range(F.shape[0]):
+        b = -F[c]
+
+        # Relative-error weighting (VF-style)
+        eps = 1e-30
+        w = 1.0 / np.maximum(np.abs(b), eps)
+
         Mw = M * w[:, None]
         bw = b * w
 
-        sol, *_ = np.linalg.lstsq(Mw, bw, rcond=None)
+        xy, *_ = np.linalg.lstsq(Mw, bw, rcond=None)
 
-        x = sol[:m]
-        y = sol[m : 2 * m]
-        R[c] = x + 1j * y
+        x = xy[: poles.size]
+        y = xy[poles.size :]
 
-        if poly_deg >= 0:
-            a[c] = sol[2 * m :]
+        r_out[c] = x + 1j * y
 
-    return R, a
+    return r_out
 
 
 def refit_residues_realpart(s, f, poles, weights=None):

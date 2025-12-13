@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.linalg import svd
-import scipy.linalg as la
 from scipy.sparse import spdiags
 
 
@@ -109,6 +108,7 @@ def miaaa_xs(
     # FIND PEAKS:
     all_peak_energies = []
     from scipy.signal import find_peaks
+
     for i, channel in enumerate(channels):
         # Find peaks in this channel
         peaks, _ = find_peaks(np.real(channel))
@@ -174,12 +174,16 @@ def miaaa_xs(
                 elif fallback_strategy == "snap":
                     # Snap to nearest resonance and use that
                     current_energy = E[j_star]
-                    nearest_resonance = resonances_energies[np.argmin(np.abs(resonances_energies - current_energy))]
+                    nearest_resonance = resonances_energies[
+                        np.argmin(np.abs(resonances_energies - current_energy))
+                    ]
                     # Find grid point closest to this resonance
                     j_star = np.argmin(np.abs(E - nearest_resonance))
                     selected = True
                     if log:
-                        print(f"  current energy {current_energy:.3f}, nearest resonance {nearest_resonance:.3f}, switched to {j_star}")
+                        print(
+                            f"  current energy {current_energy:.3f}, nearest resonance {nearest_resonance:.3f}, switched to {j_star}"
+                        )
                     break
                 elif fallback_strategy == "skip":
                     # Try next candidate
@@ -240,9 +244,13 @@ def miaaa_xs(
         # Stack all channels
         L = np.vstack(L_blocks)
 
+        # try to enforce conjugate pairs
+        L_real = np.vstack([np.real(L), np.imag(L)])
+        L_real = L
+
         # SVD to find common weights
         if method == "full_svd":
-            _, _, Vh = svd(L, full_matrices=False)
+            _, _, Vh = svd(L_real, full_matrices=False)
         elif method == "qr+svd":
             Q, R_mat = np.linalg.qr(L, mode="reduced")
             _, _, Vh = svd(R_mat, full_matrices=False)
@@ -263,7 +271,9 @@ def miaaa_xs(
 
     # Lawson iteration (optional)
     if lawson_iter > 0 and len(z) > 0:
-        w_lawson, R = lawson_iteration(grid, F, z, fz, w, R, Jz, lawson_iter, space, log)
+        w_lawson, R = lawson_iteration(
+            grid, F, z, fz, w, R, Jz, lawson_iter, space, log
+        )
         if len(w_lawson) == 2 * len(z):
             if log > 2:
                 print("Lawson successful. Removing zero weight supports")
@@ -396,8 +406,8 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
     lbcr = []
     best_w = None
     best_R = R
-    max_error = np.max(np.abs(F-best_R))
-    best_error = np.max(np.abs(F-best_R))
+    max_error = np.max(np.abs(F - best_R))
+    best_error = np.max(np.abs(F - best_R))
 
     # cauchy matrix
     # Build Cauchy matrix - handle coincident points properly
@@ -409,7 +419,7 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
         # For coincident points, set to 0 (will be handled by interpolation condition)
         C[~mask, i] = 0.0
 
-    sm = [] # Equivalent to a MATLAB cell array
+    sm = []  # Equivalent to a MATLAB cell array
     for i in range(k):
         # Select the i-th row of f. Python uses 0-based indexing.
         # f[i, :] is the direct equivalent of f(i,:)
@@ -438,11 +448,11 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
     eps = 1e-13
     for l in range(max_iter):
         lws = np.tile(lw, k)
-        d = spdiags(np.sqrt(lws), 0, (M*k, M*k))
+        d = spdiags(np.sqrt(lws), 0, (M * k, M * k))
         _, _, Vh = svd(d.dot(L), full_matrices=False)
         w = Vh[-1, :]
-        w_den = w[:m]     # First m elements: denominator weights
-        w_num = w[m:2*m]  # Should be m weights, not all remaining
+        w_den = w[:m]  # First m elements: denominator weights
+        w_num = w[m : 2 * m]  # Should be m weights, not all remaining
 
         R_new = evaluate_miaaa(grid, w, z, fz, space, w_den=w_den, w_num=w_num)
         # lmaxerror = np.max(np.abs(F-R_new))
@@ -458,10 +468,14 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
             best_w = w.copy()
             best_R = R_new.copy()
             if log:
-                print(f"  Lawson iter {l}: optimized from {max_error:.3e} to {lmaxerror:.3e}")
+                print(
+                    f"  Lawson iter {l}: optimized from {max_error:.3e} to {lmaxerror:.3e}"
+                )
         else:
             if log:
-                print(f"  Lawson iter {l}: error {lmaxerror:.3e} hasn't beat {best_error:.3e}")
+                print(
+                    f"  Lawson iter {l}: error {lmaxerror:.3e} hasn't beat {best_error:.3e}"
+                )
         # Update the Lawson wieghts(extended to multiple functions with a summation)
         # testlw=lw.*((max(abs(f-lbcr),[],1)).^gama);
         # absollute:
@@ -471,9 +485,11 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
         for i in range(k):
             rel_err = np.abs(F[i] - R_new[i]) / np.maximum(np.abs(F[i]), 1e-30)
             rel_errors.append(rel_err)
-        error_per_point = np.maximum.reduce(rel_errors)  # Max relative error across channels
+        error_per_point = np.maximum.reduce(
+            rel_errors
+        )  # Max relative error across channels
 
-        testlw = lw * (error_per_point ** gama)
+        testlw = lw * (error_per_point**gama)
         # testlw(find(testlw==Inf))=max(testlw(testlw~=Inf));
         if np.any(np.isinf(testlw)):
             max_non_inf = np.max(testlw[np.isfinite(testlw)])
@@ -484,7 +500,7 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
             testlw[np.isnan(testlw)] = mean_non_nan
 
         if np.any(np.isnan(testlw)) or np.any(np.isinf(testlw)):
-            print('Lawson terminated, Weights could not be fixed')
+            print("Lawson terminated, Weights could not be fixed")
             break
 
         # testlw(find(testlw==0))=mean(testlw(testlw~=0));   %avoid any 0's from perfect interpolation
@@ -495,7 +511,9 @@ def lawson_iteration(grid, F, z, fz, w_init, R, Jz, max_iter, space, log=True):
         # if(norm(testlw-lw,inf)<1e-8) %This Tolerance should be tested
         inf_norm_diff = np.linalg.norm(testlw - lw, np.inf)
         if inf_norm_diff < 1e-20:  # This Tolerance should be tested
-            print(f"Lawson converged at iteration {l}, inf_norm_diff: {inf_norm_diff:.2e}")
+            print(
+                f"Lawson converged at iteration {l}, inf_norm_diff: {inf_norm_diff:.2e}"
+            )
             break
         lw = testlw.copy()
     if best_w is not None:
@@ -526,6 +544,6 @@ def remove_zero_weight_supports(z, fz, w):
         w = np.delete(w, indices_to_delete)
         print(f"zero weight supports removed at {indices_to_delete}")
     else:
-        print('No zero-weight support points found.')
+        print("No zero-weight support points found.")
     # return either way
     return z, fz, w

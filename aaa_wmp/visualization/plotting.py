@@ -3,8 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..core.conversion import evaluate_simple
-
 # from ..core.conversion import evaluate_simple
 
 
@@ -256,69 +254,152 @@ def plot_reconstruction(
     dict
         Reconstructed cross sections
     """
+    # temp load NJOY data
+    temp = 1500
+    # temp = 0
+    from ..io.njoy_interface import generate_temperature_references
 
-    # Convert to OpenMC format and evaluate
-    # mc_data = poles_residues_to_openmc_data(poles, residues, name=name)
-    # xs_recon = evaluate_multipole_xs(E, mc_data, poly_info, fit_space=fit_space)
-    poly_coeffs = poly_info["poly_coeffs"]
-    xs_recon = evaluate_simple(
-        E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space
+    ref_data = generate_temperature_references(
+        endf_file="data/input/ENDF/ENDF-VIII-data/n-092_U_238.endf",
+        name="U238",
+        temperatures=[294, 600, 900, 1200, 1500],
+        cache_dir="data/input/NJOY_pickles",
+        njoy_error=5e-4,
+        log=1,
     )
+    ref = ref_data[temp]
+    energy = ref["energy"]
+    # Apply energy bounds if specified
+    E_min, E_max = np.min(E), np.max(E)
+    mask = (energy >= E_min) & (energy <= E_max)
+    energy = energy[mask]
+
+    # Reference cross sections
+    xs_ref = {
+        "elastic": ref["elastic_xs"][mask]
+        if len(ref["elastic_xs"]) > sum(mask)
+        else ref["elastic_xs"],
+        "absorption": ref["absorption_xs"][mask]
+        if len(ref["absorption_xs"]) > sum(mask)
+        else ref["absorption_xs"],
+    }
+    if ref["fissionable"]:
+        xs_ref["fission"] = (
+            ref["fission_xs"][mask]
+            if len(ref["fission_xs"]) > sum(mask)
+            else ref["fission_xs"]
+        )
+
+    def interp_xs(energy_src, xs_src, energy_dst):
+        return np.interp(energy_dst, energy_src, xs_src)
+
+    energy_0K = ref_data[0]["energy"]
+    energy_eval = energy
+    xs_ref_0K_interp = np.vstack(
+        [
+            interp_xs(energy_0K, ref_data[0]["elastic_xs"], energy_eval),
+            interp_xs(energy_0K, ref_data[0]["absorption_xs"], energy_eval),
+            interp_xs(energy_0K, ref_data[0]["fission_xs"], energy_eval),
+        ]
+    )
+
+    Z = np.sqrt(energy) if fit_space == "sqrt_E" else energy
+    # poly_coeffs = poly_info["poly_coeffs"]
+    # xs_recon = evaluate_simple(
+    #     E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space
+    # )
 
     # USe vf.evaluate instaed?
-    from openmc.data.vectfit import evaluate
+    # from openmc.data.vectfit import evaluate
+    #
+    # xs_recon = evaluate(np.sqrt(E), poles, residues)
 
-    xs_recon = evaluate(np.sqrt(E), poles, residues)
-
-    # if the space sqrtE and fitted in E sigma(E)  then we can use evaluate AAA?
-    # THIS SHOULDN'T WORK CUZ NEED BROADENED?
     from ..core.conversion import (
-        build_wmp_poles,
-        evaluate_openmc,
-        refit_residues_realpart,
+        # build_wmp_poles,
+        evaluate_openmc_T,
+        # refit_residues_openmc,
+        # refit_residues_realpart,
+        to_wmp_form,
     )
 
-    mp_poles = build_wmp_poles(poles, tol=1e-10, eps_rel=1e-2)
-    s = np.sqrt(E)
-    F = np.vstack(
-        [
-            original_data["elastic"] * E,
-            original_data["absorption"] * E,
-            original_data["fission"] * E,
-        ]
-    )  # shape (k,n)
-    r_vf = refit_residues_realpart(s, F, mp_poles, weights=None)
-    mp_residues = r_vf / 1j
-    xs_recon = evaluate_openmc(E, mp_poles, mp_residues)
+    # mp_poles = build_wmp_poles(poles, tol=1e-10, eps_rel=1e-2)
+    # s = np.sqrt(energy)
+    # F = np.vstack(
+    #     [
+    #         xs_ref["elastic"] * energy,
+    #         xs_ref["absorption"] * energy,
+    #         xs_ref["fission"] * energy,
+    #     ]
+    # )  # shape (k,n)
 
-    # mp_residues, poly = refit_openmc_residues_with_poly(E, F, mp_poles, poly_deg=1)
-    # xs_recon = evaluate_openmc(E, mp_poles, mp_residues, poly_coeffs=poly)
+    # def fit_poly_first(E, F, deg=0, eps=1e-30):
+    #     s = np.sqrt(E)
+    #     P = np.vstack([s**q for q in range(deg + 1)]).T  # (n,deg+1)
+    #     w = 1.0 / np.maximum(np.abs(F), eps)  # (k,n)
+    #
+    #     a = np.zeros((F.shape[0], deg + 1))
+    #     Fpoly = np.zeros_like(F)
+    #     for c in range(F.shape[0]):
+    #         Pw = P * w[c][:, None]
+    #         bw = F[c] * w[c]
+    #         a[c], *_ = np.linalg.lstsq(Pw, bw, rcond=None)
+    #         Fpoly[c] = P @ a[c]
+    #     return a, Fpoly
+    #
+    # a, Fpoly = fit_poly_first(energy, F, deg=0)  # constant in F(s)
+    # a = np.array(a)
+    # Frem = F - Fpoly
+    # r_vf = refit_residues_realpart(s, Frem, mp_poles, weights=None)
+    # mp_residues = r_vf / 1j
 
-    print(f" Now we have {len(mp_poles)} poles")
+    # no polynomial:
+    # r_vf = refit_residues_realpart(s, F, mp_poles, weights=None)
+    # mp_residues = r_vf / 1j
+    # # mp_residues = refit_residues_openmc(s, F, mp_poles)
+    mp_poles, mp_residues = to_wmp_form(poles, residues)
+    print(f"Number of poles is {len(mp_poles)}")
+    awr = np.sqrt(ref_data["AWR"])
+    # Pole-only reconstruction at 0 K
+    xs_poles_0K = evaluate_openmc_T(
+        energy, 0.0, mp_poles, mp_residues / 1j, sqrtAWR=awr, poly_coeffs=None
+    )
 
-    if fit_space == "sqrt_E":
-        Z = np.sqrt(E)
-    else:
-        Z = E
+    # Background remainder (pointwise)
+    xs_poles_0K = np.asarray(xs_poles_0K)
+    xs_bg = xs_ref_0K_interp - xs_poles_0K
+
+    def print_avg_background(xs_bg, names=("elastic", "absorption", "fission")):
+        xs_bg = np.asarray(xs_bg)
+        avg = xs_bg.mean(axis=1)
+        for i, name in enumerate(names):
+            print(f"avg background {name:10s} = {avg[i]:.6e}")
+
+    print_avg_background(xs_bg)
+
+    # Reconstruction at any temperature + same background
+    xs_recon = evaluate_openmc_T(
+        energy, temp, mp_poles, mp_residues / 1j, sqrtAWR=awr, poly_coeffs=None
+    )
+    xs_recon += xs_bg
 
     # Define channels to plot
     channels = [
         {
             "name": "elastic",
             "symbol": "σ_s",
-            "original": original_data.get("sigma_s", original_data.get("elastic")),
+            "original": xs_ref["elastic"],
             "reconstructed": xs_recon[0],
         },
         {
             "name": "absorption",
             "symbol": "σ_a",
-            "original": original_data.get("sigma_a", original_data.get("absorption")),
+            "original": xs_ref["absorption"],
             "reconstructed": xs_recon[1],
         },
         {
             "name": "fission",
             "symbol": "σ_f",
-            "original": original_data.get("sigma_f", original_data.get("fission")),
+            "original": xs_ref["fission"],
             "reconstructed": xs_recon[2],
         },
     ]
@@ -348,6 +429,88 @@ def plot_reconstruction(
 
     if path_out:
         print(f"Saved reconstruction plots to {path_out}")
+
+
+def fit_background_poly(E, xs_ref, xs_poles, degree=0, mask=None):
+    """
+    Fit a temperature-independent background polynomial to cross sections.
+
+    Fits:
+        sigma_bg(E) ≈ sigma_ref(E) - sigma_poles(E)
+
+    using a polynomial in sqrt(E).
+
+    Parameters
+    ----------
+    E : ndarray (n,)
+        Energy grid (eV)
+    xs_ref : ndarray (k, n)
+        Reference cross sections at 0 K
+    xs_poles : ndarray (k, n)
+        Pole-only reconstructed cross sections (0 K)
+    degree : int
+        Polynomial degree in sqrt(E)
+        degree=0 -> constant background
+        degree=1 -> a + b*sqrt(E)
+    mask : ndarray, optional
+        Boolean mask of points to include in fit
+
+    Returns
+    -------
+    coeffs : ndarray (k, degree+1)
+        Polynomial coefficients per channel,
+        ordered from lowest degree to highest:
+            coeffs[:,0] = constant term
+            coeffs[:,1] = linear sqrt(E) term
+            etc.
+    """
+    E = np.asarray(E)
+    u = np.sqrt(E)
+
+    xs_ref = np.asarray(xs_ref)
+    xs_poles = np.asarray(xs_poles)
+
+    if mask is None:
+        mask = np.ones_like(E, dtype=bool)
+
+    k = xs_ref.shape[0]
+    coeffs = np.zeros((k, degree + 1))
+
+    # Vandermonde matrix in sqrt(E)
+    V = np.vstack([u**d for d in range(degree + 1)]).T  # (n, degree+1)
+    V = V[mask]
+
+    for i in range(k):
+        y = (xs_ref[i] - xs_poles[i])[mask]
+        c, *_ = np.linalg.lstsq(V, y, rcond=None)
+        coeffs[i] = c
+
+    return coeffs
+
+
+def eval_background_poly(E, coeffs):
+    """
+    Evaluate background polynomial in sqrt(E).
+
+    Parameters
+    ----------
+    E : ndarray (n,)
+    coeffs : ndarray (k, degree+1)
+
+    Returns
+    -------
+    xs_bg : ndarray (k, n)
+    """
+    E = np.asarray(E)
+    u = np.sqrt(E)
+
+    k, degp1 = coeffs.shape
+    xs_bg = np.zeros((k, len(E)))
+
+    for d in range(degp1):
+        xs_bg += coeffs[:, d, None] * u**d
+
+    return xs_bg
 
 
 def evaluate_multipole_xs(E, data_dict, poly_info=None, fit_space="sqrt_E"):
@@ -449,85 +612,6 @@ def evaluate_multipole_xs(E, data_dict, poly_info=None, fit_space="sqrt_E"):
             # fission_xs[fission_xs < 0] = 1e-10
 
     return [elastic_xs, absorption_xs, fission_xs]
-
-
-def poles_residues_to_openmc_data(poles, residues, name="test_nuclide", AWR=235.0):
-    """
-    Simple conversion of poles and residues to OpenMC multipole data format.
-
-    Takes poles and residues from AAA and creates the basic data structure
-    that OpenMC expects
-
-    Parameters
-    ----------
-    poles : array-like
-        Complex poles in energy space (eV)
-    residues : list or array
-        Residues for each reaction channel. Should be:
-        - [elastic_residues, absorption_residues] for non-fissionable
-        - [elastic_residues, absorption_residues, fission_residues] for fissionable
-        Each element should be an array of complex residues matching poles length
-    name : str, optional
-        Nuclide name (default "test_nuclide")
-    AWR : float, optional
-        Atomic weight ratio (default 235.0)
-
-    Returns
-    -------
-    dict
-        Dictionary with OpenMC-compatible data:
-        - 'data': 2D array [pole_energy, elastic_residue, absorption_residue, (fission_residue)]
-        - 'name': nuclide name
-        - 'sqrtAWR': sqrt of atomic weight ratio
-        - 'fissionable': boolean indicating if fission channel present
-        - 'n_poles': number of poles
-    """
-    poles = np.array(poles, dtype=complex)
-    n_poles = len(poles)
-
-    # Determine if fissionable and get residue arrays
-    if isinstance(residues, list):
-        n_reactions = len(residues)
-        residue_arrays = [np.array(r, dtype=complex) for r in residues]
-    else:
-        # Assume it's a 2D array with shape (n_reactions, n_poles)
-        # residue_arrays = [residues[i] for i in range(residues.shape[0])]
-        residue_arrays = residues
-        n_reactions = len(residue_arrays)
-
-    fissionable = n_reactions > 2
-
-    # Validate dimensions
-    for i, res_array in enumerate(residue_arrays):
-        if len(res_array) != n_poles:
-            raise ValueError(
-                f"Residue array {i} length ({len(res_array)}) "
-                f"doesn't match poles length ({n_poles})"
-            )
-
-    # Create the data array: [pole, elastic_residue, absorption_residue, (fission_residue)]
-    data_cols = 1 + n_reactions
-    data = np.zeros((n_poles, data_cols), dtype=complex)
-
-    # Fill in poles (first column)
-    data[:, 0] = poles
-
-    # Fill in residues
-    for i, res_array in enumerate(residue_arrays):
-        data[:, i + 1] = res_array
-
-    # Sort by pole energy (real part)
-    sort_idx = np.argsort(data[:, 0].real)
-    data = data[sort_idx]
-
-    return {
-        "data": data,
-        "name": name,
-        "sqrtAWR": np.sqrt(AWR),
-        "fissionable": fissionable,
-        "n_poles": n_poles,
-        "n_reactions": n_reactions,
-    }
 
 
 def plot_aaa_results(
