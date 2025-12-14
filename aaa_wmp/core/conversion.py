@@ -369,6 +369,162 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
     return poles, res, remainder, info
 
 
+def fit_pseudopoles_adaptive_0K(
+    Z,
+    remainder,
+    xs_0K_recon,
+    max_poles=6,
+    rtol=1e-6,
+    verbose=True,
+    denom_floor=1e-15,
+    lstsq_rcond=1e-12,
+):
+    """
+    Adaptive pseudo-pole fit for a *remainder* term, using a 0K reconstruction
+    (pole-only or total, whichever you want) as the relative-error denominator.
+
+    Parameters
+    ----------
+    Z : (n,) array-like
+        Fit grid (e.g., sqrt(E) or E)
+    remainder : (k,n) array-like
+        Target remainder per reaction channel (k channels, n points)
+    xs_0K_recon : (k,n) array-like
+        0 K reconstruction used as denominator for relative error (replaces `bcf`)
+        Typical choice in your plotting pipeline: `xs_poles_0K`.
+    max_poles : int
+        Maximum number of pseudo poles to try
+    rtol : float
+        Stop early if max relative error < rtol
+    denom_floor : float
+        Avoid division blow-ups when denom is ~0; points with |denom| <= denom_floor
+        are ignored in the relative-error evaluation.
+    lstsq_rcond : float
+        rcond passed to np.linalg.lstsq
+
+    Returns
+    -------
+    poles : (n_poles,) ndarray
+    residues_T : (k, n_poles) ndarray
+        Residues in the same orientation you were using previously (residues.T)
+    """
+    remainder = np.asarray(remainder)
+    xs_0K_recon = np.asarray(xs_0K_recon)
+
+    if remainder.ndim != 2:
+        raise ValueError(f"`remainder` must be 2D (k,n). Got shape {remainder.shape}")
+    if xs_0K_recon.shape != remainder.shape:
+        raise ValueError(
+            f"`xs_0K_recon` must match `remainder` shape. "
+            f"Got xs_0K_recon={xs_0K_recon.shape}, remainder={remainder.shape}"
+        )
+
+    k, n = remainder.shape
+
+    Z = np.asarray(Z)
+    if Z.ndim != 1 or Z.shape[0] != n:
+        raise ValueError(
+            f"`Z` must be shape (n,) matching remainder columns. Got {Z.shape}"
+        )
+
+    Z_real = Z.real if np.iscomplexobj(Z) else Z
+    Z_min, Z_max = np.min(Z_real), np.max(Z_real)
+    Z_range = Z_max - Z_min
+
+    # Distance multipliers to try
+    if Z_min > 0:
+        distance_factors = [1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
+    else:
+        distance_factors = [0.5, 1, 2, 5, 10, 50, 100]
+
+    best_error = np.inf
+    best_config = None
+
+    for n_poles in range(1, max_poles + 1):
+        for dist_factor in distance_factors:
+            # Place poles symmetrically (same logic as your original)
+            poles = []
+            n_left = n_poles // 2
+            n_right = n_poles - n_left
+
+            if Z_min > 0:
+                # Multiplicative placement
+                for _ in range(n_left):
+                    pole = Z_min / dist_factor
+                    if pole > 0:
+                        poles.append(pole)
+                for _ in range(n_right):
+                    poles.append(Z_max * dist_factor)
+            else:
+                # Additive placement
+                for _ in range(n_left):
+                    poles.append(Z_min - Z_range * dist_factor)
+                for _ in range(n_right):
+                    poles.append(Z_max + Z_range * dist_factor)
+
+            poles = np.asarray(poles, dtype=np.complex128)
+
+            if poles.size != n_poles:
+                continue
+
+            # Fit residues: remainder[i,:] ≈ sum_j r[j,i] / (Z - p[j])
+            C = 1.0 / (Z[:, None] - poles[None, :])  # (n, n_poles)
+            residues = np.zeros((n_poles, k), dtype=np.complex128)
+
+            for i in range(k):
+                if np.max(np.abs(remainder[i, :])) > 1e-12:
+                    residues[:, i], _, _, _ = np.linalg.lstsq(
+                        C, remainder[i, :], rcond=lstsq_rcond
+                    )
+
+            approx = residues.T @ C.T  # (k,n)
+            error_array = remainder - approx
+
+            # Relative error normalized by 0K reconstruction (replaces bcf)
+            max_rel_error = 0.0
+            for i in range(k):
+                denom = xs_0K_recon[i, :]
+                nonzero = np.abs(denom) > denom_floor
+                if np.any(nonzero):
+                    rel_err = np.max(np.abs(error_array[i, nonzero] / denom[nonzero]))
+                    if rel_err > max_rel_error:
+                        max_rel_error = rel_err
+
+            if max_rel_error < best_error:
+                best_error = max_rel_error
+                best_config = {
+                    "n_poles": n_poles,
+                    "poles": poles,
+                    "residues": residues,
+                    "dist_factor": dist_factor,
+                    "error": max_rel_error,
+                }
+                if verbose:
+                    print(
+                        f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best"
+                    )
+                if max_rel_error < rtol:
+                    break
+            elif verbose:
+                print(
+                    f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}"
+                )
+
+        if best_error < rtol:
+            break
+
+    if best_config is not None:
+        if verbose:
+            print(
+                f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance"
+            )
+            print(f"Poles: {best_config['poles']}")
+            print(f"Final relative error: {best_config['error']:.3e}")
+        return best_config["poles"], best_config["residues"].T
+
+    return np.array([], dtype=np.complex128), np.zeros((k, 0), dtype=np.complex128)
+
+
 def to_wmp_form(poles, residues, tol=1e-12):
     poles = np.asarray(poles)
     residues = np.asarray(residues)  # (k, m)

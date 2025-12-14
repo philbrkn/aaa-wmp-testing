@@ -290,6 +290,30 @@ def plot_reconstruction(
             else ref["fission_xs"]
         )
 
+    Z = np.sqrt(energy) if fit_space == "sqrt_E" else energy
+
+    # USe vf.evaluate instaed?
+    # from openmc.data.vectfit import evaluate
+    #
+    # xs_recon = evaluate(np.sqrt(E), poles, residues)
+
+    from ..core.conversion import (
+        # build_wmp_poles,
+        evaluate_openmc_T,
+        fit_pseudopoles_adaptive_0K,
+        # refit_residues_openmc,
+        # refit_residues_realpart,
+        to_wmp_form,
+    )
+
+    mp_poles, mp_residues = to_wmp_form(poles, residues)
+    print(f"Number of poles is {len(mp_poles)}")
+    awr = np.sqrt(ref_data["AWR"])
+    # Pole-only reconstruction at 0 K
+    xs_poles_0K = evaluate_openmc_T(
+        energy, 0.0, mp_poles, mp_residues / 1j, sqrtAWR=awr, poly_coeffs=None
+    )
+
     def interp_xs(energy_src, xs_src, energy_dst):
         return np.interp(energy_dst, energy_src, xs_src)
 
@@ -302,85 +326,41 @@ def plot_reconstruction(
             interp_xs(energy_0K, ref_data[0]["fission_xs"], energy_eval),
         ]
     )
-
-    Z = np.sqrt(energy) if fit_space == "sqrt_E" else energy
-    # poly_coeffs = poly_info["poly_coeffs"]
-    # xs_recon = evaluate_simple(
-    #     E, poles, residues, poly_coeffs=poly_coeffs, fit_space=fit_space
-    # )
-
-    # USe vf.evaluate instaed?
-    # from openmc.data.vectfit import evaluate
-    #
-    # xs_recon = evaluate(np.sqrt(E), poles, residues)
-
-    from ..core.conversion import (
-        # build_wmp_poles,
-        evaluate_openmc_T,
-        # refit_residues_openmc,
-        # refit_residues_realpart,
-        to_wmp_form,
-    )
-
-    # mp_poles = build_wmp_poles(poles, tol=1e-10, eps_rel=1e-2)
-    # s = np.sqrt(energy)
-    # F = np.vstack(
-    #     [
-    #         xs_ref["elastic"] * energy,
-    #         xs_ref["absorption"] * energy,
-    #         xs_ref["fission"] * energy,
-    #     ]
-    # )  # shape (k,n)
-
-    # def fit_poly_first(E, F, deg=0, eps=1e-30):
-    #     s = np.sqrt(E)
-    #     P = np.vstack([s**q for q in range(deg + 1)]).T  # (n,deg+1)
-    #     w = 1.0 / np.maximum(np.abs(F), eps)  # (k,n)
-    #
-    #     a = np.zeros((F.shape[0], deg + 1))
-    #     Fpoly = np.zeros_like(F)
-    #     for c in range(F.shape[0]):
-    #         Pw = P * w[c][:, None]
-    #         bw = F[c] * w[c]
-    #         a[c], *_ = np.linalg.lstsq(Pw, bw, rcond=None)
-    #         Fpoly[c] = P @ a[c]
-    #     return a, Fpoly
-    #
-    # a, Fpoly = fit_poly_first(energy, F, deg=0)  # constant in F(s)
-    # a = np.array(a)
-    # Frem = F - Fpoly
-    # r_vf = refit_residues_realpart(s, Frem, mp_poles, weights=None)
-    # mp_residues = r_vf / 1j
-
-    # no polynomial:
-    # r_vf = refit_residues_realpart(s, F, mp_poles, weights=None)
-    # mp_residues = r_vf / 1j
-    # # mp_residues = refit_residues_openmc(s, F, mp_poles)
-    mp_poles, mp_residues = to_wmp_form(poles, residues)
-    print(f"Number of poles is {len(mp_poles)}")
-    awr = np.sqrt(ref_data["AWR"])
-    # Pole-only reconstruction at 0 K
-    xs_poles_0K = evaluate_openmc_T(
-        energy, 0.0, mp_poles, mp_residues / 1j, sqrtAWR=awr, poly_coeffs=None
-    )
-
     # Background remainder (pointwise)
     xs_poles_0K = np.asarray(xs_poles_0K)
-    xs_bg = xs_ref_0K_interp - xs_poles_0K
+    remainder = xs_ref_0K_interp - xs_poles_0K
 
-    def print_avg_background(xs_bg, names=("elastic", "absorption", "fission")):
-        xs_bg = np.asarray(xs_bg)
-        avg = xs_bg.mean(axis=1)
-        for i, name in enumerate(names):
-            print(f"avg background {name:10s} = {avg[i]:.6e}")
+    pp, res_pp = fit_pseudopoles_adaptive_0K(
+        Z,
+        remainder,
+        xs_0K_recon=xs_poles_0K,  # <-- "0K reconstruction" denominator
+        max_poles=6,
+        rtol=1e-8,
+        verbose=True,
+    )
+    # Evaluate pseudo background using the SAME kernel used in the fit: 1/(Z - p)
+    if pp.size > 0:
+        Cpp = 1.0 / (Z[:, None] - pp[None, :])  # (n, npp)
+        bg_0K = res_pp @ Cpp.T  # (k, n)
+    else:
+        bg_0K = np.zeros_like(remainder)
 
-    print_avg_background(xs_bg)
+    # def print_avg_background(xs_bg, names=("elastic", "absorption", "fission")):
+    #     xs_bg = np.asarray(xs_bg)
+    #     avg = xs_bg.mean(axis=1)
+    #     for i, name in enumerate(names):
+    #         print(f"avg background {name:10s} = {avg[i]:.6e}")
+    #
+    # print_avg_background(xs_bg)
 
     # Reconstruction at any temperature + same background
     xs_recon = evaluate_openmc_T(
         energy, temp, mp_poles, mp_residues / 1j, sqrtAWR=awr, poly_coeffs=None
     )
-    xs_recon += xs_bg
+    xs_recon = np.asarray(xs_recon) + bg_0K
+
+    # xs_recon += remainder
+    # xs_recon += poly_vals
 
     # Define channels to plot
     channels = [

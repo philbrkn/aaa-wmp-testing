@@ -99,6 +99,52 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
 
     Z = np.sqrt(E_piece) if space == "sqrt_E" else E_piece
 
+    poles_bg, residues_bg, remainder, poly_info = proper_rational(
+        z,
+        w,
+        w,
+        fz,
+        R,
+        Z,
+        pole_extraction=kwargs.get("pole_extraction", None),
+        max_poly_degree=kwargs.get("max_poly_degree", 0),
+    )
+
+    if kwargs.get("rerun_on_residual", False):
+        bg_vals = eval_background(Z, poly_info)
+
+        channels_residual = []
+        for i, ch in enumerate(channels):
+            channels_residual.append(ch - bg_vals[i])
+
+        channels_residual = np.asarray(channels_residual)
+        w, z, fz, R, err_hist = miaaa_xs(
+            E_piece,
+            channels_residual,
+            method=kwargs.get("method", "full_svd"),
+            rtol=kwargs.get("rtol", 1e-13),
+            mmax=kwargs.get("mmax", 100),
+            greedy_metric="relative",
+            log=log,
+            space=space,
+            normalize=True,
+            lawson_iter=kwargs.get("lawson_iter", 0),
+        )
+
+        poles_piece, residues_piece, _, _ = proper_rational(
+            z,
+            w,
+            w,
+            fz,
+            R,
+            Z,
+            pole_extraction=kwargs.get("pole_extraction", None),
+            max_poly_degree=0,  # IMPORTANT: NO POLY SECOND TIME
+        )
+    else:
+        poles_piece = poles_bg
+        residues_piece = residues_bg
+
     # Optional cleanup
     if cleanup:
         pol, res, _, _ = proper_rational(z, w, w, fz, R, Z)
@@ -107,31 +153,20 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
         )
 
     # Extract poles and residues
-    if len(w) == 2 * len(z):  # Lawson succeeded
-        m = len(z)
-        w_num = w[m : 2 * m]
-        w_den = w[:m]
-        poles_piece, residues_piece, remainder, poly_info = proper_rational(
-            z,
-            w_num,
-            w_den,
-            fz,
-            R,
-            Z,
-            pole_extraction=kwargs.get("pole_extraction", None),
-            max_poly_degree=kwargs.get("max_poly_degree", 0),
-        )
-    else:  # No Lawson
-        poles_piece, residues_piece, remainder, poly_info = proper_rational(
-            z,
-            w,
-            w,
-            fz,
-            R,
-            Z,
-            pole_extraction=kwargs.get("pole_extraction", None),
-            max_poly_degree=kwargs.get("max_poly_degree", 0),
-        )
+    # if len(w) == 2 * len(z):  # Lawson succeeded
+    #     m = len(z)
+    #     w_num = w[m : 2 * m]
+    #     w_den = w[:m]
+    #     poles_piece, residues_piece, remainder, poly_info = proper_rational(
+    #         z,
+    #         w_num,
+    #         w_den,
+    #         fz,
+    #         R,
+    #         Z,
+    #         pole_extraction=kwargs.get("pole_extraction", None),
+    #         max_poly_degree=kwargs.get("max_poly_degree", 0),
+    #     )
 
     if log:
         print(f"    Piece {i_piece + 1}: {len(poles_piece)} poles")
@@ -153,6 +188,22 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
         "E_piece": E_piece,
         "channels": channels,
     }
+
+
+def eval_background(E, poly_info):
+    # returns shape (k, n)
+    coeffs = poly_info.get("poly_coeffs", None) if poly_info else None
+    if coeffs is None:
+        return None
+    k = len(coeffs)
+    bg = np.zeros((k, len(E)))
+    for c in range(k):
+        if coeffs[c] is None:
+            bg[c] = 0.0
+        else:
+            # your polyfit returns descending powers
+            bg[c] = np.polyval(coeffs[c], E)
+    return bg
 
 
 def plot_piece(E_piece, Z, channels, w, z, fz, fissionable, space, path_out, i_piece):
