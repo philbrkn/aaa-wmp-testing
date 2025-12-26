@@ -125,11 +125,15 @@ def evaluate_openmc_T(
     # Polynomial contribution (background)
     # ------------------------------------------------------------------
     if poly_coeffs is not None:
+        n_poly = poly_coeffs.shape[1]
         if sqrtkT != 0.0 and broaden_poly:
-            raise NotImplementedError(
-                "Polynomial Doppler broadening requires "
-                "_broaden_wmp_polynomials (OpenMC internal)."
-            )
+            # Doppler-broaden the polynomial
+            dopp = sqrtAWR / sqrtkT
+            broadened_factors = _broaden_wmp_polynomials(E, dopp, n_poly)
+
+            # Sum contributions: sig[channel] += sum over poly terms
+            for q in range(n_poly):
+                sig += poly_coeffs[:, q, None] * broadened_factors[q, :]
         else:
             temp = invE.copy()
             for q in range(poly_coeffs.shape[1]):
@@ -161,6 +165,69 @@ def evaluate_openmc_T(
         return sig[0], sig[1], None
     else:
         return tuple(sig)
+
+
+def _broaden_wmp_polynomials(E, dopp, n):
+    """
+    Evaluate Doppler-broadened windowed multipole curvefit.
+
+    The curvefit is a polynomial of the form:
+    a/E + b/sqrt(E) + c + d*sqrt(E) + ...
+
+    Parameters
+    ----------
+    E : ndarray
+        Energy to evaluate at (eV)
+    dopp : float
+        sqrt(atomic weight ratio / kT) in units of 1/sqrt(eV)
+    n : int
+        Number of components to the polynomial
+
+    Returns
+    -------
+    ndarray of shape (n, len(E))
+        The value of each Doppler-broadened curvefit polynomial term
+    """
+    from scipy.special import erf
+
+    E = np.asarray(E)
+    sqrtE = np.sqrt(E)
+    beta = sqrtE * dopp
+    half_inv_dopp2 = 0.5 / dopp**2
+    quarter_inv_dopp4 = half_inv_dopp2**2
+
+    # Vectorized erf and exp
+    erf_beta = np.where(beta > 6.0, 1.0, erf(beta))
+    exp_m_beta2 = np.where(beta > 6.0, 0.0, np.exp(-(beta**2)))
+
+    factors = np.zeros((n, len(E)))
+
+    # factors[0] corresponds to 1/E term
+    if n >= 1:
+        factors[0] = erf_beta / E
+
+    # factors[1] corresponds to 1/sqrt(E) term
+    if n >= 2:
+        factors[1] = 1.0 / sqrtE
+
+    # factors[2] corresponds to constant term
+    if n >= 3:
+        factors[2] = factors[0] * (half_inv_dopp2 + E) + exp_m_beta2 / (
+            beta * np.sqrt(np.pi)
+        )
+
+    # Recursive broadening of higher order components
+    for i in range(1, n - 2):
+        if i != 1:
+            factors[i + 2] = -factors[i - 2] * (
+                i - 1.0
+            ) * i * quarter_inv_dopp4 + factors[i] * (
+                E + (1.0 + 2.0 * i) * half_inv_dopp2
+            )
+        else:
+            factors[i + 2] = factors[i] * (E + (1.0 + 2.0 * i) * half_inv_dopp2)
+
+    return factors
 
 
 def _faddeeva(z):
@@ -269,6 +336,19 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
     # Extract poles using the przd eigenvalue method
     physical_poles = przd_for_poles(z, wden, deflation_tol=1e-10)
 
+    # DEB
+    # Filter far poles
+    # z_center = np.mean(z.real)
+    # z_span = np.max(z.real) - np.min(z.real)
+    # max_dist = 5.0 * max(z_span, 0.1)  # At least 0.5 units
+    #
+    # keep_mask = np.abs(physical_poles.real - z_center) < max_dist
+    # n_removed = np.sum(~keep_mask)
+    # if n_removed > 0:
+    #     print(f"Filtered {n_removed} far poles")
+    # physical_poles = physical_poles[keep_mask]
+    # DEB
+
     # Compute residues via Cauchy matrices
     # Cnum: (n_poles, m) matrix with entries 1/(pole_i - z_j)
     Cnum = 1.0 / (physical_poles[:, np.newaxis] - z[np.newaxis, :])
@@ -323,11 +403,23 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
     remainder = bcf - pra
     remainder = remainder.real
 
+    # DEBUG
+    # Compare analytical c0 vs mean remainder
+    # c0_analytical = np.array([np.sum(wden * fz[i, :]) / np.sum(wden) for i in range(k)])
+    # remainder_mean = np.mean(remainder, axis=1)
+    #
+    # print("Channel | c0 (analytical) | remainder mean | remainder std")
+    # for i in range(k):
+    #     print(
+    #         f"{i:7} | {c0_analytical[i].real:15.6e} | {remainder_mean[i]:14.6e} | {np.std(remainder[i]):13.6e}"
+    #     )
+    # DEBUGEND
+
     # Initialize output
     poles = physical_poles.copy()
     res = physical_res.copy()
 
-    if pole_extraction == "polynomial" and max_poly_degree > 0:
+    if pole_extraction == "polynomial" and max_poly_degree >= 0:
         info = {"method": pole_extraction}
         # Fit polynomial to remainder
         poly_coeffs = []
@@ -343,10 +435,14 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
             else:
                 poly_coeffs.append(None)
         info["poly_coeffs"] = poly_coeffs
+        # analytical:
+        c0 = np.array([np.sum(wden * fz[i, :]) / np.sum(wden) for i in range(k)])
+        # Store in info
+        info["c0"] = c0.real
     elif pole_extraction == "pseudo_pole":
         # info = fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra)
         info = {"method": "pseudo_pole", "poly_coeffs": None}
-        p_poles, p_residues = fit_pseudopoles_adaptive(
+        p_poles, p_residues = fit_pseudopoles_adaptive_0K(
             Z,
             remainder,
             bcf,
@@ -364,8 +460,68 @@ def proper_rational(z, wnum, wden, fz, bcf, Z, pole_extraction=None, max_poly_de
         info = {"method": None}
         info["poly_coeffs"] = [None] * k
 
-    # Return in appropriate format
-    # res = res / 1j
+    # ======= DEBUG ======= #
+    # After computing physical_res
+    # print("\n=== Residue magnitudes by channel ===")
+    # for i in range(k):
+    #     print(
+    #         f"Channel {i}: max|res| = {np.max(np.abs(physical_res[i, :])):.2e}, "
+    #         f"sum|res| = {np.sum(np.abs(physical_res[i, :])):.2e}"
+    #     )
+    #
+    # print("\n=== Residue values at each pole ===")
+    # for j, p in enumerate(physical_poles):
+    #     print(f"Pole {j} at {p:.6f}:")
+    #     for i in range(k):
+    #         print(f"  Channel {i}: res = {physical_res[i, j]:.6e}")
+    # # Test each channel separately
+    # print("\n=== Per-channel reconstruction error ===")
+    # CC = 1.0 / (Z[:, None] - physical_poles[None, :])
+    # for i in range(k):
+    #     pra_channel = physical_res[i, :] @ CC.T
+    #     err = np.max(np.abs(pra_channel - bcf[i, :]))
+    #     rel_err = np.max(
+    #         np.abs((pra_channel - bcf[i, :]) / (np.abs(bcf[i, :]) + 1e-10))
+    #     )
+    #     print(f"Channel {i}: max_abs_err = {err:.2e}, max_rel_err = {rel_err:.2%}")
+    #
+    # # After computing physical_poles
+    # print("\n=== PRZD Diagnostics ===")
+    # print(f"Number of support points: {len(z)}")
+    # print(f"Number of poles found: {len(physical_poles)}")
+    # print(f"Support points z: {z}")
+    # print(f"Weights w: {wden}")
+    # print(f"Poles: {physical_poles}")
+    #
+    # # Check condition of the residue calculation
+    # print("\nDenominator derivatives at poles:")
+    # for j, p in enumerate(physical_poles):
+    #     denom_deriv_j = np.sum(wden / (p - z) ** 2)
+    #     print(f"  Pole {j}: p={p:.6e}, D'(p)={denom_deriv_j:.6e}")
+    #
+    # # Check if any denominator derivatives are tiny (ill-conditioned)
+    # denom_deriv = Cden @ wden
+    # print(f"\nMin |D'(p)|: {np.min(np.abs(denom_deriv)):.2e}")
+    # print(f"Max |D'(p)|: {np.max(np.abs(denom_deriv)):.2e}")
+    #
+    # # Compute constant term for each channel
+    # c0 = np.array([np.sum(wden * fz[i, :]) / np.sum(wden) for i in range(k)])
+    # print(f"Constant terms c0: {c0}")
+    #
+    # # Test reconstruction with constant
+    # x_test = Z[len(Z) // 2]
+    # CC_test = 1.0 / (x_test - physical_poles)
+    #
+    # for i in range(k):
+    #     pf_val = np.sum(physical_res[i, :] * CC_test)
+    #     bary_val = np.sum(wden * fz[i, :] / (x_test - z)) / np.sum(wden / (x_test - z))
+    #
+    #     print(
+    #         f"Channel {i}: PF={pf_val:.6e}, PF+c0={pf_val + c0[i]:.6e}, bary={bary_val:.6e}"
+    #     )
+    #
+    # ==================== #
+
     return poles, res, remainder, info
 
 
@@ -374,81 +530,69 @@ def fit_pseudopoles_adaptive_0K(
     remainder,
     xs_0K_recon,
     max_poles=6,
-    rtol=1e-6,
+    rtol=1e-3,  # Changed default to match VF (0.1%)
+    atol=1e-5,  # NEW: absolute tolerance (barns)
     verbose=True,
-    denom_floor=1e-15,
-    lstsq_rcond=1e-12,
+    target_satisfaction=0.99,  # NEW: aim for 99% of points acceptable
 ):
     """
-    Adaptive pseudo-pole fit for a *remainder* term, using a 0K reconstruction
-    (pole-only or total, whichever you want) as the relative-error denominator.
+    Adaptive pseudo-pole fit using VF/WMP-style hybrid error metric.
+
+    A point is considered accurate if EITHER:
+      - Absolute error < atol, OR
+      - Relative error < rtol
 
     Parameters
     ----------
-    Z : (n,) array-like
-        Fit grid (e.g., sqrt(E) or E)
-    remainder : (k,n) array-like
-        Target remainder per reaction channel (k channels, n points)
-    xs_0K_recon : (k,n) array-like
-        0 K reconstruction used as denominator for relative error (replaces `bcf`)
-        Typical choice in your plotting pipeline: `xs_poles_0K`.
+    Z : (n,) array
+        Fit grid (sqrt(E) or E)
+    remainder : (k,n) array
+        Target remainder per channel
+    xs_0K_recon : (k,n) array
+        0K reconstruction (denominator for relative error)
     max_poles : int
-        Maximum number of pseudo poles to try
+        Maximum pseudo poles to try
     rtol : float
-        Stop early if max relative error < rtol
-    denom_floor : float
-        Avoid division blow-ups when denom is ~0; points with |denom| <= denom_floor
-        are ignored in the relative-error evaluation.
-    lstsq_rcond : float
-        rcond passed to np.linalg.lstsq
-
-    Returns
-    -------
-    poles : (n_poles,) ndarray
-    residues_T : (k, n_poles) ndarray
-        Residues in the same orientation you were using previously (residues.T)
+        Relative tolerance (default 1e-3 = 0.1%)
+    atol : float
+        Absolute tolerance (default 1e-5 barns)
+    target_satisfaction : float
+        Stop if this fraction of points meet tolerance
     """
     remainder = np.asarray(remainder)
     xs_0K_recon = np.asarray(xs_0K_recon)
 
     if remainder.ndim != 2:
-        raise ValueError(f"`remainder` must be 2D (k,n). Got shape {remainder.shape}")
+        raise ValueError(f"remainder must be 2D. Got {remainder.shape}")
     if xs_0K_recon.shape != remainder.shape:
-        raise ValueError(
-            f"`xs_0K_recon` must match `remainder` shape. "
-            f"Got xs_0K_recon={xs_0K_recon.shape}, remainder={remainder.shape}"
-        )
+        raise ValueError("xs_0K_recon must match remainder shape")
 
     k, n = remainder.shape
-
     Z = np.asarray(Z)
-    if Z.ndim != 1 or Z.shape[0] != n:
-        raise ValueError(
-            f"`Z` must be shape (n,) matching remainder columns. Got {Z.shape}"
-        )
+    if Z.shape[0] != n:
+        raise ValueError("Z must match remainder columns")
 
     Z_real = Z.real if np.iscomplexobj(Z) else Z
     Z_min, Z_max = np.min(Z_real), np.max(Z_real)
     Z_range = Z_max - Z_min
 
-    # Distance multipliers to try
+    # Distance factors for pole placement
     if Z_min > 0:
         distance_factors = [1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8]
     else:
         distance_factors = [0.5, 1, 2, 5, 10, 50, 100]
 
-    best_error = np.inf
+    best_satisfaction = -np.inf
     best_config = None
 
     for n_poles in range(1, max_poles + 1):
         for dist_factor in distance_factors:
-            # Place poles symmetrically (same logic as your original)
+            # Place poles symmetrically
             poles = []
             n_left = n_poles // 2
             n_right = n_poles - n_left
 
             if Z_min > 0:
-                # Multiplicative placement
                 for _ in range(n_left):
                     pole = Z_min / dist_factor
                     if pole > 0:
@@ -456,72 +600,103 @@ def fit_pseudopoles_adaptive_0K(
                 for _ in range(n_right):
                     poles.append(Z_max * dist_factor)
             else:
-                # Additive placement
                 for _ in range(n_left):
                     poles.append(Z_min - Z_range * dist_factor)
                 for _ in range(n_right):
                     poles.append(Z_max + Z_range * dist_factor)
 
             poles = np.asarray(poles, dtype=np.complex128)
-
             if poles.size != n_poles:
                 continue
 
-            # Fit residues: remainder[i,:] ≈ sum_j r[j,i] / (Z - p[j])
-            C = 1.0 / (Z[:, None] - poles[None, :])  # (n, n_poles)
+            # Fit residues
+            C = 1.0 / (Z[:, None] - poles[None, :])
             residues = np.zeros((n_poles, k), dtype=np.complex128)
 
             for i in range(k):
                 if np.max(np.abs(remainder[i, :])) > 1e-12:
                     residues[:, i], _, _, _ = np.linalg.lstsq(
-                        C, remainder[i, :], rcond=lstsq_rcond
+                        C, remainder[i, :], rcond=1e-12
                     )
 
             approx = residues.T @ C.T  # (k,n)
             error_array = remainder - approx
 
-            # Relative error normalized by 0K reconstruction (replaces bcf)
+            # ============================================================
+            # NEW: VF-style hybrid error assessment
+            # ============================================================
+            total_points = 0
+            satisfied_points = 0
             max_rel_error = 0.0
-            for i in range(k):
-                denom = xs_0K_recon[i, :]
-                nonzero = np.abs(denom) > denom_floor
-                if np.any(nonzero):
-                    rel_err = np.max(np.abs(error_array[i, nonzero] / denom[nonzero]))
-                    if rel_err > max_rel_error:
-                        max_rel_error = rel_err
 
-            if max_rel_error < best_error:
-                best_error = max_rel_error
+            for i in range(k):
+                # Absolute error
+                abs_err = np.abs(error_array[i, :])
+
+                # Relative error (normalized by full xs, not remainder)
+                with np.errstate(invalid="ignore", divide="ignore"):
+                    rel_err = abs_err / np.abs(xs_0K_recon[i, :])
+                    rel_err[np.isnan(rel_err) | np.isinf(rel_err)] = 0
+
+                # Point satisfies if EITHER abs < atol OR rel < rtol
+                satisfied = (abs_err < atol) | (rel_err < rtol)
+
+                satisfied_points += np.sum(satisfied)
+                total_points += n
+
+                # Max relative error (only where abs error matters)
+                significant = abs_err > atol
+                if np.any(significant):
+                    max_rel = np.max(rel_err[significant])
+                    max_rel_error = max(max_rel_error, max_rel)
+
+            satisfaction_ratio = satisfied_points / total_points
+            # ============================================================
+
+            # Choose based on satisfaction ratio (like VF does)
+            if satisfaction_ratio > best_satisfaction:
+                best_satisfaction = satisfaction_ratio
                 best_config = {
                     "n_poles": n_poles,
                     "poles": poles,
                     "residues": residues,
                     "dist_factor": dist_factor,
-                    "error": max_rel_error,
+                    "satisfaction": satisfaction_ratio,
+                    "max_rel_error": max_rel_error,
                 }
+
                 if verbose:
                     print(
-                        f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best"
+                        f"n={n_poles}, dist={dist_factor:6.1f}x, "
+                        f"satisfy={satisfaction_ratio * 100:.1f}%, "
+                        f"max_rel={max_rel_error * 100:.2f}% ← best"
                     )
-                if max_rel_error < rtol:
+
+                # Early exit if target met
+                if satisfaction_ratio >= target_satisfaction:
                     break
             elif verbose:
                 print(
-                    f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}"
+                    f"n={n_poles}, dist={dist_factor:6.1f}x, "
+                    f"satisfy={satisfaction_ratio * 100:.1f}%, "
+                    f"max_rel={max_rel_error * 100:.2f}%"
                 )
 
-        if best_error < rtol:
+        if best_satisfaction >= target_satisfaction:
             break
 
     if best_config is not None:
         if verbose:
             print(
-                f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance"
+                f"\n✓ Best: {best_config['n_poles']} poles "
+                f"at {best_config['dist_factor']}x distance"
             )
-            print(f"Poles: {best_config['poles']}")
-            print(f"Final relative error: {best_config['error']:.3e}")
+            print(f"  Satisfaction: {best_config['satisfaction'] * 100:.1f}%")
+            print(f"  Max rel error: {best_config['max_rel_error'] * 100:.2f}%")
+
         return best_config["poles"], best_config["residues"].T
 
+    # Fallback: no poles
     return np.array([], dtype=np.complex128), np.zeros((k, 0), dtype=np.complex128)
 
 
@@ -727,229 +902,6 @@ def create_single_window_wmp(poles, residues, E_min, E_max, sqrtAWR, name="test"
     wmp.broaden_poly = np.array([False])
 
     return wmp
-
-
-def fit_pseudopoles(Z, remainder, n_pseudo_poles, bcf, bestpra):
-    # Place pseudo-poles geometrically outside the domain
-    info = {"method": "pseudo_pole"}
-    k = remainder.shape[0]
-
-    Z_real = Z.real if np.iscomplexobj(Z) else Z
-    Z_min, Z_max = np.min(Z_real), np.max(Z_real)
-    Z_range = Z_max - Z_min
-
-    # Strategy 1: Place pseudo-poles logarithmically outside domain
-    # This gives better coverage for wide energy ranges
-    if Z_min > 0:  # For positive energy grids
-        # Place poles logarithmically spaced below and above
-        n_left = n_pseudo_poles // 2
-        n_right = (n_pseudo_poles + 1) // 2
-        left_factors = np.logspace(4, 5, n_left)  # [10, 100, ...1000]
-        pseudo_poles_left = Z_min / left_factors
-        # Right poles: above Z_max
-        right_factors = np.logspace(4, 5, n_right)  # [10, 100, ...1000]
-        pseudo_poles_right = Z_max * right_factors
-
-        pseudo_poles = np.concatenate([pseudo_poles_left, pseudo_poles_right])
-    else:
-        # For grids including zero, use linear spacing
-        left_poles = Z_min - Z_range * np.linspace(0.5, 2.0, n_pseudo_poles // 2)
-        right_poles = Z_max + Z_range * np.linspace(0.5, 2.0, (n_pseudo_poles + 1) // 2)
-        pseudo_poles = np.concatenate([left_poles, right_poles])
-
-    # Ensure pseudo-poles are real for real problems
-    if not np.iscomplexobj(Z) and not np.iscomplexobj(bcf):
-        pseudo_poles = pseudo_poles.real
-
-    # Fit residues using regularized least squares
-    pseudo_residues = np.zeros((len(pseudo_poles), k), dtype=np.complex128)
-
-    for i in range(k):
-        remainder_i = remainder[i, :]
-        max_remainder = np.max(np.abs(remainder_i))
-
-        if max_remainder > 1e-12:
-            # Build Cauchy matrix for pseudo-poles
-            C_pseudo = 1.0 / (Z[:, np.newaxis] - pseudo_poles[np.newaxis, :])
-
-            # Use Tikhonov regularization for stability
-            # The regularization parameter scales with the remainder magnitude
-            lambda_reg = 1e-20 * max_remainder
-
-            # Solve normal equations with regularization
-            # (C^T C + lambda*I) * residues = C^T * remainder
-            CTC = C_pseudo.T @ C_pseudo
-            CTr = C_pseudo.T @ remainder_i
-
-            # Add regularization to diagonal
-            CTC_reg = CTC + lambda_reg * np.eye(len(pseudo_poles))
-
-            try:
-                # Solve using Cholesky decomposition for better numerical stability
-                pseudo_residues[:, i] = np.linalg.solve(CTC_reg, CTr)
-            except np.linalg.LinAlgError:
-                # Fallback to least squares if Cholesky fails
-                pseudo_residues[:, i], _, _, _ = np.linalg.lstsq(
-                    C_pseudo, remainder_i, rcond=1e-10
-                )
-
-            # Update approximation
-            bestpra[i, :] += C_pseudo @ pseudo_residues[:, i]
-
-    # Check quality of pseudo-pole fit
-    final_remainder = bcf - bestpra
-    improvement = np.max(np.abs(remainder)) - np.max(np.abs(final_remainder))
-
-    # DEBUG
-    print(f"Z range: [{Z_min:.3e}, {Z_max:.3e}]")
-    print(f"Pseudo-poles: {pseudo_poles}")
-
-    print(f"Pseudo-poles: Added {len(pseudo_poles)} poles")
-    print(f"  Remainder before: {np.max(np.abs(remainder)):.3e}")
-    print(f"  Remainder after:  {np.max(np.abs(final_remainder)):.3e}")
-    print(f"  Improvement:      {improvement:.3e}")
-
-    info["pseudo_poles"] = pseudo_poles
-    info["pseudo_residues"] = pseudo_residues
-    info["n_pseudo_poles"] = n_pseudo_poles
-
-    return info
-
-
-def fit_pseudopoles_adaptive(Z, remainder, bcf, max_poles=6, rtol=1e-6, verbose=True):
-    """
-    Simple loop to find best pseudo-pole configuration.
-
-    Try different numbers of poles and different distances.
-    Pick the best one.
-    """
-    k = remainder.shape[0]
-    Z_real = Z.real if np.iscomplexobj(Z) else Z
-    Z_min, Z_max = np.min(Z_real), np.max(Z_real)
-    Z_range = Z_max - Z_min
-
-    # Define distance multipliers to try
-    if Z_min > 0:
-        # For positive domains, use multiplicative factors
-        # distance_factors = [2, 5, 10, 100, 1000, 1e4, 1e5, 1e6, 1e7, 1e8]
-        distance_factors = [1e4, 1e5, 1e6, 1e7, 1e8]
-    else:
-        # For domains with negative values, use range multiples
-        distance_factors = [0.5, 1, 2, 5, 10, 50, 100]
-
-    best_error = np.inf
-    best_config = None
-
-    # Simple loop: try different pole counts and distances
-    for n_poles in range(1, max_poles + 1):
-        for dist_factor in distance_factors:
-            # Place poles symmetrically
-            poles = []
-            if Z_min > 0:
-                # Multiplicative placement
-                n_left = n_poles // 2
-                n_right = n_poles - n_left  # Handles odd numbers
-
-                # Left poles
-                for i in range(n_left):
-                    pole = Z_min / dist_factor
-                    if pole > 0:  # Don't go below zero
-                        poles.append(pole)
-
-                # Right poles
-                for i in range(n_right):
-                    poles.append(Z_max * dist_factor)
-            else:
-                # Additive placement
-                n_left = n_poles // 2
-                n_right = n_poles - n_left
-
-                # Left poles
-                for i in range(n_left):
-                    poles.append(Z_min - Z_range * dist_factor)
-
-                # Right poles
-                for i in range(n_right):
-                    poles.append(Z_max + Z_range * dist_factor)
-
-            poles = np.array(poles)
-
-            # Skip if we couldn't place all poles
-            if len(poles) != n_poles:
-                continue
-
-            # Fit residues using least squares
-            C = 1.0 / (Z[:, np.newaxis] - poles[np.newaxis, :])
-            residues = np.zeros((n_poles, k), dtype=np.complex128)
-
-            for i in range(k):
-                if np.max(np.abs(remainder[i, :])) > 1e-12:
-                    residues[:, i], _, _, _ = np.linalg.lstsq(
-                        C, remainder[i, :], rcond=1e-12
-                    )
-
-            # Calculate approximation
-            approx = residues.T @ C.T
-            error_array = remainder - approx
-
-            # Calculate max relative error
-            max_rel_error = 0
-            for i in range(k):
-                nonzero = np.abs(bcf[i, :]) > 1e-15
-                if np.any(nonzero):
-                    rel_err = np.max(np.abs(error_array[i, nonzero] / bcf[i, nonzero]))
-                    max_rel_error = max(max_rel_error, rel_err)
-
-            # Check if this is better
-            if max_rel_error < best_error:
-                best_error = max_rel_error
-                best_config = {
-                    "n_poles": n_poles,
-                    "poles": poles,
-                    "residues": residues,
-                    "dist_factor": dist_factor,
-                    "error": max_rel_error,
-                }
-
-                if verbose:
-                    print(
-                        f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e} ← best"
-                    )
-
-                # Stop if good enough
-                if max_rel_error < rtol:
-                    break
-            elif verbose:  # Only print first few
-                print(
-                    f"n={n_poles}, dist={dist_factor:6.1f}x, error={max_rel_error:.3e}"
-                )
-
-        # Stop if we found good solution
-        if best_error < rtol:
-            break
-
-    # Apply best configuration
-    if best_config:
-        # C_best = 1.0 / (Z[:, np.newaxis] - best_config['poles'][np.newaxis, :])
-        # bestpra += best_config['residues'].T @ C_best.T
-
-        if verbose:
-            print(
-                f"\nBest: {best_config['n_poles']} poles at {best_config['dist_factor']}x distance"
-            )
-            print(f"Poles: {best_config['poles']}")
-            print(f"Final relative error: {best_config['error']:.3e}")
-
-        # return {
-        #     "method": "pseudo_pole",
-        #     "pseudo_poles": best_config['poles'],
-        #     "pseudo_residues": best_config['residues'],
-        #     "n_pseudo_poles": best_config['n_poles'],
-        #     "distance_factor": best_config['dist_factor']
-        # }
-        return best_config["poles"], best_config["residues"].T
-
-    return {"method": "pseudo_pole", "error": "failed"}
 
 
 def przd_for_poles(z, w, deflation_tol=1e-10):

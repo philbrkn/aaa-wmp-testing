@@ -1,277 +1,253 @@
-import os
 import pickle
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-import matplotlib.pyplot as plt
 import numpy as np
-from multipole_deplete_v3 import WindowedMultipole
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from aaa_wmp.core.conversion import (
+    evaluate_openmc_T,
+    to_wmp_form,
+)
+from aaa_wmp.io.njoy_interface import generate_temperature_references
+from aaa_wmp.visualization.plotting import (
+    plot_wmp_temperature_validation,
+    plot_wmp_validation,
+)
 
-def plot_wmp_comparison(
-    wmp_data,
-    reference_data,
-    E_grid,
+K_BOLTZMANN = 8.617333262e-5  # eV/K
+TEMPERATURE_LIMIT = 3000  # K
+
+# mp_file = "data/output/U238/mp_data/U238_mp.pickle"
+mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE.pickle"
+temp = 294
+# temp = 0
+
+with open(mp_file, "rb") as f:
+    mp_data = pickle.load(f)
+
+# Handle multi-piece format (concatenate if needed)
+poles_list = mp_data["poles"]
+residues_list = mp_data["residues"]
+
+E_min, E_max = mp_data["E_min"], mp_data["E_max"]
+vf_pieces = len(poles_list)
+
+ref_data = generate_temperature_references(
+    endf_file="data/input/ENDF/ENDF-VIII-data/n-092_U_238.endf",
     name="U238",
-    path_out="./plots",
-    T=0.0,
-    method="VF",
-):
-    """
-    Simple function to plot WMP vs reference data with errors.
+    temperatures=[294, 600, 900, 1200, 1500],
+    cache_dir="data/input/NJOY_pickles",
+    njoy_error=5e-4,
+    log=1,
+)
+# Create common energy grid within bounds
+ref_0K = ref_data[0]
+energy_0K = ref_0K["energy"]
+mask_0K = (energy_0K >= E_min) & (energy_0K <= E_max)
+energy = energy_0K[mask_0K]  # Use 0K grid as common grid
+channels = ["elastic", "absorption"]
+if ref_0K["fissionable"]:
+    channels.append("fission")
+k = len(channels)
 
-    Parameters
-    ----------
-    wmp_data : WindowedMultipole
-        Your WMP data object
-    reference_data : dict
-        Reference data with keys 'elastic', 'absorption', 'fission'
-    E_grid : array-like
-        Energy grid for comparison
-    name : str
-        Nuclide name for plot titles
-    path_out : str
-        Directory to save plots
-    T : float
-        Temperature in K
-    method : str
-        "VF" or "AAA" - determines which evaluate function to use
-    """
 
-    print("Evaluating WMP cross sections...")
-    wmp_elastic = []
-    wmp_absorption = []
-    wmp_fission = []
+def interp_xs(energy_src, xs_src, energy_dst):
+    return np.interp(energy_dst, energy_src, xs_src)
 
-    # Only apply -1j conversion for VF method
-    if method == "VF":
-        wmp_data.data[:, 1:] *= -1j
 
-    for E in E_grid:
-        if method == "AAA":
-            sig_s, sig_a, sig_f = wmp_data._evaluate_aaa(E, T)
-        else:
-            sig_s, sig_a, sig_f = wmp_data._evaluate(E, T)
-        wmp_elastic.append(sig_s)
-        wmp_absorption.append(sig_a)
-        wmp_fission.append(sig_f)
-
-    wmp_elastic = np.array(wmp_elastic)
-    wmp_absorption = np.array(wmp_absorption)
-    wmp_fission = np.array(wmp_fission)
-
-    # Plot each channel
-    channels = [
-        ("elastic", "σ_s", wmp_elastic, reference_data.get("elastic")),
-        ("absorption", "σ_a", wmp_absorption, reference_data.get("absorption")),
-        ("fission", "σ_f", wmp_fission, reference_data.get("fission")),
+# Interpolate 0K reference onto common grid
+original_0K = np.vstack(
+    [
+        interp_xs(ref_0K["energy"], ref_0K["elastic_xs"], energy),
+        interp_xs(ref_0K["energy"], ref_0K["absorption_xs"], energy),
+        interp_xs(ref_0K["energy"], ref_0K["fission_xs"], energy)
+        if ref_0K["fissionable"]
+        else np.zeros(len(energy)),
     ]
-
-    os.makedirs(path_out, exist_ok=True)
-
-    for channel_name, symbol, wmp_xs, ref_xs in channels:
-        if ref_xs is None:
-            continue
-
-        fig, (ax1, ax2) = plt.subplots(
-            2, 1, figsize=(10, 8), gridspec_kw={"height_ratios": [2, 1]}, sharex=True
-        )
-
-        ax1.semilogy(E_grid, ref_xs, "b-", label=f"Reference {symbol}", linewidth=2)
-        ax1.semilogy(E_grid, wmp_xs, "r--", label=f"WMP {symbol}", linewidth=2)
-        ax1.set_ylabel("Cross section (b)")
-        ax1.set_title(f"{name} - {channel_name.capitalize()} Channel ({method})")
-        ax1.legend()
-        ax1.grid(True, which="both", alpha=0.3)
-
-        mask = ref_xs != 0
-        rel_error = np.full_like(ref_xs, np.nan)
-        rel_error[mask] = np.abs(wmp_xs[mask] - ref_xs[mask]) / ref_xs[mask] * 100
-
-        ax2.semilogy(E_grid, rel_error, "k-", linewidth=1.5)
-        ax2.set_xlabel("Energy (eV)")
-        ax2.set_ylabel("Relative Error (%)")
-        ax2.axhline(y=0, color="k", linestyle="-", alpha=0.3)
-        ax2.set_ylim(1e-7, 1e1)
-        ax2.grid(True, which="both", alpha=0.3)
-
-        plt.tight_layout()
-        plt.savefig(
-            os.path.join(
-                path_out, f"{name}_{channel_name}_wmp_comparison_{method}.png"
-            ),
-            dpi=300,
-            bbox_inches="tight",
-        )
-        plt.close()
-
-        if np.any(mask):
-            max_err = np.max(np.abs(rel_error[mask]))
-            rms_err = np.sqrt(np.mean(rel_error[mask] ** 2))
-            print(
-                f"{channel_name.capitalize()}: Max error = {max_err:.2e}%, RMS error = {rms_err:.2e}%"
-            )
-
-
-def create_reference_from_njoy(njoy_pickle_path, E_grid=None, bounds=None):
-    """Extract reference cross sections from NJOY pickle."""
-    with open(njoy_pickle_path, "rb") as f:
-        nuc_ce = pickle.load(f)
-
-    njoy_energy = nuc_ce.energy["0K"]
-    E_max = njoy_energy[-1]
-    E_max_idx = len(njoy_energy) - 1
-
-    for mt in nuc_ce.reactions:
-        if hasattr(nuc_ce.reactions[mt].xs["0K"], "_threshold_idx"):
-            threshold_idx = nuc_ce.reactions[mt].xs["0K"]._threshold_idx
-            if 0 < threshold_idx < E_max_idx:
-                E_max_idx = threshold_idx
-                E_max = njoy_energy[threshold_idx]
-
-    if bounds:
-        E_min = max(bounds.get("E_min", njoy_energy[0]), njoy_energy[0])
-        E_max = min(bounds.get("E_max", E_max), E_max)
-    else:
-        E_min = njoy_energy[0]
-
-    if E_grid is None:
-        mask = (njoy_energy >= E_min) & (njoy_energy <= E_max)
-        energy_eval = njoy_energy[mask]
-    else:
-        mask = (E_grid >= E_min) & (E_grid <= E_max)
-        energy_eval = E_grid[mask]
-
-    print(f"Reference energy range: {E_min:.2e} to {E_max:.2e} eV")
-    print(f"Reference points: {len(energy_eval)}")
-
-    reference_data = {}
-
-    try:
-        reference_data["elastic"] = nuc_ce[2].xs["0K"](energy_eval)
-    except KeyError:
-        reference_data["elastic"] = np.zeros_like(energy_eval)
-
-    try:
-        reference_data["absorption"] = nuc_ce[27].xs["0K"](energy_eval)
-    except KeyError:
-        reference_data["absorption"] = np.zeros_like(energy_eval)
-
-    try:
-        reference_data["fission"] = nuc_ce[18].xs["0K"](energy_eval)
-    except KeyError:
-        reference_data["fission"] = None
-
-    reference_data["energy"] = energy_eval
-    reference_data["bounds"] = {"E_min": E_min, "E_max": E_max}
-
-    return reference_data
-
-
-def load_aaa_wmp(wmp_file, pseudo_file=None):
-    """
-    Load AAA WMP data including pseudopoles.
-
-    Parameters
-    ----------
-    wmp_file : str
-        Path to HDF5 file with physical poles
-    pseudo_file : str, optional
-        Path to pickle file with pseudopoles. If None, looks for
-        wmp_file.replace('.h5', '_pseudo.pickle')
-
-    Returns
-    -------
-    WindowedMultipole
-        WMP object with pseudo_poles and pseudo_residues loaded
-    """
-    # Load main WMP data
-    wmp_data = WindowedMultipole.from_hdf5(wmp_file)
-
-    # Try to load pseudopoles
-    if pseudo_file is None:
-        pseudo_file = wmp_file.replace(".h5", "_pseudo.pickle")
-
-    if os.path.exists(pseudo_file):
-        with open(pseudo_file, "rb") as f:
-            pseudo_data = pickle.load(f)
-        wmp_data.pseudo_poles = pseudo_data["pseudo_poles"]
-        wmp_data.pseudo_residues = pseudo_data["pseudo_residues"]
-        print(f"Loaded pseudopoles from {pseudo_file}")
-        n_pseudo = sum(len(pp) for pp in wmp_data.pseudo_poles)
-        print(f"Total pseudopoles: {n_pseudo}")
-    else:
-        print(f"No pseudopole file found at {pseudo_file}")
-        wmp_data.pseudo_poles = None
-        wmp_data.pseudo_residues = None
-
-    return wmp_data
-
-
-# ============== MAIN ==============
-
-name = "U238"
-METHOD = "AAA"  # or "VF"
-
-# wmp_file = "data/output/WMP_Lib_viii.0/U238/U238_4kphys_6kpp.h5"
-wmp_file = "data/output/WMP_Lib_viii.0/U238/U238.h5"
-njoy_pickle_path = f"data/input/NJOY_pickles/{name}_NJOY.pickle"
-
-# Load WMP data
-if METHOD == "AAA":
-    wmp_data = load_aaa_wmp(wmp_file)
+)
+# Interpolate T reference onto common grid
+if temp > 0:
+    ref_T = ref_data[temp]
+    original_T = np.vstack(
+        [
+            interp_xs(ref_T["energy"], ref_T["elastic_xs"], energy),
+            interp_xs(ref_T["energy"], ref_T["absorption_xs"], energy),
+            interp_xs(ref_T["energy"], ref_T["fission_xs"], energy)
+            if ref_T["fissionable"]
+            else np.zeros(len(energy)),
+        ]
+    )
 else:
-    wmp_data = WindowedMultipole.from_hdf5(wmp_file)
+    original_T = original_0K.copy()
 
-print(f"Total number of physical poles: {len(wmp_data.data)}")
-print(f"Number of windows: {len(wmp_data.windows)}")
+awr = np.sqrt(mp_data["AWR"])
+alpha = mp_data["AWR"] / (K_BOLTZMANN * TEMPERATURE_LIMIT)
+piece_width = (np.sqrt(mp_data["E_max"]) - np.sqrt(mp_data["E_min"])) / vf_pieces
 
-if METHOD == "AAA" and wmp_data.pseudo_poles is not None:
-    n_pseudo = sum(len(pp) for pp in wmp_data.pseudo_poles)
-    print(f"Total pseudopoles: {n_pseudo}")
-    print(f"Average pseudopoles per window: {n_pseudo / len(wmp_data.windows):.2f}")
+# Global reconstruction accumulator
+xs_recon_0K_total = np.zeros((k, energy.size))
+xs_recon_T_total = np.zeros((k, energy.size))
+xs_weight = np.zeros(energy.size)
+# each window is probably going to have a different set of pseudo poles, hence why we do this
+window_bounds = []
+total_wmp_poles = 0
 
-bounds = {"E_min": 1, "E_max": 20000}
-reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
-E_grid = reference_data["energy"]
+for i_piece, poles in enumerate(poles_list):
+    sqrt_E_left = np.sqrt(E_min) + i_piece * piece_width
+    sqrt_E_right = min(np.sqrt(E_max), sqrt_E_left + piece_width)
+    window_bounds.append((sqrt_E_left**2, sqrt_E_right**2))
+    E_left = sqrt_E_left**2
+    # E_right = sqrt_E_right**2
+    # Doppler broadening extension
+    if i_piece == 0 or np.sqrt(alpha) * sqrt_E_left < 4.0:
+        e_start = E_left
+    else:
+        e_start = max(E_min, (np.sqrt(alpha) * sqrt_E_left - 4.0) ** 2 / alpha)
+    e_end = min(E_max, (np.sqrt(alpha) * sqrt_E_right + 4.0) ** 2 / alpha)
+    piece_mask = (energy >= e_start) & (energy <= e_end)
+    if not np.any(piece_mask):
+        continue
 
-### DEBUG ###
-E_test = 6.67  # first big U-238 resonance
-sqrtE = np.sqrt(E_test)
+    energy_i = energy[piece_mask]
 
-# Find window
-i_window = int((sqrtE - np.sqrt(wmp_data.E_min)) / wmp_data.spacing)
-print(f"E={E_test}, window={i_window}")
+    residues = residues_list[i_piece]
+    c0 = mp_data["poly_info_list"][i_piece]["c0"]  # Get c0 for this piece
+    poly_coeffs = c0[:, np.newaxis]  # Shape (k, 1)
+    mp_poles, mp_residues = to_wmp_form(poles, residues, tol=1e-9)
+    total_wmp_poles += len(mp_poles)
 
-# Physical poles in this window
-startw = wmp_data.windows[i_window, 0] - 1
-endw = wmp_data.windows[i_window, 1]
-print(f"Physical poles: {startw} to {endw} ({endw - startw} poles)")
+    # Pole-only reconstruction at 0 K
+    # SOME HWO GET ENERGY SLICE FOR THAT WINDOW.
+    xs_recon_0K = evaluate_openmc_T(
+        energy_i,
+        0.0,
+        mp_poles,
+        mp_residues / 1j,
+        sqrtAWR=awr,
+        poly_coeffs=poly_coeffs,
+        broaden_poly=False,
+    )
+    # import openmc.data.vectfit as vf
+    # xs_poles_0K = vf.evaluate(Z_i, poles, residues) / energy_i
+    # Reconstruction at any temperature + same background
+    xs_recon_T = evaluate_openmc_T(
+        energy_i,
+        temp,
+        mp_poles,
+        mp_residues / 1j,
+        sqrtAWR=awr,
+        poly_coeffs=poly_coeffs,
+        broaden_poly=False,
+    )
 
-# Pseudopoles in this window
-if wmp_data.pseudo_poles is not None:
-    pp = wmp_data.pseudo_poles[i_window]
-    print(f"Pseudopoles in window: {len(pp)}")
-    if len(pp) > 0:
-        print(f"Pseudopole values: {pp}")
+    # Accumulate both
+    xs_recon_0K_total[:, piece_mask] += np.asarray(xs_recon_0K).real
+    xs_recon_T_total[:, piece_mask] += np.asarray(xs_recon_T).real
+    xs_weight[piece_mask] += 1.0
 
-# Evaluate
-sig_s, sig_a, sig_f = wmp_data._evaluate_aaa(E_test, 0.0)
-print(f"WMP: sig_s={sig_s:.4f}, sig_a={sig_a:.4f}, sig_f={sig_f:.4f}")
+print(f"Total WMP poles: {total_wmp_poles}")
 
-# Reference
-ref_idx = np.argmin(np.abs(reference_data["energy"] - E_test))
-print(
-    f"Ref: sig_s={reference_data['elastic'][ref_idx]:.4f}, sig_a={reference_data['absorption'][ref_idx]:.4f}"
-)
-###########
+# Normalize by overlap weight
+nonzero = xs_weight > 0
+xs_recon_0K_total[:, nonzero] /= xs_weight[nonzero]
+xs_recon_T_total[:, nonzero] /= xs_weight[nonzero]
 
-plot_wmp_comparison(
-    wmp_data,
-    reference_data,
-    E_grid,
-    name=name,
-    path_out="data/output/U238/wmp_plots",
-    method=METHOD,
-)
+# Channel symbols for plotting
+symbols = {"elastic": "σ_el", "absorption": "σ_abs", "fission": "σ_f"}
+
+# Plot each channel
+print("\n" + "=" * 60)
+print("Generating plots...")
+print("=" * 60)
+
+output_dir = "/home/philip/Documents/aaa-wmp-testing/data/output/U238/validation/"
+# Then in your plotting loop:
+for i, channel in enumerate(channels):
+    if temp == 0:
+        c0 = mp_data["poly_info_list"][0]["c0"][i]  # Get c0 for this channel
+        stats = plot_wmp_validation(
+            E=energy,
+            original=original_0K[i],
+            reconstructed=xs_recon_0K_total[i],
+            c0=c0,
+            channel_name=channel,
+            symbol=symbols[channel],
+            name="U238",
+            path_out=output_dir,
+            rtol=1e-3,
+            atol=1e-5,
+            window_bounds=window_bounds,
+        )
+    else:
+        stats = plot_wmp_temperature_validation(
+            E=energy,
+            ref_0K=original_0K[i],
+            ref_T=original_T[i],
+            recon_0K=xs_recon_0K_total[i],
+            recon_T=xs_recon_T_total[i],
+            temperature=temp,
+            channel_name=channel,
+            symbol=symbols[channel],
+            name="U238",
+            path_out=output_dir,
+            rtol=1e-3,
+            atol=1e-5,
+            window_bounds=window_bounds,
+        )
+
+    # print(f"{channel}: {stats['satisfaction_pct']:.1f}% within tolerance, "
+    #       f"max rel err = {stats['max_rel_err']*100:.3f}%")
+
+
+def assess_reconstruction(xs_recon, xs_ref, rtol=1e-3, atol=1e-5):
+    """
+    Assess reconstruction quality using VF/WMP criteria.
+
+    rtol: relative tolerance (default 1e-3 = 0.1%)
+    atol: absolute tolerance (default 1e-5 barns)
+    """
+    abserr = np.abs(xs_recon - xs_ref)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        relerr = abserr / xs_ref
+    # Check for NaN (shouldn't happen but guard against it)
+    if np.any(np.isnan(abserr)):
+        return {"maxre": np.inf, "ratio": 0.0, "ratio2": 0.0, "status": "FAILED - NaN"}
+    # If all points satisfy absolute tolerance, perfect
+    if np.all(abserr <= atol):
+        return {"maxre": 0.0, "ratio": 1.0, "ratio2": 1.0, "status": "PERFECT"}
+    # Max relative error (only where abs error > atol)
+    # This ignores relative error at near-zero cross sections
+    maxre = np.max(relerr[abserr > atol])
+    # Fraction of points satisfying EITHER relative OR absolute tolerance
+    ratio = np.sum((relerr < rtol) | (abserr < atol)) / relerr.size
+    ratio2 = np.sum((relerr < 10 * rtol) | (abserr < atol)) / relerr.size
+    # Status
+    if ratio >= 0.99:
+        status = "EXCELLENT"
+    elif ratio >= 0.95:
+        status = "GOOD"
+    elif ratio >= 0.90:
+        status = "ACCEPTABLE"
+    else:
+        status = "POOR"
+    return {"maxre": maxre, "ratio": ratio, "ratio2": ratio2, "status": status}
+
+
+print("\n" + "=" * 60)
+print(f"Assessment at {temp}K:")
+print("=" * 60)
+
+# Choose which reconstruction and reference to assess based on temp
+recon_to_assess = xs_recon_T_total if temp > 0 else xs_recon_0K_total
+ref_to_assess = original_T if temp > 0 else original_0K
+
+for i, channel in enumerate(channels):
+    result = assess_reconstruction(
+        recon_to_assess[i], ref_to_assess[i], rtol=1e-3, atol=1e-5
+    )
+    print(f"\n{channel.upper()}:")
+    print(f"  Max relative error: {result['maxre'] * 100:.3f}% (where abs err > 1e-5)")
+    print(f"  Points within either tol:  {result['ratio'] * 100:.1f}%")
+    print(f"  Points within 10x rtol and atol:  {result['ratio2'] * 100:.1f}%")
+    print(f"  Status: {result['status']}")

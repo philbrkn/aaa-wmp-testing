@@ -1,6 +1,5 @@
 import pickle
 import time
-from pathlib import Path
 
 import numpy as np
 
@@ -12,7 +11,7 @@ import numpy as np
 # vectfit_file = Path("mp-data-VF-output/U238_mp_data_VIII_20250815_175017.pickle")
 # vectfit_file = Path("aaa_analyze_constant/U238_mp.pickle")
 # vectfit_file = Path("data/output/WMP_Lib_viii.0/U238/U238_mp-VF.pickle")
-vectfit_file = Path("data/output/WMP_Lib_viii.0/U238/U238_mp_328p_1e-3.pickle")
+vectfit_file = "data/output/U238/mp_data/U238_mp-VF.pickle"
 
 with open(vectfit_file, "rb") as f:
     obj = pickle.load(f)
@@ -78,4 +77,5 @@ def count_wmp_poles_in_range(poles, bounds):
 bounds = {"E_min": 0, "E_max": 20000}
 count_wmp_poles_in_range(mp_data["poles"], bounds)
 
+print("test", len(mp_data["poles"]))
 print("Time taken to create WMP:", time.time() - start_time)

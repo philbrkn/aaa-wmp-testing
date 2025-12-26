@@ -255,8 +255,8 @@ def plot_reconstruction(
         Reconstructed cross sections
     """
     # temp load NJOY data
-    temp = 1500
-    # temp = 0
+    # temp = 1500
+    temp = 0
     from ..io.njoy_interface import generate_temperature_references
 
     ref_data = generate_temperature_references(
@@ -331,12 +331,12 @@ def plot_reconstruction(
     remainder = xs_ref_0K_interp - xs_poles_0K
 
     pp, res_pp = fit_pseudopoles_adaptive_0K(
-        Z,
+        energy,
         remainder,
         xs_0K_recon=xs_poles_0K,  # <-- "0K reconstruction" denominator
-        max_poles=6,
+        max_poles=2,
         rtol=1e-8,
-        verbose=True,
+        verbose=False,
     )
     # Evaluate pseudo background using the SAME kernel used in the fit: 1/(Z - p)
     if pp.size > 0:
@@ -407,8 +407,544 @@ def plot_reconstruction(
             poles=poles,
         )
 
+
+def plot_wmp_validation(
+    E,
+    original,
+    reconstructed,
+    c0,
+    channel_name,
+    symbol,
+    name,
+    path_out=None,
+    rtol=1e-3,
+    atol=1e-5,
+    window_bounds=None,
+):
+    """
+    Plot WMP reconstruction validation for a single channel.
+
+    Parameters
+    ----------
+    E : array-like
+        Energy grid (eV)
+    original : array-like
+        Reference cross section (barns)
+    reconstructed : array-like
+        WMP reconstruction (barns)
+    c0 : float
+        Constant term in E*sigma space for this channel
+    channel_name : str
+        Name of the channel (elastic, absorption, fission)
+    symbol : str
+        LaTeX symbol for the cross section
+    name : str
+        Nuclide name
+    path_out : str, optional
+        Directory to save plot
+    rtol : float
+        Relative tolerance (default 1e-3 = 0.1%)
+    atol : float
+        Absolute tolerance in barns (default 1e-5)
+    window_bounds : list of tuples, optional
+        List of (E_left, E_right) for each window
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    # Compute errors
+    abs_err = np.abs(reconstructed - original)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_err = abs_err / np.abs(original)
+        rel_err[~np.isfinite(rel_err)] = 0
+
+    # Points satisfying tolerance
+    satisfied = (rel_err < rtol) | (abs_err < atol)
+    satisfaction_pct = 100 * np.sum(satisfied) / len(satisfied)
+
+    # Compute contributions
+    c0_contribution = c0 / E  # c0 is in E*sigma space
+    pole_only = reconstructed - c0_contribution
+    remainder = original - pole_only  # What the constant needs to capture
+
+    # ========== Top Left: Original vs Reconstruction ==========
+    ax = axes[0, 0]
+    ax.loglog(E, original, "b-", label=f"Reference {symbol}", linewidth=1.5)
+    ax.loglog(
+        E, reconstructed, "r--", label="WMP Reconstruction", linewidth=1.0, alpha=0.8
+    )
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (barns)")
+    ax.set_title(f"{name} {channel_name.capitalize()}: Reference vs WMP")
+    ax.legend(loc="best")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Top Right: Remainder vs c0/E ==========
+    ax = axes[0, 1]
+    ax.semilogx(E, remainder, "b-", label="Remainder (ref - poles)", linewidth=1.0)
+    ax.semilogx(E, c0_contribution, "r--", label=f"c₀/E (c₀={c0:.3e})", linewidth=1.5)
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (barns)")
+    ax.set_title(f"{channel_name.capitalize()}: Remainder vs Polynomial Background")
+    ax.legend(loc="best")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Bottom Left: Relative Error ==========
+    ax = axes[1, 0]
+    ax.semilogy(E, rel_err * 100, "b-", linewidth=0.8, label="Relative error")
+    ax.axhline(
+        rtol * 100,
+        color="r",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"rtol = {rtol * 100:.1f}%",
+    )
+
+    # Shade where absolute tolerance saves us
+    abs_dominated = (abs_err < atol) & (rel_err >= rtol)
+    if np.any(abs_dominated):
+        for start, end in _get_contiguous_regions(abs_dominated):
+            ax.axvspan(E[start], E[end - 1], alpha=0.2, color="green")
+        ax.fill_between([], [], alpha=0.2, color="green", label="Within atol only")
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Relative error (%)")
+    ax.set_title(
+        f"{channel_name.capitalize()}: Relative Error ({satisfaction_pct:.1f}% within tolerance)"
+    )
+    ax.set_xscale("log")
+    ax.set_ylim(1e-6, 1e2)
+    ax.legend(loc="upper right")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Bottom Right: Absolute Error ==========
+    ax = axes[1, 1]
+    ax.semilogy(E, abs_err, "b-", linewidth=0.8, label="Absolute error")
+    ax.axhline(
+        atol, color="r", linestyle="--", linewidth=1.5, label=f"atol = {atol:.0e} barns"
+    )
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Absolute error (barns)")
+    ax.set_title(f"{channel_name.capitalize()}: Absolute Error")
+    ax.set_xscale("log")
+    ax.legend(loc="upper right")
+    ax.grid(True, which="both", alpha=0.3)
+
+    plt.suptitle(
+        f"{name} {channel_name.capitalize()} WMP Validation",
+        fontsize=14,
+        fontweight="bold",
+    )
+    plt.tight_layout()
+
     if path_out:
-        print(f"Saved reconstruction plots to {path_out}")
+        filename = f"{name}_{channel_name}_wmp_validation.png"
+        filepath = os.path.join(path_out, filename)
+        plt.savefig(filepath, dpi=300, bbox_inches="tight")
+        print(f"  Saved: {filepath}")
+        plt.close()
+    else:
+        plt.show()
+
+    return {
+        "satisfaction_pct": satisfaction_pct,
+        "max_rel_err": np.max(rel_err[abs_err > atol]) if np.any(abs_err > atol) else 0,
+        "max_abs_err": np.max(abs_err),
+    }
+
+
+def _get_contiguous_regions(mask):
+    """Helper to find contiguous True regions in a boolean mask."""
+    regions = []
+    start = None
+    for i, val in enumerate(mask):
+        if val and start is None:
+            start = i
+        elif not val and start is not None:
+            regions.append((start, i))
+            start = None
+    if start is not None:
+        regions.append((start, len(mask)))
+    return regions
+
+
+def plot_wmp_temperature_validation(
+    E,
+    ref_0K,
+    ref_T,
+    recon_0K,
+    recon_T,
+    temperature,
+    channel_name,
+    symbol,
+    name,
+    path_out=None,
+    rtol=1e-3,
+    atol=1e-5,
+    window_bounds=None,
+):
+    """
+    Plot WMP reconstruction validation at finite temperature.
+
+    Parameters
+    ----------
+    E : array-like
+        Energy grid (eV)
+    ref_0K : array-like
+        Reference cross section at 0K (barns)
+    ref_T : array-like
+        Reference cross section at temperature T (barns)
+    recon_0K : array-like
+        WMP reconstruction at 0K (barns)
+    recon_T : array-like
+        WMP reconstruction at temperature T (barns)
+    temperature : float
+        Temperature in Kelvin
+    channel_name : str
+        Name of the channel
+    symbol : str
+        LaTeX symbol for the cross section
+    name : str
+        Nuclide name
+    path_out : str, optional
+        Directory to save plot
+    rtol : float
+        Relative tolerance (default 1e-3 = 0.1%)
+    atol : float
+        Absolute tolerance in barns (default 1e-5)
+    window_bounds : list of tuples, optional
+        List of (E_left, E_right) for each window
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    # Compute errors at temperature T
+    abs_err_T = np.abs(recon_T - ref_T)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_err_T = abs_err_T / np.abs(ref_T)
+        rel_err_T[~np.isfinite(rel_err_T)] = 0
+
+    # Compute errors at 0K for comparison
+    abs_err_0K = np.abs(recon_0K - ref_0K)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rel_err_0K = abs_err_0K / np.abs(ref_0K)
+        rel_err_0K[~np.isfinite(rel_err_0K)] = 0
+
+    satisfied_T = (rel_err_T < rtol) | (abs_err_T < atol)
+    satisfaction_pct_T = 100 * np.sum(satisfied_T) / len(satisfied_T)
+
+    satisfied_0K = (rel_err_0K < rtol) | (abs_err_0K < atol)
+    satisfaction_pct_0K = 100 * np.sum(satisfied_0K) / len(satisfied_0K)
+
+    # ========== Top Left: Reference vs Reconstruction at T ==========
+    ax = axes[0, 0]
+    ax.loglog(
+        E, ref_T, "b-", label=f"Reference {symbol} @ {temperature}K", linewidth=1.5
+    )
+    ax.loglog(
+        E, recon_T, "r--", label=f"WMP @ {temperature}K", linewidth=1.0, alpha=0.8
+    )
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (barns)")
+    ax.set_title(f"{channel_name.capitalize()}: Reference vs WMP @ {temperature}K")
+    ax.legend(loc="best")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Top Right: Doppler Broadening Effect ==========
+    ax = axes[0, 1]
+    ax.loglog(
+        E, ref_0K, color="black", label="Reference @ 0K", linewidth=1.0, alpha=0.6
+    )
+    ax.loglog(E, ref_T, "b--", label=f"Reference @ {temperature}K", linewidth=1.5)
+    ax.loglog(E, recon_T, "r:", label=f"WMP @ {temperature}K", linewidth=1.5)
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (barns)")
+    ax.set_title(f"{channel_name.capitalize()}: Doppler Broadening Effect")
+    ax.legend(loc="best")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Bottom Left: Relative Error Comparison ==========
+    ax = axes[1, 0]
+    ax.semilogy(
+        E,
+        rel_err_0K * 100,
+        color="gray",
+        linewidth=0.8,
+        alpha=0.7,
+        label="Rel error @ 0K",
+    )
+    ax.semilogy(
+        E, rel_err_T * 100, "b-", linewidth=0.8, label=f"Rel error @ {temperature}K"
+    )
+    ax.axhline(
+        rtol * 100,
+        color="r",
+        linestyle="--",
+        linewidth=1.5,
+        label=f"rtol = {rtol * 100:.1f}%",
+    )
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Relative error (%)")
+    ax.set_title(
+        f"{channel_name.capitalize()}: Relative Error (0K: {satisfaction_pct_0K:.1f}%, {temperature}K: {satisfaction_pct_T:.1f}% within tol)"
+    )
+    ax.set_xscale("log")
+    ax.set_ylim(1e-6, 1e2)
+    ax.legend(loc="upper right")
+    ax.grid(True, which="both", alpha=0.3)
+
+    # ========== Bottom Right: Absolute Error Comparison ==========
+    ax = axes[1, 1]
+    ax.semilogy(
+        E, abs_err_0K, color="gray", linewidth=0.8, alpha=0.7, label="Abs error @ 0K"
+    )
+    ax.semilogy(E, abs_err_T, "b-", linewidth=0.8, label=f"Abs error @ {temperature}K")
+    ax.axhline(
+        atol, color="r", linestyle="--", linewidth=1.5, label=f"atol = {atol:.0e} barns"
+    )
+
+    if window_bounds is not None:
+        for i, (E_l, E_r) in enumerate(window_bounds):
+            ax.axvline(E_l, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+            if i == len(window_bounds) - 1:
+                ax.axvline(E_r, color="black", linestyle=":", alpha=0.8, linewidth=1.8)
+
+    # Points failing rtol but saved by atol
+    saved_by_atol_T = (rel_err_T >= rtol) & (abs_err_T < atol)
+    # Points failing both tolerances
+    failing_both_T = (rel_err_T >= rtol) & (abs_err_T >= atol)
+    if np.any(saved_by_atol_T):
+        ax.scatter(
+            E[saved_by_atol_T],
+            abs_err_T[saved_by_atol_T],
+            c="green",
+            s=10,
+            alpha=0.7,
+            zorder=5,
+            label="Saved by atol",
+        )
+
+    # Highlight points failing both tolerances (red)
+    if np.any(failing_both_T):
+        ax.scatter(
+            E[failing_both_T],
+            abs_err_T[failing_both_T],
+            c="red",
+            s=10,
+            alpha=0.7,
+            zorder=5,
+            label="Failing both",
+        )
+
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Absolute error (barns)")
+    ax.set_title(f"{channel_name.capitalize()}: Absolute Error")
+    ax.set_xscale("log")
+    ax.legend(loc="upper right")
+    ax.grid(True, which="both", alpha=0.3)
+
+    plt.suptitle(
+        f"{name} {channel_name.capitalize()} WMP Validation @ {temperature}K",
+        fontsize=14,
+        fontweight="bold",
+    )
+    plt.tight_layout()
+
+    if path_out:
+        filename = f"{name}_{channel_name}_wmp_validation_{temperature}K.png"
+        filepath = os.path.join(path_out, filename)
+        plt.savefig(filepath, dpi=300, bbox_inches="tight")
+        # print(f'  Saved: {filepath}')
+        plt.close()
+    else:
+        plt.show()
+
+    return {
+        "satisfaction_pct_0K": satisfaction_pct_0K,
+        "satisfaction_pct_T": satisfaction_pct_T,
+        "max_rel_err_T": np.max(rel_err_T[abs_err_T > atol])
+        if np.any(abs_err_T > atol)
+        else 0,
+        "max_abs_err_T": np.max(abs_err_T),
+    }
+
+
+def plot_decomposition(
+    E,
+    original,
+    pole_contribution,
+    pseudo_contribution,
+    remainder,
+    channel_name,
+    symbol,
+    name,
+    path_out=None,
+    plot_type="loglog",
+):
+    """
+    Plot the decomposition of cross section into pole, pseudo-pole, and remainder contributions.
+
+    Parameters
+    ----------
+    E : array-like
+        Energy grid
+    original : array-like
+        Original cross section data
+    pole_contribution : array-like
+        Contribution from physical poles
+    pseudo_contribution : array-like
+        Contribution from pseudo poles
+    remainder : array-like
+        Remaining difference (original - pole - pseudo)
+    channel_name : str
+        Name of the channel
+    symbol : str
+        Symbol for the cross section
+    name : str
+        Nuclide name
+    path_out : str, optional
+        Directory to save plot
+    plot_type : str
+        Plot scale type
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    # Choose plotting function based on type
+    def get_plot_func(ax):
+        if plot_type == "loglog":
+            return ax.loglog
+        elif plot_type == "semilogx":
+            return ax.semilogx
+        elif plot_type == "semilogy":
+            return ax.semilogy
+        else:
+            return ax.plot
+
+    # Top left: Original vs total reconstruction
+    ax = axes[0, 0]
+    plot_func = get_plot_func(ax)
+    total_recon = pole_contribution + pseudo_contribution
+    plot_func(E, original, "b-", label=f"Original {symbol}", linewidth=2)
+    plot_func(E, total_recon, "r--", label="Total Reconstruction", linewidth=1.5)
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (b)")
+    ax.set_title(f"{channel_name.capitalize()}: Original vs Reconstruction")
+    ax.legend()
+    ax.grid(True, which="both", alpha=0.3)
+
+    # Top right: Pole contribution only
+    ax = axes[0, 1]
+    plot_func = get_plot_func(ax)
+    plot_func(E, original, "b-", label=f"Original {symbol}", linewidth=2, alpha=0.5)
+    plot_func(
+        E, pole_contribution, color="gray", label="Pole Contribution", linewidth=1.5
+    )
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (b)")
+    ax.set_title(f"{channel_name.capitalize()}: Physical Pole Contribution")
+    ax.legend()
+    ax.grid(True, which="both", alpha=0.3)
+
+    # Bottom left: Pseudo-pole contribution
+    ax = axes[1, 0]
+    y_min = min(pseudo_contribution.min(), remainder.min())
+    y_max = max(pseudo_contribution.max(), remainder.max())
+    # Pseudo contribution can be negative, so use semilogx for energy axis only
+    if plot_type in ["loglog", "semilogx"]:
+        ax.semilogx(
+            E,
+            pseudo_contribution,
+            "m-",
+            label="Pseudo-pole Contribution",
+            linewidth=1.5,
+        )
+    else:
+        ax.plot(
+            E,
+            pseudo_contribution,
+            "m-",
+            label="Pseudo-pole Contribution",
+            linewidth=1.5,
+        )
+    ax.axhline(y=0, color="k", linestyle="--", linewidth=0.5)
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (b)")
+    ax.set_title(f"{channel_name.capitalize()}: Pseudo-pole Contribution (Background)")
+    ax.legend()
+    ax.grid(True, which="both", alpha=0.3)
+    ax.set_ylim(y_min, y_max)
+
+    # Bottom right: Final remainder
+    ax = axes[1, 1]
+    if plot_type in ["loglog", "semilogx"]:
+        ax.semilogx(E, remainder, "k-", label="Remainder (Error)", linewidth=1.5)
+    else:
+        ax.plot(E, remainder, "k-", label="Remainder (Error)", linewidth=1.5)
+    ax.axhline(y=0, color="r", linestyle="--", linewidth=0.5)
+    ax.set_xlabel("Energy (eV)")
+    ax.set_ylabel("Cross section (b)")
+    ax.set_title(f"{channel_name.capitalize()}: Remainder (Original - Reconstruction)")
+    ax.legend()
+    ax.grid(True, which="both", alpha=0.3)
+    ax.set_ylim(y_min, y_max)
+
+    plt.suptitle(
+        f"{name} {channel_name.capitalize()} Cross Section Decomposition", fontsize=14
+    )
+    plt.tight_layout()
+
+    if path_out:
+        filename = f"{name}_{channel_name}_decomposition.png"
+        plt.savefig(os.path.join(path_out, filename), dpi=300, bbox_inches="tight")
+        plt.close()
+    else:
+        plt.show()
 
 
 def fit_background_poly(E, xs_ref, xs_poles, degree=0, mask=None):

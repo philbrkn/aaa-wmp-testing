@@ -17,7 +17,9 @@ endf_files = [
 ]
 out_dir = "data/output/WMP_Lib_viii.0"
 # mp_file = "data/output/U238/mp_data/U238_mp-VF.pickle"
-mp_file = "data/output/U238/mp_data/U238_mp_50p_2e-3.pickle"
+# mp_file = "data/output/U238/mp_data/U238_mp_50p_2e-3.pickle"
+# mp_file = "data/output/U238/mp_data/U238_mp.pickle"
+mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE.pickle"
 METHOD = "AAA"
 
 print("Start processing {} nuclides - {}".format(len(endf_files), time.ctime()))
@@ -57,7 +59,6 @@ def process(endf_file):
                                 n_threads=20,
                                 njoy_input=njoy_input,
                                 method=METHOD,
-                                rtol=1e-2,
                             )
                         except Exception as e:
                             print(f"Failed with rtol 1e-3: {str(e)}")
