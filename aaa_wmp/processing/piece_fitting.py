@@ -110,40 +110,8 @@ def fit_piece(i_piece, data, piece_width, alpha, space, **kwargs):
         max_poly_degree=kwargs.get("max_poly_degree", 0),
     )
 
-    if kwargs.get("rerun_on_residual", False):
-        bg_vals = eval_background(Z, poly_info)
-
-        channels_residual = []
-        for i, ch in enumerate(channels):
-            channels_residual.append(ch - bg_vals[i])
-
-        channels_residual = np.asarray(channels_residual)
-        w, z, fz, R, err_hist = miaaa_xs(
-            E_piece,
-            channels_residual,
-            method=kwargs.get("method", "full_svd"),
-            rtol=kwargs.get("rtol", 1e-13),
-            mmax=kwargs.get("mmax", 100),
-            greedy_metric="relative",
-            log=log,
-            space=space,
-            normalize=True,
-            lawson_iter=kwargs.get("lawson_iter", 0),
-        )
-
-        poles_piece, residues_piece, _, _ = proper_rational(
-            z,
-            w,
-            w,
-            fz,
-            R,
-            Z,
-            pole_extraction=kwargs.get("pole_extraction", None),
-            max_poly_degree=0,  # IMPORTANT: NO POLY SECOND TIME
-        )
-    else:
-        poles_piece = poles_bg
-        residues_piece = residues_bg
+    poles_piece = poles_bg
+    residues_piece = residues_bg
 
     # Optional cleanup
     if cleanup:

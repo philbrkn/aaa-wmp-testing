@@ -20,8 +20,8 @@ TEMPERATURE_LIMIT = 3000  # K
 
 # mp_file = "data/output/U238/mp_data/U238_mp.pickle"
 mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE.pickle"
-temp = 294
 # temp = 0
+temp = 1500
 
 with open(mp_file, "rb") as f:
     mp_data = pickle.load(f)
@@ -81,17 +81,20 @@ if temp > 0:
 else:
     original_T = original_0K.copy()
 
-awr = np.sqrt(mp_data["AWR"])
+sqrt_awr = np.sqrt(mp_data["AWR"])
 alpha = mp_data["AWR"] / (K_BOLTZMANN * TEMPERATURE_LIMIT)
 piece_width = (np.sqrt(mp_data["E_max"]) - np.sqrt(mp_data["E_min"])) / vf_pieces
 
 # Global reconstruction accumulator
 xs_recon_0K_total = np.zeros((k, energy.size))
 xs_recon_T_total = np.zeros((k, energy.size))
+xs_poles_only_total = np.zeros((k, energy.size))
 xs_weight = np.zeros(energy.size)
 # each window is probably going to have a different set of pseudo poles, hence why we do this
 window_bounds = []
 total_wmp_poles = 0
+
+Z = np.sqrt(energy)
 
 for i_piece, poles in enumerate(poles_list):
     sqrt_E_left = np.sqrt(E_min) + i_piece * piece_width
@@ -110,33 +113,38 @@ for i_piece, poles in enumerate(poles_list):
         continue
 
     energy_i = energy[piece_mask]
-
     residues = residues_list[i_piece]
     c0 = mp_data["poly_info_list"][i_piece]["c0"]  # Get c0 for this piece
     poly_coeffs = c0[:, np.newaxis]  # Shape (k, 1)
     mp_poles, mp_residues = to_wmp_form(poles, residues, tol=1e-9)
     total_wmp_poles += len(mp_poles)
 
-    # Pole-only reconstruction at 0 K
-    # SOME HWO GET ENERGY SLICE FOR THAT WINDOW.
-    xs_recon_0K = evaluate_openmc_T(
-        energy_i,
-        0.0,
-        mp_poles,
-        mp_residues / 1j,
-        sqrtAWR=awr,
-        poly_coeffs=poly_coeffs,
-        broaden_poly=False,
-    )
-    # import openmc.data.vectfit as vf
-    # xs_poles_0K = vf.evaluate(Z_i, poles, residues) / energy_i
+    import openmc.data.vectfit as vf
+
+    Z_i = Z[piece_mask]
+    F = vf.evaluate(Z_i, mp_poles, mp_residues, poly_coefficients=poly_coeffs)
+    xs_recon_0K = np.real(F) / energy_i[None, :]
+    # Also compute poles-only (no c0) for plotting
+    F_poles_only = vf.evaluate(Z_i, mp_poles, mp_residues, poly_coefficients=None)
+    xs_poles_only = np.real(F_poles_only) / energy_i[None, :]
+
+    # xs_recon_0K = evaluate_openmc_T(
+    #     energy_i,
+    #     0.0,
+    #     mp_poles,
+    #     mp_residues / 1j,
+    #     sqrtAWR=awr,
+    #     poly_coeffs=poly_coeffs,
+    #     broaden_poly=False,
+    # )
+
     # Reconstruction at any temperature + same background
     xs_recon_T = evaluate_openmc_T(
         energy_i,
         temp,
         mp_poles,
         mp_residues / 1j,
-        sqrtAWR=awr,
+        sqrtAWR=sqrt_awr,
         poly_coeffs=poly_coeffs,
         broaden_poly=False,
     )
@@ -144,6 +152,7 @@ for i_piece, poles in enumerate(poles_list):
     # Accumulate both
     xs_recon_0K_total[:, piece_mask] += np.asarray(xs_recon_0K).real
     xs_recon_T_total[:, piece_mask] += np.asarray(xs_recon_T).real
+    xs_poles_only_total[:, piece_mask] += np.asarray(xs_poles_only).real
     xs_weight[piece_mask] += 1.0
 
 print(f"Total WMP poles: {total_wmp_poles}")
@@ -152,6 +161,7 @@ print(f"Total WMP poles: {total_wmp_poles}")
 nonzero = xs_weight > 0
 xs_recon_0K_total[:, nonzero] /= xs_weight[nonzero]
 xs_recon_T_total[:, nonzero] /= xs_weight[nonzero]
+xs_poles_only_total[:, nonzero] /= xs_weight[nonzero]
 
 # Channel symbols for plotting
 symbols = {"elastic": "σ_el", "absorption": "σ_abs", "fission": "σ_f"}
@@ -162,7 +172,6 @@ print("Generating plots...")
 print("=" * 60)
 
 output_dir = "/home/philip/Documents/aaa-wmp-testing/data/output/U238/validation/"
-# Then in your plotting loop:
 for i, channel in enumerate(channels):
     if temp == 0:
         c0 = mp_data["poly_info_list"][0]["c0"][i]  # Get c0 for this channel
@@ -170,7 +179,7 @@ for i, channel in enumerate(channels):
             E=energy,
             original=original_0K[i],
             reconstructed=xs_recon_0K_total[i],
-            c0=c0,
+            poles_only=xs_poles_only_total[i],
             channel_name=channel,
             symbol=symbols[channel],
             name="U238",

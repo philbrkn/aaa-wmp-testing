@@ -412,7 +412,7 @@ def plot_wmp_validation(
     E,
     original,
     reconstructed,
-    c0,
+    poles_only,
     channel_name,
     symbol,
     name,
@@ -462,9 +462,11 @@ def plot_wmp_validation(
     satisfaction_pct = 100 * np.sum(satisfied) / len(satisfied)
 
     # Compute contributions
-    c0_contribution = c0 / E  # c0 is in E*sigma space
-    pole_only = reconstructed - c0_contribution
-    remainder = original - pole_only  # What the constant needs to capture
+    # c0_contribution = c0 / E  # c0 is in E*sigma space
+    # pole_only = reconstructed - c0_contribution
+    # remainder = original - pole_only  # What the constant needs to capture
+    remainder = original - poles_only  # True background needed
+    background = reconstructed - poles_only  # Actual per-piece c0/E
 
     # ========== Top Left: Original vs Reconstruction ==========
     ax = axes[0, 0]
@@ -488,7 +490,8 @@ def plot_wmp_validation(
     # ========== Top Right: Remainder vs c0/E ==========
     ax = axes[0, 1]
     ax.semilogx(E, remainder, "b-", label="Remainder (ref - poles)", linewidth=1.0)
-    ax.semilogx(E, c0_contribution, "r--", label=f"c₀/E (c₀={c0:.3e})", linewidth=1.5)
+    # ax.semilogx(E, c0_contribution, "r--", label=f"c₀/E (c₀={c0:.3e})", linewidth=1.5)
+    ax.semilogx(E, background, "r--", label="Background (c₀/E piece)", linewidth=1.5)
 
     if window_bounds is not None:
         for i, (E_l, E_r) in enumerate(window_bounds):

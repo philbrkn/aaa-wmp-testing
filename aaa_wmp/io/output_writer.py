@@ -47,6 +47,7 @@ class OutputWriter:
             "poles": results["poles"],
             "residues": results["residues"],
             "poly_info_list": results["poly_info_list"],  # ADD THIS
+            "bcf_list": results["bcf_list"],
             "space": results.get("space", "sqrt_E"),  # ADD THIS
         }
 
