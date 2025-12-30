@@ -19,9 +19,9 @@ K_BOLTZMANN = 8.617333262e-5  # eV/K
 TEMPERATURE_LIMIT = 3000  # K
 
 # mp_file = "data/output/U238/mp_data/U238_mp.pickle"
-mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE.pickle"
+mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE3.pickle"
 # temp = 0
-temp = 1500
+temp = 600
 
 with open(mp_file, "rb") as f:
     mp_data = pickle.load(f)
@@ -127,16 +127,6 @@ for i_piece, poles in enumerate(poles_list):
     # Also compute poles-only (no c0) for plotting
     F_poles_only = vf.evaluate(Z_i, mp_poles, mp_residues, poly_coefficients=None)
     xs_poles_only = np.real(F_poles_only) / energy_i[None, :]
-
-    # xs_recon_0K = evaluate_openmc_T(
-    #     energy_i,
-    #     0.0,
-    #     mp_poles,
-    #     mp_residues / 1j,
-    #     sqrtAWR=awr,
-    #     poly_coeffs=poly_coeffs,
-    #     broaden_poly=False,
-    # )
 
     # Reconstruction at any temperature + same background
     xs_recon_T = evaluate_openmc_T(

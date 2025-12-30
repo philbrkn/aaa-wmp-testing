@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from multipole_deplete_v3 import WindowedMultipole
 
+from aaa_wmp.io.njoy_interface import generate_temperature_references
+
 # from openmc.data.multipole_old import WindowedMultipole
 
 
@@ -35,22 +37,11 @@ def plot_wmp_comparison(
 
     # Extract WMP cross sections
     print("Evaluating WMP cross sections...")
-    wmp_elastic = []
-    wmp_absorption = []
-    wmp_fission = []
-
-    wmp_data.data[:, 1:] *= -1j
-    for E in E_grid:
-        sig_s, sig_a, sig_f = wmp_data._evaluate(E, T)
-        wmp_elastic.append(sig_s)
-        wmp_absorption.append(sig_a)
-        wmp_fission.append(sig_f)
-
-    wmp_elastic = np.array(wmp_elastic)
-    wmp_absorption = np.array(wmp_absorption)
-    wmp_fission = np.array(wmp_fission)
+    wmp_elastic, wmp_absorption, wmp_fission = wmp_data(E_grid, T)
 
     # Plot each channel
+    # After evaluation in your plotting script
+
     channels = [
         ("elastic", "σ_s", wmp_elastic, reference_data.get("elastic")),
         ("absorption", "σ_a", wmp_absorption, reference_data.get("absorption")),
@@ -268,42 +259,45 @@ def count_wmp_poles_in_range(wmp_data, bounds):
 name = "U238"
 # name = "Zr91"
 # name = "Fe56"
-# wmp_file = Path(__file__).parent / "ENDF-VIII-data" / f"officialWMP-{name}.h5"
 # wmp_file = "data/output/WMP_Lib_viii.0/U238_VF-CF.h5"
-# wmp_file = "data/output/WMP_Lib_viii.0/U238/U238.h5"
-wmp_file = "data/output/WMP_Lib_viii.0/U238/U238_4kphys_6kpp.h5"
-
+wmp_file = "data/output/WMP_Lib_viii.0/U238/U238.h5"
 njoy_pickle_path = f"data/input/NJOY_pickles/{name}_NJOY.pickle"
-
-import h5py
-
-with h5py.File(wmp_file, "r") as f:
-    print("File version:", f.attrs["version"])
-    group = list(f.values())[0]
-    data = group["data"][()]
-    print("Data shape:", data.shape)
-    print("Expected for v3: shape[1] should be 6 or 7")
-    print("Expected for v2: shape[1] should be 4 or 5")
 
 wmp = WindowedMultipole(name)
 wmp_data = wmp.from_hdf5(wmp_file)
+
 print(f"Total number of poles: {len(wmp_data.data)}")
-# print(wmp_data.data[1])
 print(f"Number of windows {len(wmp_data.windows)}")
 
-# bounds = {'E_min': wmp_data.E_min, 'E_max': wmp_data.E_max}
-# bounds = {"E_min": 785, "E_max": 861}
-# bounds = {"E_min": 17400, "E_max": 17475}
 # bounds = {"E_min": 30, "E_max": 50}
-bounds = {"E_min": 1, "E_max": 20000}
+bounds = {"E_min": 100, "E_max": 19999}
 # bounds = None
-reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
+temp = 600
+reference_data_alltemps = generate_temperature_references(
+    endf_file="data/input/ENDF/ENDF-VIII-data/n-092_U_238.endf",
+    name="U238",
+    temperatures=[294, 600, 900, 1200, 1500],
+    cache_dir="data/input/NJOY_pickles",
+    njoy_error=5e-4,
+    log=1,
+    bounds=bounds,
+)
+reference_data = reference_data_alltemps[temp]
 E_grid = reference_data["energy"]
+mask = (E_grid >= wmp_data.E_min) & (E_grid <= wmp_data.E_max)
+E_grid = E_grid[mask]
+reference_data["elastic"] = reference_data["elastic_xs"][mask]
+reference_data["absorption"] = reference_data["absorption_xs"][mask]
+reference_data["fission"] = reference_data["fission_xs"][mask]
+
+# reference_data = create_reference_from_njoy(njoy_pickle_path, bounds=bounds)
+# E_grid = reference_data["energy"]
 
 plot_wmp_comparison(
-    wmp_data, reference_data, E_grid, name="U238", path_out="data/output/U238/wmp_plots"
+    wmp_data,
+    reference_data,
+    E_grid,
+    name="U238",
+    path_out="data/output/U238/wmp_plots",
+    T=temp,
 )
-count_wmp_poles_in_range(wmp_data, bounds)
-# print(wmp_data.windows[1:20])
-# print(wmp_data.data.shape[0])
-# sig_s, sig_a, sig_f = wmp_data._evaluate(E, T=0)

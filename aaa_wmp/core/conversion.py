@@ -498,6 +498,7 @@ def convert_to_wmp_format(mp_data, tol=1e-9, log=False):
 
     wmp_poles = []
     wmp_residues = []
+    pr_constant = []
 
     total_input_poles = 0
     total_output_poles = 0
@@ -520,6 +521,26 @@ def convert_to_wmp_format(mp_data, tol=1e-9, log=False):
         wmp_poles.append(mp_poles)
         wmp_residues.append(mp_residues)
 
+        # Extract c0 from poly_info_list if available
+        if "poly_info_list" in mp_data and i_piece < len(mp_data["poly_info_list"]):
+            c0 = mp_data["poly_info_list"][i_piece].get("c0", None)
+            if c0 is not None:
+                pr_constant.append(np.asarray(c0))
+            else:
+                # Default to zeros if c0 not found
+                k = residues.shape[0]  # number of channels
+                pr_constant.append(np.zeros(k))
+                if log:
+                    print(
+                        f"  Warning: No c0 found for piece {i_piece + 1}, using zeros"
+                    )
+        else:
+            # Default to zeros if poly_info_list not present
+            k = residues.shape[0]
+            pr_constant.append(np.zeros(k))
+            if log and i_piece == 0:
+                print("  Warning: No poly_info_list found, using zero constants")
+
         total_output_poles += len(mp_poles)
 
         if log:
@@ -539,6 +560,7 @@ def convert_to_wmp_format(mp_data, tol=1e-9, log=False):
         "E_max": mp_data["E_max"],
         "poles": wmp_poles,
         "residues": wmp_residues,
+        "pr_constant": pr_constant,
     }
 
     # Preserve any additional metadata

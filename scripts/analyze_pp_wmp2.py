@@ -5,135 +5,314 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from aaa_wmp.core.conversion import to_wmp_form
+from aaa_wmp.core.conversion import (
+    convert_to_wmp_format,
+    evaluate_openmc_T,
+)
 from aaa_wmp.io.njoy_interface import generate_temperature_references
-from aaa_wmp.processing.piece_fitting import calculate_piece_boundaries
+from aaa_wmp.visualization.plotting import (
+    plot_wmp_temperature_validation,
+    plot_wmp_validation,
+)
 
 K_BOLTZMANN = 8.617333262e-5  # eV/K
 TEMPERATURE_LIMIT = 3000  # K
 
-mp_file = "data/output/U238/mp_data/U238_mp.pickle"
-temp = 0
+# mp_file = "data/output/U238/mp_data/U238_mp.pickle"
+mp_file = "data/output/U238/mp_data/U238_mp_100p_1e-3_EsigE3.pickle"
+# temp = 0
+temp = 600
 
 with open(mp_file, "rb") as f:
     mp_data = pickle.load(f)
 
-poles_list = mp_data["poles"]
-residues_list = mp_data["residues"]
-E_min, E_max = mp_data["E_min"], mp_data["E_max"]
+wmp_data = convert_to_wmp_format(mp_data, log=False)
+
+wmp_filename = "data/output/U238/wmp_data/mp_data.pickle"
+with open(wmp_filename, "wb") as f:
+    pickle.dump(wmp_data, f)
+
+# Handle multi-piece format (concatenate if needed)
+poles_list = wmp_data["poles"]
+residues_list = wmp_data["residues"]
+pr_constant_list = wmp_data["pr_constant"]
+
+E_min_fit = wmp_data["E_min"]  # The E_min used during fitting
+E_max_fit = wmp_data["E_max"]
 vf_pieces = len(poles_list)
 
-# Load reference data (same as before)
 ref_data = generate_temperature_references(
     endf_file="data/input/ENDF/ENDF-VIII-data/n-092_U_238.endf",
     name="U238",
-    temperatures=[0],
+    temperatures=[294, 600, 900, 1200, 1500],
     cache_dir="data/input/NJOY_pickles",
     njoy_error=5e-4,
-    log=0,
+    log=1,
 )
-
+# Create common energy grid within bounds
 ref_0K = ref_data[0]
-energy_full = ref_0K["energy"]  # FULL grid
-
+energy_0K = ref_0K["energy"]
+# print(f"Emin was {E_min}")
+# E_min = energy_0K[0]
+# print(f"Emin is {E_min}")
+E_min_eval = max(E_min_fit, energy_0K[0])  # At least 1e-5
+E_max_eval = min(E_max_fit, energy_0K[-1])
+E_min_eval = 19059
+E_max_eval = 19080
+# print(f"Eminfit {E_min_fit} Emaxfit {E_max_fit} Emineval {E_min_eval} Emaxeval {E_max_eval}")
+mask_0K = (energy_0K >= E_min_eval) & (energy_0K <= E_max_eval)
+energy = energy_0K[mask_0K]  # Use 0K grid as common grid
 channels = ["elastic", "absorption"]
-fissionable = ref_0K["fissionable"]
-if fissionable:
+if ref_0K["fissionable"]:
     channels.append("fission")
 k = len(channels)
 
-# Build sigE on FULL grid (sigma * E for comparison with bcf)
-sigE_njoy_full = np.vstack(
+
+def interp_xs(energy_src, xs_src, energy_dst):
+    return np.interp(energy_dst, energy_src, xs_src)
+
+
+# Interpolate 0K reference onto common grid
+original_0K = np.vstack(
     [
-        ref_0K["elastic_xs"] * energy_full,
-        ref_0K["absorption_xs"] * energy_full,
-        ref_0K["fission_xs"] * energy_full
-        if fissionable
-        else np.zeros(len(energy_full)),
+        interp_xs(ref_0K["energy"], ref_0K["elastic_xs"], energy),
+        interp_xs(ref_0K["energy"], ref_0K["absorption_xs"], energy),
+        interp_xs(ref_0K["energy"], ref_0K["fission_xs"], energy)
+        if ref_0K["fissionable"]
+        else np.zeros(len(energy)),
     ]
 )
+# Interpolate T reference onto common grid
+if temp > 0:
+    ref_T = ref_data[temp]
+    original_T = np.vstack(
+        [
+            interp_xs(ref_T["energy"], ref_T["elastic_xs"], energy),
+            interp_xs(ref_T["energy"], ref_T["absorption_xs"], energy),
+            interp_xs(ref_T["energy"], ref_T["fission_xs"], energy)
+            if ref_T["fissionable"]
+            else np.zeros(len(energy)),
+        ]
+    )
+else:
+    original_T = original_0K.copy()
 
-sqrt_awr = np.sqrt(mp_data["AWR"])
-alpha = mp_data["AWR"] / (K_BOLTZMANN * TEMPERATURE_LIMIT)
-piece_width = (np.sqrt(E_max) - np.sqrt(E_min)) / vf_pieces
-Z_full = np.sqrt(energy_full)
+sqrt_awr = np.sqrt(wmp_data["AWR"])
+alpha = wmp_data["AWR"] / (K_BOLTZMANN * TEMPERATURE_LIMIT)
+piece_width = (np.sqrt(E_max_fit) - np.sqrt(E_min_fit)) / vf_pieces
 
-import openmc.data.vectfit as vf
+# Global reconstruction accumulator
+xs_recon_0K_total = np.zeros((k, energy.size))
+xs_recon_T_total = np.zeros((k, energy.size))
+xs_poles_only_total = np.zeros((k, energy.size))
+xs_weight = np.zeros(energy.size)
+# each window is probably going to have a different set of pseudo poles, hence why we do this
+window_bounds = []
+total_wmp_poles = 0
 
-print("=" * 60)
-print("PIECE-BY-PIECE ANALYSIS")
-print("=" * 60)
+Z = np.sqrt(energy)
 
 for i_piece, poles in enumerate(poles_list):
-    residues = residues_list[i_piece]
-    c0 = mp_data["poly_info_list"][i_piece]["c0"]
-    bcf_i = mp_data["bcf_list"][i_piece]
+    sqrt_E_left = np.sqrt(E_min_fit) + i_piece * piece_width
+    sqrt_E_right = min(np.sqrt(E_max_fit), sqrt_E_left + piece_width)
+    window_bounds.append((sqrt_E_left**2, sqrt_E_right**2))
+    E_left = sqrt_E_left**2
+    # E_right = sqrt_E_right**2
+    # Doppler broadening extension
+    if i_piece == 0 or np.sqrt(alpha) * sqrt_E_left < 4.0:
+        e_start = E_left
+    else:
+        e_start = max(E_min_fit, (np.sqrt(alpha) * sqrt_E_left - 4.0) ** 2 / alpha)
+    e_end = min(E_max_fit, (np.sqrt(alpha) * sqrt_E_right + 4.0) ** 2 / alpha)
+    piece_mask = (energy >= e_start) & (energy <= e_end)
+    if not np.any(piece_mask):
+        continue
 
-    mp_poles, mp_residues = to_wmp_form(poles, residues, tol=1e-9)
+    energy_i = energy[piece_mask]
+    c0 = pr_constant_list[i_piece]  # Get c0 from pr_constant
+    poly_coeffs = c0[:, np.newaxis]  # Shape (k, 1)
 
-    e_start_idx, e_end_idx = calculate_piece_boundaries(
-        i_piece,
-        piece_width,
-        {"energy": energy_full, "E_min": E_min, "E_max": E_max},
-        alpha,
-        "sqrt_E",
+    wmp_poles = poles
+    wmp_residues = residues_list[i_piece]
+    total_wmp_poles += len(wmp_poles)
+
+    import openmc.data.vectfit as vf
+
+    Z_i = Z[piece_mask]
+    F = vf.evaluate(Z_i, wmp_poles, wmp_residues * 1j, poly_coefficients=poly_coeffs)
+    xs_recon_0K = np.real(F) / energy_i[None, :]
+    # Also compute poles-only (no c0) for plotting
+    F_poles_only = vf.evaluate(Z_i, wmp_poles, wmp_residues * 1j)
+    xs_poles_only = np.real(F_poles_only) / energy_i[None, :]
+
+    # Reconstruction at any temperature + same background
+    xs_recon_T = evaluate_openmc_T(
+        energy_i,
+        temp,
+        wmp_poles,
+        wmp_residues,
+        sqrtAWR=sqrt_awr,
+        poly_coeffs=poly_coeffs,
+        broaden_poly=False,
     )
 
-    energy_i = energy_full[e_start_idx:e_end_idx]
-    Z_i = Z_full[e_start_idx:e_end_idx]
-    sigE_njoy_i = sigE_njoy_full[:, e_start_idx:e_end_idx]
+    # Accumulate both
+    xs_recon_0K_total[:, piece_mask] += np.asarray(xs_recon_0K).real
+    xs_recon_T_total[:, piece_mask] += np.asarray(xs_recon_T).real
+    xs_poles_only_total[:, piece_mask] += np.asarray(xs_poles_only).real
+    xs_weight[piece_mask] += 1.0
 
-    sigE_poles = np.real(
-        vf.evaluate(Z_i, mp_poles, mp_residues, poly_coefficients=None)
-    )
-    sigE_recon_c0 = sigE_poles + c0[:, None]
+print(f"Total WMP poles: {total_wmp_poles}")
 
-    print(
-        f"\nPiece {i_piece}: [{energy_i[0]:.2f}, {energy_i[-1]:.2f}] eV, {len(energy_i)} pts, {len(mp_poles)} poles"
-    )
+# Normalize by overlap weight
+nonzero = xs_weight > 0
+xs_recon_0K_total[:, nonzero] /= xs_weight[nonzero]
+xs_recon_T_total[:, nonzero] /= xs_weight[nonzero]
+xs_poles_only_total[:, nonzero] /= xs_weight[nonzero]
 
-    for ch_idx, ch_name in enumerate(channels):
-        bcf_ch = np.real(bcf_i[ch_idx])
-        njoy_ch = sigE_njoy_i[ch_idx]
-        recon_c0_ch = sigE_recon_c0[ch_idx]
-        poles_ch = sigE_poles[ch_idx]
+# Channel symbols for plotting
+symbols = {"elastic": "σ_el", "absorption": "σ_abs", "fission": "σ_f"}
+# After the reconstruction loop, add:
+# Add this to your mp_data analysis script (the pre-windowing one)
+# RIGHT AFTER the reconstruction loop, BEFORE averaging
 
-        eps = 1e-30
+print("\n" + "=" * 80)
+print("PRE-WINDOWING: Checking E=65 eV BEFORE overlap averaging")
+print("=" * 80)
 
-        # Existing comparisons
-        err_bcf_njoy = np.max(np.abs(bcf_ch - njoy_ch) / (np.abs(njoy_ch) + eps))
-        err_recon_c0_bcf = np.max(np.abs(recon_c0_ch - bcf_ch) / (np.abs(bcf_ch) + eps))
-        err_recon_c0_njoy = np.max(
-            np.abs(recon_c0_ch - njoy_ch) / (np.abs(njoy_ch) + eps)
+E_check = 19065.0
+idx_check = np.argmin(np.abs(energy - E_check))
+E_actual = energy[idx_check]
+
+print(f"Checking at E={E_actual:.2f} eV (target was {E_check} eV)")
+print(f"Number of pieces contributing (weight): {xs_weight[idx_check]}")
+
+# Show contributions from each piece BEFORE averaging
+print("\nReconstructions BEFORE averaging:")
+print(f"  Elastic: {xs_recon_0K_total[0, idx_check]:.6e}")
+print(f"  Absorption: {xs_recon_0K_total[1, idx_check]:.6e}")
+print(f"  Fission: {xs_recon_0K_total[2, idx_check]:.6e}")
+
+print(f"\nReconstructions AFTER averaging (divide by {xs_weight[idx_check]}):")
+print(f"  Elastic: {xs_recon_0K_total[0, idx_check] / xs_weight[idx_check]:.6e}")
+print(f"  Absorption: {xs_recon_0K_total[1, idx_check] / xs_weight[idx_check]:.6e}")
+print(f"  Fission: {xs_recon_0K_total[2, idx_check] / xs_weight[idx_check]:.6e}")
+
+print("\nReference:")
+print(f"  Elastic: {original_0K[0, idx_check]:.6e}")
+print(f"  Absorption: {original_0K[1, idx_check]:.6e}")
+print(f"  Fission: {original_0K[2, idx_check]:.6e}")
+
+# Find which pieces are contributing at this energy
+print(f"\nWhich pieces contribute at E={E_actual:.2f} eV?")
+for i_piece in range(vf_pieces):
+    sqrt_E_left = np.sqrt(E_min_fit) + i_piece * piece_width
+    sqrt_E_right = min(np.sqrt(E_max_fit), sqrt_E_left + piece_width)
+    E_left = sqrt_E_left**2
+
+    if i_piece == 0 or np.sqrt(alpha) * sqrt_E_left < 4.0:
+        e_start = E_left
+    else:
+        e_start = max(E_min_fit, (np.sqrt(alpha) * sqrt_E_left - 4.0) ** 2 / alpha)
+    e_end = min(E_max_fit, (np.sqrt(alpha) * sqrt_E_right + 4.0) ** 2 / alpha)
+
+    if e_start <= E_actual <= e_end:
+        print(f"  Piece {i_piece}: covers [{e_start:.2f}, {e_end:.2f}] eV")
+        print(f"    c0: {pr_constant_list[i_piece]}")
+
+print("=" * 80)
+
+# Plot each channel
+print("\n" + "=" * 60)
+print("Generating plots...")
+print("=" * 60)
+
+output_dir = "/home/philip/Documents/aaa-wmp-testing/data/output/U238/validation/"
+for i, channel in enumerate(channels):
+    if temp == 0:
+        c0 = pr_constant_list[0][i]  # Get c0 from pr_constant
+        stats = plot_wmp_validation(
+            E=energy,
+            original=original_0K[i],
+            reconstructed=xs_recon_0K_total[i],
+            poles_only=xs_poles_only_total[i],
+            channel_name=channel,
+            symbol=symbols[channel],
+            name="U238",
+            path_out=output_dir,
+            rtol=1e-3,
+            atol=1e-5,
+            # window_bounds=window_bounds,
+        )
+    else:
+        stats = plot_wmp_temperature_validation(
+            E=energy,
+            ref_0K=original_0K[i],
+            ref_T=original_T[i],
+            recon_0K=xs_recon_0K_total[i],
+            recon_T=xs_recon_T_total[i],
+            temperature=temp,
+            channel_name=channel,
+            symbol=symbols[channel],
+            name="U238",
+            path_out=output_dir,
+            rtol=1e-3,
+            atol=1e-5,
+            window_bounds=window_bounds,
         )
 
-        # NEW: Fit polynomial to NJOY residual
-        residual_njoy = njoy_ch - poles_ch
+    # print(f"{channel}: {stats['satisfaction_pct']:.1f}% within tolerance, "
+    #       f"max rel err = {stats['max_rel_err']*100:.3f}%")
 
-        # Try different polynomial degrees
-        for n_poly in [1, 2, 3, 5]:
-            # Polynomial basis in sqrt(E): 1, z, z^2, ...
-            poly_basis = np.vstack([Z_i**j for j in range(n_poly)]).T
 
-            # Fit
-            coeffs, _, _, _ = np.linalg.lstsq(poly_basis, residual_njoy, rcond=None)
+def assess_reconstruction(xs_recon, xs_ref, rtol=1e-3, atol=1e-5):
+    """
+    Assess reconstruction quality using VF/WMP criteria.
 
-            # Reconstruct
-            poly_fit = poly_basis @ coeffs
-            recon_polyfit = poles_ch + poly_fit
+    rtol: relative tolerance (default 1e-3 = 0.1%)
+    atol: absolute tolerance (default 1e-5 barns)
+    """
+    abserr = np.abs(xs_recon - xs_ref)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        relerr = abserr / xs_ref
+    # Check for NaN (shouldn't happen but guard against it)
+    if np.any(np.isnan(abserr)):
+        return {"maxre": np.inf, "ratio": 0.0, "ratio2": 0.0, "status": "FAILED - NaN"}
+    # If all points satisfy absolute tolerance, perfect
+    if np.all(abserr <= atol):
+        return {"maxre": 0.0, "ratio": 1.0, "ratio2": 1.0, "status": "PERFECT"}
+    # Max relative error (only where abs error > atol)
+    # This ignores relative error at near-zero cross sections
+    maxre = np.max(relerr[abserr > atol])
+    # Fraction of points satisfying EITHER relative OR absolute tolerance
+    ratio = np.sum((relerr < rtol) | (abserr < atol)) / relerr.size
+    ratio2 = np.sum((relerr < 10 * rtol) | (abserr < atol)) / relerr.size
+    # Status
+    if ratio >= 0.99:
+        status = "EXCELLENT"
+    elif ratio >= 0.95:
+        status = "GOOD"
+    elif ratio >= 0.90:
+        status = "ACCEPTABLE"
+    else:
+        status = "POOR"
+    return {"maxre": maxre, "ratio": ratio, "ratio2": ratio2, "status": status}
 
-            err_recon_polyfit_njoy = np.max(
-                np.abs(recon_polyfit - njoy_ch) / (np.abs(njoy_ch) + eps)
-            )
 
-            if n_poly == 1:
-                print(f"  {ch_name}:")
-                print(f"    bcf vs NJOY:           {err_bcf_njoy:.2e}")
-                print(f"    poles+c0 vs bcf:       {err_recon_c0_bcf:.2e}")
-                print(f"    poles+c0 vs NJOY:      {err_recon_c0_njoy:.2e}")
-                print(
-                    f"    poles+poly1 vs NJOY:   {err_recon_polyfit_njoy:.2e}  (coeffs: {coeffs[0]:.4e})"
-                )
-            else:
-                print(f"    poles+poly{n_poly} vs NJOY:   {err_recon_polyfit_njoy:.2e}")
+print("\n" + "=" * 60)
+print(f"Assessment at {temp}K:")
+print("=" * 60)
 
+# Choose which reconstruction and reference to assess based on temp
+recon_to_assess = xs_recon_T_total if temp > 0 else xs_recon_0K_total
+ref_to_assess = original_T if temp > 0 else original_0K
+
+for i, channel in enumerate(channels):
+    result = assess_reconstruction(
+        recon_to_assess[i], ref_to_assess[i], rtol=1e-3, atol=1e-5
+    )
+    print(f"\n{channel.upper()}:")
+    print(f"  Max relative error: {result['maxre'] * 100:.3f}% (where abs err > 1e-5)")
+    print(f"  Points within either tol:  {result['ratio'] * 100:.1f}%")
+    print(f"  Points within 10x rtol and atol:  {result['ratio2'] * 100:.1f}%")
+    print(f"  Status: {result['status']}")

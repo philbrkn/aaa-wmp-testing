@@ -628,6 +628,20 @@ def _windowing(
     mp_poles = mp_data["poles"]
     mp_residues = mp_data["residues"]
 
+    # Extract pr_constant from mp_data
+    if "pr_constant" in mp_data:
+        mp_pr_constant = mp_data["pr_constant"]
+    elif "poly_info_list" in mp_data:
+        # Extract from poly_info_list
+        mp_pr_constant = [
+            mp_data["poly_info_list"][i]["c0"] for i in range(len(mp_data["poles"]))
+        ]
+    else:
+        # No c0 available
+        mp_pr_constant = None
+        if log:
+            print("Warning: No pr_constant found in mp_data")
+
     n_pieces = len(mp_poles)
     piece_width = (sqrt(E_max) - sqrt(E_min)) / n_pieces
     alpha = awr / (K_BOLTZMANN * TEMPERATURE_LIMIT)
@@ -660,6 +674,9 @@ def _windowing(
     # initialize an array to record whether each pole is used or not
     poles_unused = [np.ones_like(p, dtype=int) for p in mp_poles]
 
+    # Initialize pr_constant storage for each window
+    pr_constant_windows = []
+
     # optimize the windows: the goal is to find the least set of significant
     # consecutive poles and curve fit coefficients to reproduce cross section
     win_data = []
@@ -679,22 +696,33 @@ def _windowing(
         e_end = min(E_max, (sqrt(alpha) * inend + 4.0) ** 2 / alpha)
 
         # locate piece and relevant poles
-        i_piece = min(n_pieces - 1, int((inbegin - sqrt(E_min)) / piece_width + 0.5))
+        # i_piece = min(n_pieces - 1, int((inbegin - sqrt(E_min)) / piece_width + 0.5))
+        i_piece = min(n_pieces - 1, int((inbegin - sqrt(E_min)) / piece_width))
         poles, residues = mp_poles[i_piece], mp_residues[i_piece]
         n_poles = poles.size
+        k = residues.shape[0]
+
+        # Get c0 for this piece
+        if mp_pr_constant is not None:
+            c0_window = mp_pr_constant[i_piece]
+        else:
+            c0_window = np.zeros(len(residues))
+        pr_constant_windows.append(c0_window)
 
         # generate energy points for fitting: equally spaced in momentum
         n_points = min(max(100, int((e_end - e_start) * 4)), 10000)
         energy_sqrt = np.linspace(np.sqrt(e_start), np.sqrt(e_end), n_points)
         energy = energy_sqrt**2
 
-        # reference xs from multipole form, note the residue terms in the
-        # multipole and vector fitting representations differ by a 1j
+        # xs_ref = evaluate(energy_sqrt, poles, residues * 1j) / energy
         if method == "VF":
+            # reference xs from multipole form, note the residue terms in the
+            # multipole and vector fitting representations differ by a 1j
             xs_ref = evaluate(energy_sqrt, poles, residues * 1j) / energy
         elif method == "AAA":
-            c0 = mp_data["poly_info_list"][:]["c0"]  # Get c0 for this piece
-            xs_ref = evaluate(energy_sqrt, poles, residues * 1j) / energy
+            c0 = mp_pr_constant[i_piece]  # Get c0 from pr_constant
+            poly_coeffs = c0[:, np.newaxis]  # Shape (k, 1)
+            xs_ref = evaluate(energy_sqrt, poles, residues * 1j, poly_coeffs) / energy
         else:
             print("Method string not valid")
 
@@ -704,16 +732,32 @@ def _windowing(
         # start from 0 poles, initialize pointers to the center nearest pole
         center_pole_ind = np.argmin((np.fabs(poles.real - incenter)))
         lp = rp = center_pole_ind
+
         while True:
             if log >= DETAILED_LOGGING:
                 print(f"Trying poles {lp} to {rp}")
 
             # calculate the cross sections contributed by the windowed poles
             if rp > lp:
-                xs_wp = (
-                    evaluate(energy_sqrt, poles[lp:rp], residues[:, lp:rp] * 1j)
-                    / energy
-                )
+                # xs_wp = (
+                #     evaluate(energy_sqrt, poles[lp:rp], residues[:, lp:rp] * 1j)
+                #     / energy
+                # )
+                if method == "VF":
+                    xs_wp = (
+                        evaluate(energy_sqrt, poles[lp:rp], residues[:, lp:rp] * 1j)
+                        / energy
+                    )
+                elif method == "AAA":
+                    xs_wp = (
+                        evaluate(
+                            energy_sqrt,
+                            poles[lp:rp],
+                            residues[:, lp:rp] * 1j,
+                            poly_coeffs,
+                        )
+                        / energy
+                    )
             else:
                 xs_wp = np.zeros_like(xs_ref)
 
@@ -739,6 +783,7 @@ def _windowing(
                     if log >= DETAILED_LOGGING:
                         print("Accuracy satisfied.")
                     break
+                    # Inside the while loop, after computing xs_fit:
 
             # we expect pure curvefit will succeed for the first window
             # TODO: find the energy boundary below which no poles are allowed
@@ -794,6 +839,7 @@ def _windowing(
     wmp.curvefit = np.asarray(curvefit)
     # TODO: check if Doppler brodening of the polynomial curvefit is negligible
     wmp.broaden_poly = np.ones((n_win,), dtype=bool)
+    wmp.pr_constant = np.asarray(pr_constant_windows)
 
     return wmp
 
@@ -852,6 +898,7 @@ class WindowedMultipole(EqualityMixin):
         self.windows = None
         self.broaden_poly = None
         self.curvefit = None
+        self.pr_constant = None
 
     @property
     def name(self):
@@ -861,6 +908,19 @@ class WindowedMultipole(EqualityMixin):
     def name(self, name):
         cv.check_type("name", name, str)
         self._name = name
+        # Add property
+
+    @property
+    def pr_constant(self):
+        return self._pr_constant
+
+    @pr_constant.setter
+    def pr_constant(self, pr_constant):
+        if pr_constant is not None:
+            cv.check_type("pr_constant", pr_constant, np.ndarray)
+            if len(pr_constant.shape) != 2:
+                raise ValueError("pr_constant must be 2D (n_windows, n_channels)")
+        self._pr_constant = pr_constant
 
     @property
     def fit_order(self):
@@ -1047,7 +1107,7 @@ class WindowedMultipole(EqualityMixin):
         out.sqrtAWR = group["sqrtAWR"][()]
         out.E_min = group["E_min"][()]
         out.E_max = group["E_max"][()]
-
+        out.pr_constant = group["pr_constant"][()]
         # Read arrays.
 
         err = "WMP '{}' array shape is not consistent with the '{}' array shape"
@@ -1148,6 +1208,10 @@ class WindowedMultipole(EqualityMixin):
             # load multipole data from file
             with open(mp_data, "rb") as f:
                 mp_data = pickle.load(f)
+
+        print(f"E_min: {mp_data['E_min']:.6e} eV")
+        print(f"E_max: {mp_data['E_max']:.6e} eV")
+        print(f"sqrt(E_min): {np.sqrt(mp_data['E_min']):.6e}")
 
         if search is None:
             if "n_cf" in kwargs and ("n_win" in kwargs or "spacing" in kwargs):
@@ -1262,6 +1326,11 @@ class WindowedMultipole(EqualityMixin):
 
         # ======================================================================
         # Add the contribution from the curvefit polynomial.
+        if self.pr_constant is not None:
+            sig_s += self.pr_constant[i_window, 0] * invE
+            sig_a += self.pr_constant[i_window, 1] * invE
+            if self.fissionable:
+                sig_f += self.pr_constant[i_window, 2] * invE
 
         if sqrtkT != 0 and self.broaden_poly[i_window]:
             # Broaden the curvefit.
@@ -1373,4 +1442,4 @@ class WindowedMultipole(EqualityMixin):
             g.create_dataset("windows", data=self.windows)
             g.create_dataset("broaden_poly", data=self.broaden_poly.astype(np.int8))
             g.create_dataset("curvefit", data=self.curvefit)
-
+            g.create_dataset("pr_constant", data=self.pr_constant)

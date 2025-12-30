@@ -188,8 +188,10 @@ class NJOYProcessor:
 
         # Apply user-specified bounds if provided
         if bounds:
-            E_min = bounds.get("E_min", energy[0])
-            E_max = bounds.get("E_max", energy[-1])
+            E_min = max(energy[0], bounds.get("E_min", energy[0]))
+            E_max = min(energy[-1], bounds.get("E_max", energy[-1]))
+            mask = (energy >= E_min) & (energy <= E_max)
+            energy = energy[mask]
         else:
             E_min, E_max = energy[0], energy[-1]
 
@@ -241,6 +243,7 @@ def generate_temperature_references(
     cache_dir: str = "./data/input/NJOY_pickles",
     njoy_error: float = 5e-4,
     log: int = 1,
+    bounds: Optional[dict] = None,
 ) -> dict:
     """Generate NJOY reference data at multiple temperatures.
 
@@ -286,7 +289,7 @@ def generate_temperature_references(
     results = {}
     for temp in all_temps:
         results[temp] = processor.extract_cross_sections(
-            nuc_ce, E_max_idx, temperature=temp
+            nuc_ce, E_max_idx, temperature=temp, bounds=bounds
         )
 
     # Add metadata
